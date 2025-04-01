@@ -5,7 +5,7 @@
 //  Created by Andrei Marincas on 01.04.2025.
 //
 
-import SwiftUI
+/*import SwiftUI
 import SwiftData
 
 struct ContentView: View {
@@ -56,4 +56,4 @@ struct ContentView: View {
 #Preview {
     ContentView()
         .modelContainer(for: Item.self, inMemory: true)
-}
+}*/

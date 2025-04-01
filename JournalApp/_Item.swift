@@ -5,7 +5,7 @@
 //  Created by Andrei Marincas on 01.04.2025.
 //
 
-import Foundation
+/*import Foundation
 import SwiftData
 
 @Model
@@ -15,4 +15,4 @@ final class Item {
     init(timestamp: Date) {
         self.timestamp = timestamp
     }
-}
+}*/

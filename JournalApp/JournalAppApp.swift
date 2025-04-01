@@ -12,9 +12,9 @@ import SwiftData
 struct JournalAppApp: App {
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
-            Item.self,
+            JournalNote.self, JournalEntry.self
         ])
-        let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
+        let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
 
         do {
             return try ModelContainer(for: schema, configurations: [modelConfiguration])
@@ -25,7 +25,8 @@ struct JournalAppApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            MainView()
+                .navigationTitle("")
         }
         .modelContainer(sharedModelContainer)
     }
