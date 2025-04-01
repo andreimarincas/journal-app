@@ -16,81 +16,16 @@ struct MainView: View {
     @FocusState private var isRenamingFocused: Bool
 
     var body: some View {
-        NavigationSplitView() {
-            List(selection: $selectedEntry) {
-                ForEach(entries) { entry in
-                    NavigationLink(value: entry) {
-                        entryLabel(for: entry)
-                    }
-                    .contextMenu {
-                        Button("Rename") {
-                            renamingEntry = entry
-                        }
-                        Button("Delete", role: .destructive) {
-                            deleteEntry(entry)
-                        }
-                    }
-                }
-            }
-            .listRowSeparator(.hidden)
-            .listRowInsets(.init(top: 6, leading: 4, bottom: 6, trailing: 4))
-            .toolbar {
-                ToolbarItem(placement: .primaryAction) {
-                    Button(action: addEntry) {
-                        Label("New Entry", systemImage: "plus")
-                    }
-                }
-            }
-            .navigationSplitViewColumnWidth(min: 180, ideal: 200, max: 220)
-            .onAppear {
-                if entries.isEmpty {
-                    insertInitialEntry()
-                }
+        navigationSplitView
+    }
+
+    private var navigationSplitView: some View {
+        NavigationSplitView {
+            ScrollViewReader { proxy in
+                sidebarView(proxy: proxy)
             }
         } detail: {
-            Group {
-                if entries.isEmpty {
-                    ZStack {
-                        Color(nsColor: .windowBackgroundColor)
-                            .ignoresSafeArea()
-                        VStack(spacing: 16) {
-                            Image(systemName: "book.closed")
-                                .font(.system(size: 48))
-                                .foregroundColor(.secondary)
-                            Text("No journal entries yet.")
-                                .font(.title3)
-                                .fontWeight(.semibold)
-                            Text("Click the + button above to create your first entry.")
-                                .foregroundColor(.secondary)
-                            Button {
-                                addEntry()
-                            } label: {
-                                Label("Create a New Entry", systemImage: "plus")
-                                    .padding(.horizontal, 16)
-                                    .padding(.vertical, 8)
-                                    .background(Color.accentColor)
-                                    .foregroundColor(.white)
-                                    .clipShape(RoundedRectangle(cornerRadius: 8))
-                            }
-                            .buttonStyle(.plain)
-                        }
-                        .multilineTextAlignment(.center)
-                    }
-                } else if let entry = selectedEntry {
-                    JournalEntryView(entry: entry)
-                } else {
-                    ZStack {
-                        Color(nsColor: .windowBackgroundColor)
-                            .ignoresSafeArea()
-                        Text("Select a journal entry to view its notes.")
-                            .font(.title3)
-                            .foregroundColor(.secondary)
-                            .multilineTextAlignment(.center)
-                            .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    }
-                }
-            }
-            .id(UUID())
+            detailView
         }
         .navigationTitle(selectedEntry?.title.isEmpty == false ? selectedEntry!.title : "Journal Entry")
         .toolbar {
@@ -98,11 +33,13 @@ struct MainView: View {
                 if let entry = selectedEntry {
                     HStack {
                         Spacer()
-                        Text("Entry date: " + entry.date.formatted(date: .long, time: .shortened))
-                            .font(.body)
+                        Text("Entry date:")
+                            .fontWeight(.medium)
+                        Text(entry.date.formatted(date: .long, time: .shortened))
                             .fontWeight(.light)
-                            .foregroundStyle(.secondary)
                     }
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .trailing)
                 }
             }
@@ -113,39 +50,137 @@ struct MainView: View {
     }
 
     @ViewBuilder
+    private func sidebarView(proxy: ScrollViewProxy) -> some View {
+        List(selection: $selectedEntry) {
+            ForEach(entries) { entry in
+                NavigationLink(value: entry) {
+                    entryLabel(for: entry)
+                }
+                .id(entry.id)
+                .contextMenu {
+                    Button("Rename") {
+                        renamingEntry = entry
+                    }
+                    Button("Delete", role: .destructive) {
+                        deleteEntry(entry)
+                    }
+                }
+            }
+        }
+        .onChange(of: selectedEntry) { _, _ in
+            if let entry = selectedEntry {
+                proxy.scrollTo(entry.id, anchor: .top)
+            }
+        }
+        .listStyle(.inset)
+        .listRowSeparator(.visible)
+        .listRowInsets(.init(top: 6, leading: 12, bottom: 6, trailing: 8))
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button(action: addEntry) {
+                    Label("New Entry", systemImage: "plus")
+                }
+            }
+        }
+        .navigationSplitViewColumnWidth(min: 180, ideal: 200, max: 220)
+        .onAppear {
+            if entries.isEmpty {
+                insertInitialEntry()
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var detailView: some View {
+        Group {
+            if entries.isEmpty {
+                ZStack {
+                    Color(nsColor: .windowBackgroundColor)
+                        .ignoresSafeArea()
+                    VStack(spacing: 16) {
+                        Image(systemName: "book.closed")
+                            .font(.system(size: 48))
+                            .foregroundColor(.secondary)
+                        Text("No journal entries yet.")
+                            .font(.title3)
+                            .fontWeight(.semibold)
+                        Text("Click the + button above to create your first entry.")
+                            .foregroundColor(.secondary)
+                        Button {
+                            addEntry()
+                        } label: {
+                            Label("Create a New Entry", systemImage: "plus")
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 8)
+                                .background(Color.accentColor)
+                                .foregroundColor(.white)
+                                .clipShape(RoundedRectangle(cornerRadius: 8))
+                        }
+                        .buttonStyle(.plain)
+                    }
+                    .multilineTextAlignment(.center)
+                }
+            } else if let entry = selectedEntry {
+                JournalEntryView(entry: entry)
+            } else {
+                ZStack {
+                    Color(nsColor: .windowBackgroundColor)
+                        .ignoresSafeArea()
+                    Text("Select a journal entry to view its notes.")
+                        .font(.title3)
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                }
+            }
+        }
+        .id(UUID())
+    }
+
+    @ViewBuilder
     private func entryLabel(for entry: JournalEntry) -> some View {
         if renamingEntry == entry {
             let titleBinding = Binding<String>(
                 get: { entry.title },
                 set: { newValue in entry.title = newValue }
             )
-            TextField("Title", text: titleBinding)
-                .textFieldStyle(.plain)
-                .font(.title3)
-                .focused($isRenamingFocused)
-                .onAppear {
-                    isRenamingFocused = true
-                }
-                .onSubmit {
-                    renamingEntry = nil
-                }
+            VStack(alignment: .leading, spacing: 2) {
+                TextField("Title", text: titleBinding)
+                    .textFieldStyle(.plain)
+                    .font(.title3)
+                    .focused($isRenamingFocused)
+                    .onAppear {
+                        isRenamingFocused = true
+                    }
+                    .onSubmit {
+                        renamingEntry = nil
+                    }
+                Spacer().frame(height: 28)
+            }
         } else {
-            ZStack {
-                HStack {
+            HStack(alignment: .firstTextBaseline, spacing: 4) {
+                VStack(alignment: .leading, spacing: 2) {
                     Text(entry.title.isEmpty ? "Journal Entry" : entry.title)
                         .font(.title3)
                         .lineLimit(1)
-                    Spacer()
+                    if let firstNote = entry.notes.first(where: { $0.number == 1 }) {
+                        Text(firstNote.text)
+                            .font(.subheadline)
+                            .italic()
+                            .foregroundColor(.secondary)
+                            .lineLimit(1)
+                    }
+                    HStack {
+                        Spacer()
+                        Text(entry.date.formatted(date: .abbreviated, time: .omitted))
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                    }
                 }
-                VStack {
-                    Rectangle()
-                        .foregroundColor(.clear)
-                        .border(Color.clear, width: 0)
-                        .contentShape(Rectangle())
-                        .onTapGesture(count: 2) {
-                            renamingEntry = entry
-                        }
-                }
+                Spacer()
+            }
+            .onTapGesture(count: 2) {
+                renamingEntry = entry
             }
         }
     }
