@@ -24,6 +24,8 @@ struct MainView: View {
                     }
                 }
             }
+            .listRowSeparator(.hidden)
+            .listRowInsets(.init(top: 6, leading: 4, bottom: 6, trailing: 4))
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
                     Button(action: addEntry) {
@@ -60,7 +62,9 @@ struct MainView: View {
                     HStack {
                         Spacer()
                         Text(entry.date.formatted(date: .long, time: .shortened))
-                            .font(.title3)
+                            .font(.body)
+                            .italic()
+                            .fontWeight(.light)
                             .foregroundStyle(.secondary)
                     }
                     .frame(maxWidth: .infinity, alignment: .trailing)

@@ -21,10 +21,10 @@ struct JournalEntryView: View {
                     ForEach(entry.notes.sorted(by: { $0.number < $1.number })) { note in
                         HStack(alignment: .firstTextBaseline, spacing: 8) {
                             Text("\(note.number).")
-                                .font(.system(size: 16, weight: .light))
+                                .font(.system(size: 15, weight: .light))
                                 .foregroundColor(.secondary)
                             Text(note.text)
-                                .font(.system(size: 16, weight: .light))
+                                .font(.system(size: 15, weight: .light))
                                 .lineSpacing(6)
                                 .multilineTextAlignment(.leading)
                                 .foregroundStyle(.primary)
