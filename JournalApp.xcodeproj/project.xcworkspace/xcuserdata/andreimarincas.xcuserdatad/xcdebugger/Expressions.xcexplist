@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<VariablesViewState
+   version = "1.0">
+   <ContextStates>
+      <ContextState
+         contextName = "closure #2 in MainView.body.getter:MainView.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "entries">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "MainView.deleteEntry(_:):MainView.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "entries">
+            </PersistentString>
+            <PersistentString
+               value = "selectedEntry">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "closure #2 in MainView.deleteEntry(_:):MainView.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "entries">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "closure #1 in closure #2 in MainView.body.getter:MainView.swift">
+      </ContextState>
+   </ContextStates>
+</VariablesViewState>
