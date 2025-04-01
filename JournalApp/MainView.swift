@@ -48,11 +48,15 @@ struct MainView: View {
                     JournalEntryView(entry: entry)
                 }
             } else {
-                Text("Select a journal entry to view its notes.")
-                    .font(.title3)
-                    .foregroundColor(.secondary)
-                    .multilineTextAlignment(.center)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                ZStack {
+                    Color(nsColor: .windowBackgroundColor)
+                        .ignoresSafeArea()
+                    Text("Select a journal entry to view its notes.")
+                        .font(.title3)
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                }
             }
         }
         .navigationTitle(selectedEntry?.title.isEmpty == false ? selectedEntry!.title : "Journal Entry")
@@ -82,10 +86,16 @@ struct MainView: View {
 
         let entry = JournalEntry(date: Date(), title: "Journal Entry", notes: notes)
         modelContext.insert(entry)
+        selectedEntry = entry
     }
     
     private func addEntry() {
-        let newEntry = JournalEntry(date: Date(), title: "Journal Entry", notes: [])
+        let notes = [
+            JournalNote(number: 1, text: "This is your new journal entry."),
+            JournalNote(number: 2, text: "You can write freely here.\nMultiple lines work just fine."),
+            JournalNote(number: 3, text: "Each note is numbered and can hold as much text as you want, and if longer it will word wrap to fit the screen.")
+        ]
+        let newEntry = JournalEntry(date: Date(), title: "Journal Entry", notes: notes)
         modelContext.insert(newEntry)
         selectedEntry = newEntry
     }

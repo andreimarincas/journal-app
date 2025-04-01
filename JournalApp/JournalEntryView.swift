@@ -13,7 +13,7 @@ struct JournalEntryView: View {
 
     var body: some View {
         ZStack {
-            Color.white
+            Color(nsColor: .windowBackgroundColor)
                 .ignoresSafeArea()
             HStack {
                 Spacer()
