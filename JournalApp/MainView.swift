@@ -94,7 +94,7 @@ struct MainView: View {
                 }
             }
         }
-        .safeAreaInset(edge: .bottom) {
+        .safeAreaInset(edge: .bottom, spacing: 0) {
             HStack {
                 Spacer()
                 Text("\(entries.count) entr\(entries.count == 1 ? "y" : "ies")")
@@ -103,8 +103,8 @@ struct MainView: View {
                 Spacer()
             }
             .padding(.horizontal)
-            .padding(.vertical, 6)
-            .padding(.bottom, 8)
+            .padding(.vertical, 2)
+            .padding(.bottom, 26)
             .background(Color("SidebarBackground"))
         }
         .navigationSplitViewColumnWidth(min: 180, ideal: 200, max: 220)

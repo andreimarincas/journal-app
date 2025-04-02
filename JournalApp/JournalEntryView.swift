@@ -161,10 +161,12 @@ struct JournalEntryView: View {
                     focusModel.focusedNoteID = newNote.id
                 }) {
                     Image(systemName: "plus")
-                        .imageScale(.large)
-                        .font(.system(size: 20, weight: .medium))
-                        .padding(14)
-                        .background(.thinMaterial, in: Circle())
+                        .font(.system(size: 18, weight: .bold))
+                        .foregroundStyle(.white)
+                        .frame(width: 44, height: 44)
+                        .background(Color(NSColor.controlAccentColor))
+                        .clipShape(Circle())
+                        .shadow(radius: 3)
                 }
                 .buttonStyle(.plain)
                 .padding(.top, 4)
