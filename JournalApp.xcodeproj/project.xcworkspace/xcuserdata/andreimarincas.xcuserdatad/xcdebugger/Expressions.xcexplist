@@ -3,7 +3,42 @@
    version = "1.0">
    <ContextStates>
       <ContextState
+         contextName = "closure #1 in TextViewWrapper.updateNSView(_:context:):JournalEntryView.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "usedRect.height">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "MainView.deleteEntry(_:):MainView.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "entries">
+            </PersistentString>
+            <PersistentString
+               value = "selectedEntry">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
          contextName = "closure #2 in MainView.body.getter:MainView.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "entries">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "TextViewWrapper.makeNSView(context:):JournalEntryView.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "textView.string">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "closure #2 in MainView.deleteEntry(_:):MainView.swift">
          <PersistentStrings>
             <PersistentString
                value = "entries">
@@ -21,25 +56,6 @@
             </PersistentString>
             <PersistentString
                value = "shouldFocus">
-            </PersistentString>
-         </PersistentStrings>
-      </ContextState>
-      <ContextState
-         contextName = "MainView.deleteEntry(_:):MainView.swift">
-         <PersistentStrings>
-            <PersistentString
-               value = "entries">
-            </PersistentString>
-            <PersistentString
-               value = "selectedEntry">
-            </PersistentString>
-         </PersistentStrings>
-      </ContextState>
-      <ContextState
-         contextName = "closure #2 in MainView.deleteEntry(_:):MainView.swift">
-         <PersistentStrings>
-            <PersistentString
-               value = "entries">
             </PersistentString>
          </PersistentStrings>
       </ContextState>

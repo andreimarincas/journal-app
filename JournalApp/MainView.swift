@@ -233,16 +233,13 @@ struct MainView: View {
     }
     
     private func addEntry() {
-        let notes = [
-            JournalNote(number: 1, text: "This is your new journal entry."),
-            JournalNote(number: 2, text: "You can write freely here.\nMultiple lines work just fine."),
-            JournalNote(number: 3, text: "Each note is numbered and can hold as much text as you want, and if longer it will word wrap to fit the screen.")
-        ]
-        let newEntry = JournalEntry(date: Date(), title: "Journal Entry", notes: notes)
+        let note = JournalNote(number: 1, text: "")
+        let newEntry = JournalEntry(date: Date(), title: "Journal Entry", notes: [note])
         modelContext.insert(newEntry)
         DispatchQueue.main.async {
             selectedEntry = newEntry
             justAddedEntryID = newEntry.id
+            focusModel.focusedNoteID = note.id
         }
     }
     
