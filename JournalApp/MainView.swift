@@ -26,6 +26,9 @@ struct MainView: View {
             }
         } detail: {
             detailView
+                .navigationDestination(for: JournalEntry.self) { entry in
+                    JournalEntryView(entry: entry)
+                }
         }
         .navigationTitle(selectedEntry?.title.isEmpty == false ? selectedEntry!.title : "Journal Entry")
         .toolbar {
@@ -43,9 +46,6 @@ struct MainView: View {
                     .frame(maxWidth: .infinity, alignment: .trailing)
                 }
             }
-        }
-        .navigationDestination(for: JournalEntry.self) { entry in
-            JournalEntryView(entry: entry)
         }
     }
 
@@ -179,9 +179,10 @@ struct MainView: View {
                 }
                 Spacer()
             }
-            .onTapGesture(count: 2) {
-                renamingEntry = entry
-            }
+            // Remove double-click to rename for now because it interferes with entry selection and navigation
+//            .onTapGesture(count: 2) {
+//                renamingEntry = entry
+//            }
         }
     }
 
