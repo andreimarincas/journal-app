@@ -13,30 +13,37 @@ struct JournalEntryView: View {
 
     var body: some View {
         ZStack {
-            Color(nsColor: .windowBackgroundColor)
+            Color("EntryBackground")
                 .ignoresSafeArea()
-            HStack {
-                Spacer()
-                VStack(alignment: .leading, spacing: 12) {
-                    ForEach(entry.notes.sorted(by: { $0.number < $1.number })) { note in
-                        HStack(alignment: .firstTextBaseline, spacing: 8) {
-                            Text("\(note.number).")
-                                .font(.system(size: 15, weight: .light))
-                                .foregroundColor(.secondary)
-                            Text(note.text)
-                                .font(.system(size: 15, weight: .light))
-                                .lineSpacing(6)
-                                .multilineTextAlignment(.leading)
-                                .foregroundStyle(.primary)
-                        }
-                        .padding(.vertical, 4)
-                    }
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                    Text("Notes")
+                        .font(.title)
+                        .bold()
+                        .foregroundStyle(.primary)
                     Spacer()
+                    Text(entry.date.formatted(date: .long, time: .shortened))
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
                 }
-                .padding()
+                .padding(.bottom, 4)
+                ForEach(entry.notes.sorted(by: { $0.number < $1.number })) { note in
+                    HStack(alignment: .firstTextBaseline, spacing: 8) {
+                        Text("\(note.number).")
+                            .font(.system(size: 15, weight: .light))
+                            .foregroundColor(.secondary)
+                        Text(note.text)
+                            .font(.system(size: 15, weight: .light))
+                            .lineSpacing(6)
+                            .multilineTextAlignment(.leading)
+                            .foregroundStyle(.primary)
+                    }
+                    .padding(.vertical, 4)
+                }
                 Spacer()
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            .padding()
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         }
     }
 }

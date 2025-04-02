@@ -31,7 +31,8 @@ struct MainView: View {
                 }
         }
         .navigationTitle(selectedEntry?.title.isEmpty == false ? selectedEntry!.title : "Journal Entry")
-        .toolbar {
+//        .navigationSubtitle(selectedEntry?.date.formatted(date: .long, time: .shortened) ?? "")
+        /*.toolbar {
             ToolbarItem(placement: .automatic) {
                 if let entry = selectedEntry {
                     HStack {
@@ -46,7 +47,7 @@ struct MainView: View {
                     .frame(maxWidth: .infinity, alignment: .trailing)
                 }
             }
-        }
+        }*/
     }
 
     @ViewBuilder
