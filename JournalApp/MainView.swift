@@ -123,7 +123,7 @@ struct MainView: View {
                         Text("No journal entries yet.")
                             .font(.title3)
                             .fontWeight(.semibold)
-                        Text("Click the + button above to create your first entry.")
+                        Text("Click the + button to create your first entry.")
                             .foregroundColor(.secondary)
                         Button {
                             addEntry()

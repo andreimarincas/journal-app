@@ -43,6 +43,7 @@ struct JournalEntryView: View {
                                         .foregroundStyle(.primary)
                                 }
                                 .padding(.vertical, 4)
+                                .padding(.top, 8)
                                 Divider()
                                     .frame(height: 0.5)
                                     .foregroundStyle(.secondary)
@@ -52,14 +53,32 @@ struct JournalEntryView: View {
                     }
                     .padding(.trailing, 12) // Add this line
                 }
-
-                HStack {
-                    Spacer()
-                    Text("\(entry.notes.count) note\(entry.notes.count == 1 ? "" : "s")")
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
-                        .padding(.top, 12)
-                    Spacer()
+                
+                ZStack {
+                    HStack {
+                        Spacer()
+                        Button(action: {
+                            let nextNumber = (entry.notes.map(\.number).max() ?? 0) + 1
+                            let newNote = JournalNote(number: nextNumber, text: "Newly added note.")
+                            entry.notes.append(newNote)
+                        }) {
+                            Image(systemName: "plus")
+                                .imageScale(.medium)
+                                .fontWeight(.medium)
+                                .padding(8)
+                                .background(.thinMaterial, in: Circle())
+                        }
+                        .buttonStyle(.plain)
+                        .padding(.top, 4)
+                    }
+                    HStack {
+                        Spacer()
+                        Text("\(entry.notes.count) note\(entry.notes.count == 1 ? "" : "s")")
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                            .padding(.top, 12)
+                        Spacer()
+                    }
                 }
             }
             .padding()
