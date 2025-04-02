@@ -70,19 +70,22 @@ struct JournalEntryView: View {
     }
 
     private func noteView(for note: JournalNote) -> some View {
-        NoteRow(note: note, entry: entry)
+        let isLast = note.id == entry.notes.last?.id && note.text.isEmpty
+        return NoteRow(note: note, entry: entry, shouldFocus: isLast)
     }
 
     private struct NoteRow: View {
         let note: JournalNote
         let entry: JournalEntry
+        let shouldFocus: Bool
         @State private var isHovering = false
         @State private var editedText: String
         @State private var height: CGFloat = 22
         
-        init(note: JournalNote, entry: JournalEntry) {
+        init(note: JournalNote, entry: JournalEntry, shouldFocus: Bool) {
             self.note = note
             self.entry = entry
+            self.shouldFocus = shouldFocus
             _editedText = State(initialValue: note.text)
         }
 
@@ -96,7 +99,7 @@ struct JournalEntryView: View {
                                 .foregroundColor(.secondary)
                             Spacer()
                         }
-                        TextViewWrapper(text: $editedText, height: $height)
+                        TextViewWrapper(text: $editedText, height: $height, shouldFocus: shouldFocus)
                             .frame(height: height)
                     }
                     .padding(.vertical, 4)
@@ -141,8 +144,11 @@ struct JournalEntryView: View {
                 Spacer()
                 Button(action: {
                     let nextNumber = (entry.notes.map(\.number).max() ?? 0) + 1
-                    let newNote = JournalNote(number: nextNumber, text: "Newly added note.")
+                    let newNote = JournalNote(number: nextNumber, text: "")
                     entry.notes.append(newNote)
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                        // Focus the newly added note
+                    }
                 }) {
                     Image(systemName: "plus")
                         .imageScale(.large)
@@ -168,6 +174,7 @@ struct JournalEntryView: View {
 struct TextViewWrapper: NSViewRepresentable {
     @Binding var text: String
     @Binding var height: CGFloat
+    let shouldFocus: Bool
 
     func makeNSView(context: Context) -> NSTextView {
         let textView = NSTextView()
@@ -180,6 +187,13 @@ struct TextViewWrapper: NSViewRepresentable {
         textView.isVerticallyResizable = true
         textView.isHorizontallyResizable = false
         textView.delegate = context.coordinator
+        
+        if shouldFocus {
+            DispatchQueue.main.async {
+                textView.window?.makeFirstResponder(textView)
+            }
+        }
+        
         return textView
     }
 
