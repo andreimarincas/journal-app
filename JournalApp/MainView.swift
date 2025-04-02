@@ -92,7 +92,7 @@ struct MainView: View {
             HStack {
                 Spacer()
                 Text("\(entries.count) entr\(entries.count == 1 ? "y" : "ies")")
-                    .font(.footnote)
+                    .font(.subheadline)
                     .foregroundStyle(.secondary)
                 Spacer()
             }
