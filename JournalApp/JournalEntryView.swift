@@ -9,18 +9,28 @@ import SwiftUI
 import SwiftData
 
 struct JournalEntryView: View {
-    var entry: JournalEntry
-
+    private var entry: JournalEntry
+    @EnvironmentObject private var focusModel: JournalFocusModel
+    
+    init(entry: JournalEntry) {
+        self.entry = entry
+    }
+    
     var body: some View {
         ZStack {
             Color("EntryBackground")
                 .ignoresSafeArea()
+
             VStack(alignment: .leading, spacing: 12) {
                 notesHeader
                 notesList
                 notesFooter
             }
             .padding()
+            .contentShape(Rectangle()) // Ensures the full area is tappable
+            .onTapGesture {
+                focusModel.focusedNoteID = nil
+            }
         }
     }
 
@@ -70,14 +80,16 @@ struct JournalEntryView: View {
     }
 
     private func noteView(for note: JournalNote) -> some View {
-        let isLast = note.id == entry.notes.last?.id && note.text.isEmpty
-        return NoteRow(note: note, entry: entry, shouldFocus: isLast)
+        let shouldFocus = (note.id == entry.notes.last?.id) && note.text.isEmpty && (note.id == focusModel.focusedNoteID)
+        return NoteRow(note: note, entry: entry, shouldFocus: shouldFocus)
+            .environmentObject(focusModel)
     }
 
     private struct NoteRow: View {
         let note: JournalNote
         let entry: JournalEntry
         let shouldFocus: Bool
+        @EnvironmentObject private var focusModel: JournalFocusModel
         @State private var isHovering = false
         @State private var editedText: String
         @State private var height: CGFloat = 22
@@ -99,7 +111,7 @@ struct JournalEntryView: View {
                                 .foregroundColor(.secondary)
                             Spacer()
                         }
-                        TextViewWrapper(text: $editedText, height: $height, shouldFocus: shouldFocus)
+                        TextViewWrapper(text: $editedText, height: $height, shouldFocus: shouldFocus, id: note.id)
                             .frame(height: height)
                     }
                     .padding(.vertical, 4)
@@ -146,9 +158,7 @@ struct JournalEntryView: View {
                     let nextNumber = (entry.notes.map(\.number).max() ?? 0) + 1
                     let newNote = JournalNote(number: nextNumber, text: "")
                     entry.notes.append(newNote)
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                        // Focus the newly added note
-                    }
+                    focusModel.focusedNoteID = newNote.id
                 }) {
                     Image(systemName: "plus")
                         .imageScale(.large)
@@ -175,7 +185,8 @@ struct TextViewWrapper: NSViewRepresentable {
     @Binding var text: String
     @Binding var height: CGFloat
     let shouldFocus: Bool
-
+    let id: UUID
+    
     func makeNSView(context: Context) -> NSTextView {
         let textView = NSTextView()
         textView.isEditable = true
@@ -208,6 +219,20 @@ struct TextViewWrapper: NSViewRepresentable {
             let usedRect = layoutManager.usedRect(for: textContainer)
             DispatchQueue.main.async {
                 height = usedRect.height
+            }
+        }
+        
+        DispatchQueue.main.async {
+            updateFocus(for: nsView)
+        }
+    }
+    
+    private func updateFocus(for textView: NSTextView) {
+        if shouldFocus {
+            textView.window?.makeFirstResponder(textView)
+        } else {
+            if let firstResponder = textView.window?.firstResponder, firstResponder == textView {
+                textView.window?.resignFirstResponder()
             }
         }
     }

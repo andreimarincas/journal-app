@@ -11,6 +11,20 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
+         contextName = "JournalEntryView.noteView(for:):JournalEntryView.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "focusedNoteID">
+            </PersistentString>
+            <PersistentString
+               value = "note.id">
+            </PersistentString>
+            <PersistentString
+               value = "shouldFocus">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
          contextName = "MainView.deleteEntry(_:):MainView.swift">
          <PersistentStrings>
             <PersistentString

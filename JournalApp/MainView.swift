@@ -8,6 +8,10 @@
 import SwiftUI
 import SwiftData
 
+class JournalFocusModel: ObservableObject {
+    @Published var focusedNoteID: UUID?
+}
+
 struct MainView: View {
     @Environment(\.modelContext) private var modelContext
     @Query(sort: [SortDescriptor(\JournalEntry.date, order: .reverse)]) private var entries: [JournalEntry]
@@ -15,6 +19,7 @@ struct MainView: View {
     @State private var renamingEntry: JournalEntry?
     @FocusState private var isRenamingFocused: Bool
     @State private var justAddedEntryID: UUID?
+    @StateObject private var focusModel = JournalFocusModel()
 
     var body: some View {
         navigationSplitView
@@ -29,6 +34,7 @@ struct MainView: View {
             detailView
                 .navigationDestination(for: JournalEntry.self) { entry in
                     JournalEntryView(entry: entry)
+                        .environmentObject(focusModel)
                 }
         }
         .navigationTitle(selectedEntry?.title.isEmpty == false ? selectedEntry!.title : "Journal Entry")
@@ -141,6 +147,7 @@ struct MainView: View {
                 }
             } else if let entry = selectedEntry {
                 JournalEntryView(entry: entry)
+                    .environmentObject(focusModel)
             } else {
                 ZStack {
                     Color(nsColor: .windowBackgroundColor)
