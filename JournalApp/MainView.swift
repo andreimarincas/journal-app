@@ -14,6 +14,7 @@ struct MainView: View {
     @State private var selectedEntry: JournalEntry?
     @State private var renamingEntry: JournalEntry?
     @FocusState private var isRenamingFocused: Bool
+    @State private var justAddedEntryID: UUID?
 
     var body: some View {
         navigationSplitView
@@ -23,7 +24,7 @@ struct MainView: View {
         NavigationSplitView {
             ScrollViewReader { proxy in
                 sidebarView(proxy: proxy)
-            }
+            }.background(Color("SidebarBackground"))
         } detail: {
             detailView
                 .navigationDestination(for: JournalEntry.self) { entry in
@@ -69,10 +70,14 @@ struct MainView: View {
             }
         }
         .onChange(of: selectedEntry) { _, _ in
-            if let entry = selectedEntry {
+            if let entry = selectedEntry, justAddedEntryID == entry.id {
                 proxy.scrollTo(entry.id, anchor: .top)
+                justAddedEntryID = nil
             }
         }
+        .scrollContentBackground(.hidden)
+        .scrollIndicators(.hidden, axes: .horizontal)
+        .background(Color("SidebarBackground"))
         .listStyle(.inset)
         .listRowSeparator(.visible)
         .listRowInsets(.init(top: 6, leading: 12, bottom: 6, trailing: 8))
@@ -82,6 +87,19 @@ struct MainView: View {
                     Label("New Entry", systemImage: "plus")
                 }
             }
+        }
+        .safeAreaInset(edge: .bottom) {
+            HStack {
+                Spacer()
+                Text("\(entries.count) entr\(entries.count == 1 ? "y" : "ies")")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+                Spacer()
+            }
+            .padding(.horizontal)
+            .padding(.vertical, 6)
+            .padding(.bottom, 8)
+            .background(Color("SidebarBackground"))
         }
         .navigationSplitViewColumnWidth(min: 180, ideal: 200, max: 220)
         .onAppear {
@@ -191,7 +209,7 @@ struct MainView: View {
         let notes = [
             JournalNote(number: 1, text: "Welcome to your journal."),
             JournalNote(number: 2, text: "You can add a new entry using the + button."),
-            JournalNote(number: 3, text: "Each note inside an entry will be numbered.")
+            JournalNote(number: 3, text: "Each note inside an entry will be numbered."),
         ]
 
         let entry = JournalEntry(date: Date(), title: "Journal Entry", notes: notes)
@@ -211,6 +229,7 @@ struct MainView: View {
         modelContext.insert(newEntry)
         DispatchQueue.main.async {
             selectedEntry = newEntry
+            justAddedEntryID = newEntry.id
         }
     }
     

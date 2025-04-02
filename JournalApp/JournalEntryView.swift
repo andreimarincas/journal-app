@@ -27,23 +27,42 @@ struct JournalEntryView: View {
                         .foregroundStyle(.secondary)
                 }
                 .padding(.bottom, 4)
-                ForEach(entry.notes.sorted(by: { $0.number < $1.number })) { note in
-                    HStack(alignment: .firstTextBaseline, spacing: 8) {
-                        Text("\(note.number).")
-                            .font(.system(size: 15, weight: .light))
-                            .foregroundColor(.secondary)
-                        Text(note.text)
-                            .font(.system(size: 15, weight: .light))
-                            .lineSpacing(6)
-                            .multilineTextAlignment(.leading)
-                            .foregroundStyle(.primary)
+
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 0) {
+                        ForEach(entry.notes.sorted(by: { $0.number < $1.number })) { note in
+                            VStack(alignment: .leading) {
+                                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                                    Text("\(note.number).")
+                                        .font(.system(size: 15, weight: .light))
+                                        .foregroundColor(.secondary)
+                                    Text(note.text)
+                                        .font(.system(size: 15, weight: .light))
+                                        .lineSpacing(6)
+                                        .multilineTextAlignment(.leading)
+                                        .foregroundStyle(.primary)
+                                }
+                                .padding(.vertical, 4)
+                                Divider()
+                                    .frame(height: 0.5)
+                                    .foregroundStyle(.secondary)
+                                    .padding(.vertical, 4)
+                            }
+                        }
                     }
-                    .padding(.vertical, 4)
+                    .padding(.trailing, 12) // Add this line
                 }
-                Spacer()
+
+                HStack {
+                    Spacer()
+                    Text("\(entry.notes.count) note\(entry.notes.count == 1 ? "" : "s")")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                        .padding(.top, 12)
+                    Spacer()
+                }
             }
             .padding()
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         }
     }
 }
