@@ -77,19 +77,30 @@ struct JournalEntryView: View {
         let note: JournalNote
         let entry: JournalEntry
         @State private var isHovering = false
+        @State private var editedText: String
+        
+        init(note: JournalNote, entry: JournalEntry) {
+            self.note = note
+            self.entry = entry
+            _editedText = State(initialValue: note.text)
+        }
 
         var body: some View {
             ZStack(alignment: .bottomTrailing) {
                 VStack(alignment: .leading) {
-                    HStack(alignment: .firstTextBaseline, spacing: 8) {
-                        Text("\(note.number).")
+                    HStack(alignment: .top, spacing: 8) {
+                        VStack {
+                            Text("\(note.number).")
+                                .font(.system(size: 15, weight: .light))
+                                .foregroundColor(.secondary)
+                            Spacer()
+                        }
+                        TextEditor(text: $editedText)
+                            .textEditorStyle(.plain)
                             .font(.system(size: 15, weight: .light))
-                            .foregroundColor(.secondary)
-                        Text(note.text)
-                            .font(.system(size: 15, weight: .light))
-                            .lineSpacing(6)
-                            .multilineTextAlignment(.leading)
-                            .foregroundStyle(.primary)
+                            .padding(.vertical, 0)
+                            .frame(minHeight: 22, alignment: .top)
+                            .scrollIndicators(.hidden)
                     }
                     .padding(.vertical, 4)
                     .padding(.top, 8)
@@ -97,6 +108,7 @@ struct JournalEntryView: View {
                         .frame(height: 0.5)
                         .foregroundStyle(.secondary)
                         .padding(.vertical, 4)
+                        .padding(.leading, 26)
                 }
 
                 Button(action: {
