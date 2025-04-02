@@ -84,7 +84,7 @@ struct MainView: View {
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button(action: addEntry) {
-                    Label("New Entry", systemImage: "plus")
+                    Label("New Entry", systemImage: "square.and.pencil")
                 }
             }
         }
@@ -145,11 +145,17 @@ struct MainView: View {
                 ZStack {
                     Color(nsColor: .windowBackgroundColor)
                         .ignoresSafeArea()
-                    Text("Select a journal entry to view its notes.")
-                        .font(.title3)
-                        .foregroundColor(.secondary)
-                        .multilineTextAlignment(.center)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    VStack(spacing: 16) {
+                        Image(systemName: "book")
+                            .font(.system(size: 48))
+                            .foregroundColor(.secondary)
+                        Text("Select a Journal Entry")
+                            .font(.title3)
+                            .fontWeight(.semibold)
+                        Text("Choose one from the list to view its notes.")
+                            .foregroundColor(.secondary)
+                    }
+                    .multilineTextAlignment(.center)
                 }
             }
         }
