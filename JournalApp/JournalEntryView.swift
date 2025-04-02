@@ -78,6 +78,7 @@ struct JournalEntryView: View {
         let entry: JournalEntry
         @State private var isHovering = false
         @State private var editedText: String
+        @State private var height: CGFloat = 22
         
         init(note: JournalNote, entry: JournalEntry) {
             self.note = note
@@ -95,12 +96,8 @@ struct JournalEntryView: View {
                                 .foregroundColor(.secondary)
                             Spacer()
                         }
-                        TextEditor(text: $editedText)
-                            .textEditorStyle(.plain)
-                            .font(.system(size: 15, weight: .light))
-                            .padding(.vertical, 0)
-                            .frame(minHeight: 22, alignment: .top)
-                            .scrollIndicators(.hidden)
+                        TextViewWrapper(text: $editedText, height: $height)
+                            .frame(height: height)
                     }
                     .padding(.vertical, 4)
                     .padding(.top, 8)
@@ -164,6 +161,57 @@ struct JournalEntryView: View {
                     .padding(.top, 12)
                 Spacer()
             }
+        }
+    }
+}
+
+struct TextViewWrapper: NSViewRepresentable {
+    @Binding var text: String
+    @Binding var height: CGFloat
+
+    func makeNSView(context: Context) -> NSTextView {
+        let textView = NSTextView()
+        textView.isEditable = true
+        textView.isRichText = false
+        textView.font = NSFont.systemFont(ofSize: 15, weight: .light)
+        textView.drawsBackground = false
+        textView.textContainerInset = NSSize(width: 0, height: 2)
+        textView.textContainer?.widthTracksTextView = true
+        textView.isVerticallyResizable = true
+        textView.isHorizontallyResizable = false
+        textView.delegate = context.coordinator
+        return textView
+    }
+
+    func updateNSView(_ nsView: NSTextView, context: Context) {
+        if nsView.string != text {
+            nsView.string = text
+        }
+
+        if let layoutManager = nsView.layoutManager,
+           let textContainer = nsView.textContainer {
+            layoutManager.ensureLayout(for: textContainer)
+            let usedRect = layoutManager.usedRect(for: textContainer)
+            DispatchQueue.main.async {
+                height = usedRect.height
+            }
+        }
+    }
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(self)
+    }
+
+    class Coordinator: NSObject, NSTextViewDelegate {
+        var parent: TextViewWrapper
+
+        init(_ parent: TextViewWrapper) {
+            self.parent = parent
+        }
+
+        func textDidChange(_ notification: Notification) {
+            guard let textView = notification.object as? NSTextView else { return }
+            parent.text = textView.string
         }
     }
 }
