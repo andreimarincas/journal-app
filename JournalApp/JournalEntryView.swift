@@ -275,12 +275,6 @@ struct TextViewWrapper: NSViewRepresentable {
         init(_ parent: TextViewWrapper) {
             self.parent = parent
             super.init()
-            NotificationCenter.default.addObserver(
-                self,
-                selector: #selector(didEndEditing(_:)),
-                name: NSText.didEndEditingNotification,
-                object: nil
-            )
         }
         
         deinit {
@@ -290,11 +284,6 @@ struct TextViewWrapper: NSViewRepresentable {
         func textDidChange(_ notification: Notification) {
             guard let textView = notification.object as? NSTextView else { return }
             parent.text = textView.string
-        }
-        
-        @objc func didEndEditing(_ notification: Notification) {
-//            guard let textView = notification.object as? NSTextView else { return }
-//            parent.text = textView.string
         }
     }
 }
