@@ -172,7 +172,7 @@ struct MainView: View {
                 }
             }
         }
-        //.id(UUID())
+        //.id(UUID()) // comment out the id addition because it reloads the view too often and interferes with editing note
     }
 
     @ViewBuilder
