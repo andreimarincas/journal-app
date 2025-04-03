@@ -69,7 +69,9 @@ struct JournalEntryView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
                     ForEach(entry.notes.sorted(by: { $0.number < $1.number })) { note in
-                        noteView(for: note)
+                        ZStack {
+                            noteView(for: note)
+                        }
                     }
                 }
                 .padding(.trailing, 12)
@@ -124,6 +126,12 @@ struct JournalEntryView: View {
             ZStack(alignment: .bottomTrailing) {
                 VStack(alignment: .leading) {
                     HStack(alignment: .top, spacing: 8) {
+                        Rectangle()
+                            .fill(Color.accentColor.opacity(0.8))
+                            .frame(width: 4)
+                            .opacity(focusModel.focusedNoteID == note.id ? 1 : 0)
+                            .cornerRadius(2)
+                            .offset(y: 2)
                         VStack {
                             Text("\(note.number).")
                                 .font(.system(size: 15, weight: .light))
@@ -135,6 +143,7 @@ struct JournalEntryView: View {
                     }
                     .padding(.vertical, 4)
                     .padding(.top, 8)
+                    
                     Divider()
                         .frame(height: 0.5)
                         .foregroundStyle(.secondary)
@@ -144,6 +153,7 @@ struct JournalEntryView: View {
 
                 trashButton
             }
+            .padding(.horizontal, 2)
             .contentShape(Rectangle())
             .onTapGesture {
                 focusModel.focusedNoteID = note.id
