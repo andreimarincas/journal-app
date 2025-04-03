@@ -139,7 +139,7 @@ struct JournalEntryView: View {
                         .frame(height: 0.5)
                         .foregroundStyle(.secondary)
                         .padding(.vertical, 4)
-                        .padding(.leading, 26)
+                        .padding(.leading, 24)
                 }
 
                 trashButton
