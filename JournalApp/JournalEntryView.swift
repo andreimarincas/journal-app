@@ -307,4 +307,14 @@ class FocusableTextView: NSTextView {
         }
         return resigns
     }
+    
+    override func performKeyEquivalent(with event: NSEvent) -> Bool {
+        if event.modifierFlags.contains(.command),
+           let characters = event.charactersIgnoringModifiers,
+           characters == "\r" {
+            self.window?.makeFirstResponder(nil)
+            return true
+        }
+        return super.performKeyEquivalent(with: event)
+    }
 }
