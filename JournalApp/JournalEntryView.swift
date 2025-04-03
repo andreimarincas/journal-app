@@ -11,6 +11,7 @@ import SwiftData
 struct JournalEntryView: View {
     private var entry: JournalEntry
     @EnvironmentObject private var focusModel: JournalFocusModel
+    @State private var editedTexts: [UUID: String] = [:]
     
     init(entry: JournalEntry) {
         self.entry = entry
@@ -29,6 +30,11 @@ struct JournalEntryView: View {
             .padding()
             .contentShape(Rectangle()) // Ensures the full area is tappable
             .onTapGesture {
+                if let oldID = focusModel.focusedNoteID,
+                   let newText = editedTexts[oldID],
+                   let index = entry.notes.firstIndex(where: { $0.id == oldID }) {
+                    entry.notes[index].text = newText
+                }
                 focusModel.focusedNoteID = nil
             }
         }
@@ -80,8 +86,11 @@ struct JournalEntryView: View {
     }
 
     private func noteView(for note: JournalNote) -> some View {
-        let shouldFocus = (note.id == entry.notes.last?.id) && note.text.isEmpty && (note.id == focusModel.focusedNoteID)
-        return NoteRow(note: note, entry: entry, shouldFocus: shouldFocus)
+        let shouldFocus = focusModel.focusedNoteID == note.id
+        return NoteRow(note: note, entry: entry, shouldFocus: shouldFocus, editedText: Binding(
+            get: { editedTexts[note.id] ?? note.text },
+            set: { editedTexts[note.id] = $0 }
+        ))
             .environmentObject(focusModel)
     }
 
@@ -89,16 +98,16 @@ struct JournalEntryView: View {
         let note: JournalNote
         let entry: JournalEntry
         let shouldFocus: Bool
+        @Binding var editedText: String
         @EnvironmentObject private var focusModel: JournalFocusModel
         @State private var isHovering = false
-        @State private var editedText: String
         @State private var height: CGFloat = 22
         
-        init(note: JournalNote, entry: JournalEntry, shouldFocus: Bool) {
+        init(note: JournalNote, entry: JournalEntry, shouldFocus: Bool, editedText: Binding<String>) {
             self.note = note
             self.entry = entry
             self.shouldFocus = shouldFocus
-            _editedText = State(initialValue: note.text)
+            self._editedText = editedText
         }
 
         var body: some View {
@@ -188,9 +197,15 @@ struct TextViewWrapper: NSViewRepresentable {
     @Binding var height: CGFloat
     let shouldFocus: Bool
     let id: UUID
+    @EnvironmentObject var focusModel: JournalFocusModel
     
     func makeNSView(context: Context) -> NSTextView {
-        let textView = NSTextView()
+        let textView = FocusableTextView()
+        textView.onFocusGained = {
+            if focusModel.focusedNoteID != id {
+                focusModel.focusedNoteID = id
+            }
+        }
         textView.isEditable = true
         textView.isRichText = false
         textView.font = NSFont.systemFont(ofSize: 15, weight: .light)
@@ -225,20 +240,16 @@ struct TextViewWrapper: NSViewRepresentable {
         }
         
         DispatchQueue.main.async {
-            updateFocus(for: nsView)
-        }
-    }
-    
-    private func updateFocus(for textView: NSTextView) {
-        if shouldFocus {
-            textView.window?.makeFirstResponder(textView)
-        } else {
-            if let firstResponder = textView.window?.firstResponder, firstResponder == textView {
-                textView.window?.resignFirstResponder()
+            if let firstResponder = nsView.window?.firstResponder, firstResponder == nsView {
+                if focusModel.focusedNoteID != id {
+                    focusModel.focusedNoteID = id
+                }
+            } else if shouldFocus {
+                nsView.window?.makeFirstResponder(nsView)
             }
         }
     }
-
+    
     func makeCoordinator() -> Coordinator {
         Coordinator(self)
     }
@@ -254,5 +265,17 @@ struct TextViewWrapper: NSViewRepresentable {
             guard let textView = notification.object as? NSTextView else { return }
             parent.text = textView.string
         }
+    }
+}
+
+class FocusableTextView: NSTextView {
+    var onFocusGained: (() -> Void)?
+
+    override func becomeFirstResponder() -> Bool {
+        let became = super.becomeFirstResponder()
+        if became {
+            onFocusGained?()
+        }
+        return became
     }
 }
