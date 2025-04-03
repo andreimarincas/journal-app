@@ -163,6 +163,10 @@ struct JournalEntryView: View {
                 .padding(6)
                 .opacity(isHovering ? 1 : 0)
             }
+            .contentShape(Rectangle())
+            .onTapGesture {
+                focusModel.focusedNoteID = note.id
+            }
             .onHover { hovering in
                 isHovering = hovering
             }
