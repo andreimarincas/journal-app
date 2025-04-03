@@ -114,6 +114,7 @@ struct JournalEntryView: View {
         @EnvironmentObject private var focusModel: JournalFocusModel
         @State private var isHovering = false
         @State private var height: CGFloat = 22
+        @State private var showDeleteAlert = false
         
         init(note: JournalNote, entry: JournalEntry, shouldFocus: Bool, editedText: Binding<String>) {
             self.note = note
@@ -174,16 +175,7 @@ struct JournalEntryView: View {
         
         private var trashButton: some View {
             Button(action: {
-                if let index = entry.notes.firstIndex(where: { $0.id == note.id }) {
-                    entry.notes.remove(at: index)
-                    entry.notes = entry.notes.map { note in
-                        let newNote = note
-                        if note.number > self.note.number {
-                            newNote.number -= 1
-                        }
-                        return newNote
-                    }
-                }
+                showDeleteAlert = true
             }) {
                 Image(systemName: "trash")
                     .imageScale(.medium)
@@ -193,6 +185,21 @@ struct JournalEntryView: View {
             .buttonStyle(.plain)
             .padding(6)
             .opacity(isHovering ? 1 : 0)
+            .alert("Delete this note?", isPresented: $showDeleteAlert) {
+                Button("Delete", role: .destructive) {
+                    if let index = entry.notes.firstIndex(where: { $0.id == note.id }) {
+                        entry.notes.remove(at: index)
+                        entry.notes = entry.notes.map { note in
+                            let newNote = note
+                            if note.number > self.note.number {
+                                newNote.number -= 1
+                            }
+                            return newNote
+                        }
+                    }
+                }
+                Button("Cancel", role: .cancel) {}
+            }
         }
     }
 

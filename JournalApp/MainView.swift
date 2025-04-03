@@ -21,6 +21,7 @@ struct MainView: View {
     @FocusState private var isRenamingFocused: Bool
     @State private var justAddedEntryID: UUID?
     @StateObject private var focusModel = JournalFocusModel()
+    @State private var entryToDelete: JournalEntry?
 
     var body: some View {
         navigationSplitView
@@ -71,7 +72,7 @@ struct MainView: View {
                         renamingEntry = entry
                     }
                     Button("Delete", role: .destructive) {
-                        deleteEntry(entry)
+                        entryToDelete = entry
                     }
                 }
             }
@@ -96,6 +97,22 @@ struct MainView: View {
                     Label("New Entry", systemImage: "square.and.pencil")
                 }
             }
+        }
+        .alert("Delete this entry?", isPresented: Binding(
+            get: { entryToDelete != nil },
+            set: { if !$0 { entryToDelete = nil } }
+        )) {
+            Button("Delete", role: .destructive) {
+                if let entry = entryToDelete {
+                    deleteEntry(entry)
+                }
+                entryToDelete = nil
+            }
+            Button("Cancel", role: .cancel) {
+                entryToDelete = nil
+            }
+        } message: {
+            Text("This will permanently delete the entry and its notes.")
         }
         .safeAreaInset(edge: .bottom, spacing: 0) {
             HStack {

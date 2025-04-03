@@ -11,7 +11,6 @@ import Foundation
 enum MockData {
     static func insertTestEntries(into context: ModelContext) {
         let baseDate = Calendar.current.date(byAdding: .day, value: -90, to: Date())!
-        var currentDate = baseDate
         var dayOffset = 0
 
         let entries: [(title: String, notes: [String])] = [
@@ -58,7 +57,7 @@ enum MockData {
             ])
         ]
 
-        for (index, entryData) in entries.enumerated() {
+        for (_, entryData) in entries.enumerated() {
             let entryDate = Calendar.current.date(byAdding: .day, value: dayOffset, to: baseDate)!
             let notes = entryData.notes.enumerated().map { idx, text in
                 JournalNote(number: idx + 1, text: text)
