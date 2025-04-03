@@ -30,11 +30,6 @@ struct JournalEntryView: View {
             .padding()
             .contentShape(Rectangle()) // Ensures the full area is tappable
             .onTapGesture {
-                if let oldID = focusModel.focusedNoteID,
-                   let newText = editedTexts[oldID],
-                   let index = entry.notes.firstIndex(where: { $0.id == oldID }) {
-                    entry.notes[index].text = newText
-                }
                 if let window = NSApplication.shared.keyWindow {
                     window.makeFirstResponder(nil)
                 }
@@ -291,17 +286,8 @@ struct TextViewWrapper: NSViewRepresentable {
         }
         
         @objc func didEndEditing(_ notification: Notification) {
-//            guard let textView = notification.object as? NSTextView else { return }
-//            
-//            DispatchQueue.main.async {
-//                guard let entry = self.parent.focusModel.entry,
-//                      let focusedNoteID = self.parent.focusModel.focusedNoteID,
-//                      self.parent.id == focusedNoteID else { return }
-//                
-//                if let index = entry.notes.firstIndex(where: { $0.id == self.parent.id }) {
-////                    entry.notes[index].text = textView.string
-//                }
-//            }
+            guard let textView = notification.object as? NSTextView else { return }
+            parent.text = textView.string
         }
     }
 }
