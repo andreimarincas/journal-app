@@ -54,9 +54,9 @@ struct JournalEntryView: View {
                 .bold()
                 .foregroundStyle(.primary)
             Spacer()
-            Text(entry.date.formatted(date: .long, time: .shortened))
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
+//            Text("Created: " + entry.date.formatted(date: .long, time: .shortened))
+//                .font(.subheadline)
+//                .foregroundStyle(.secondary)
         }
         .padding(.bottom, 4)
     }
