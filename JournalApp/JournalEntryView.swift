@@ -311,7 +311,23 @@ struct TextViewWrapper: NSViewRepresentable {
         @objc func textDidEndEditing(_ notification: Notification) {
             guard let textView = notification.object as? NSTextView else { return }
             let trimmedText = textView.string.trimmingCharacters(in: .whitespacesAndNewlines)
-            parent.text = trimmedText
+            if trimmedText.isEmpty {
+                if let entryView = parent.focusModel.entry {
+                    let notes = entryView.notes
+                    if let index = notes.firstIndex(where: { $0.id == parent.id }) {
+                        var notes = entryView.notes
+                        notes.remove(at: index)
+                        notes = notes.enumerated().map { (i, note) in
+                            note.number = i + 1
+                            return note
+                        }
+                        entryView.notes = notes
+                        parent.focusModel.focusedNoteID = nil
+                    }
+                }
+            } else {
+                parent.text = trimmedText
+            }
         }
         
         func textDidChange(_ notification: Notification) {

@@ -81,6 +81,8 @@ struct MainView: View {
                 proxy.scrollTo(entry.id, anchor: .top)
                 justAddedEntryID = nil
             }
+            focusModel.entry = selectedEntry
+            focusModel.focusedNoteID = nil
         }
         .scrollContentBackground(.hidden)
         .scrollIndicators(.hidden, axes: .horizontal)
@@ -205,13 +207,11 @@ struct MainView: View {
                         .font(.headline)
                         .fontWeight(.regular)
                         .lineLimit(1)
-                    if let firstNote = entry.notes.first(where: { $0.number == 1 }) {
-                        Text(firstNote.text)
-                            .font(.subheadline)
-                            .italic()
-                            .foregroundColor(.secondary)
-                            .lineLimit(1)
-                    }
+                    Text(entry.notes.first(where: { $0.number == 1 })?.text ?? " ")
+                        .font(.subheadline)
+                        .italic()
+                        .foregroundColor(.secondary)
+                        .lineLimit(1)
                     HStack {
                         Spacer()
                         Text(entry.date.formatted(date: .abbreviated, time: .omitted))
