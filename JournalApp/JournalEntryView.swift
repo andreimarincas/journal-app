@@ -126,12 +126,21 @@ struct JournalEntryView: View {
             ZStack(alignment: .bottomTrailing) {
                 VStack(alignment: .leading) {
                     HStack(alignment: .top, spacing: 8) {
-                        Rectangle()
-                            .fill(Color.accentColor.opacity(0.8))
-                            .frame(width: 4)
-                            .opacity(focusModel.focusedNoteID == note.id ? 1 : 0)
-                            .cornerRadius(2)
-                            .offset(y: 2)
+                        LinearGradient(
+                            gradient: Gradient(stops: [
+                                .init(color: Color.accentColor.opacity(0.8), location: 0),
+                                .init(color: Color.accentColor.opacity(0.0), location: 1)
+                            ]),
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                        .frame(width: 4)
+                        .mask(
+                            RoundedRectangle(cornerRadius: 2)
+                                .frame(width: 4)
+                        )
+                        .opacity(focusModel.focusedNoteID == note.id ? 1 : 0)
+                        .offset(y: 2)
                         VStack {
                             Text("\(note.number).")
                                 .font(.system(size: 15, weight: .light))

@@ -199,7 +199,8 @@ struct MainView: View {
             HStack(alignment: .firstTextBaseline, spacing: 4) {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(entry.title.isEmpty ? "Journal Entry" : entry.title)
-                        .font(.title3)
+                        .font(.headline)
+                        .fontWeight(.regular)
                         .lineLimit(1)
                     if let firstNote = entry.notes.first(where: { $0.number == 1 }) {
                         Text(firstNote.text)
@@ -212,7 +213,7 @@ struct MainView: View {
                         Spacer()
                         Text(entry.date.formatted(date: .abbreviated, time: .omitted))
                             .font(.caption2)
-                            .foregroundStyle(.secondary)
+                            .foregroundColor(.secondary.opacity(0.6))
                     }
                 }
                 Spacer()
