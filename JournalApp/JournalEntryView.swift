@@ -9,7 +9,7 @@ import SwiftUI
 import SwiftData
 
 struct JournalEntryView: View {
-    private var entry: JournalEntry
+    private(set) var entry: JournalEntry
     @EnvironmentObject private var focusModel: JournalFocusModel
     @State private var editedTexts: [UUID: String] = [:]
     
@@ -35,7 +35,12 @@ struct JournalEntryView: View {
                    let index = entry.notes.firstIndex(where: { $0.id == oldID }) {
                     entry.notes[index].text = newText
                 }
-                focusModel.focusedNoteID = nil
+                if let window = NSApplication.shared.keyWindow {
+                    window.makeFirstResponder(nil)
+                }
+            }
+            .onAppear {
+                focusModel.entry = entry
             }
         }
     }
@@ -84,8 +89,11 @@ struct JournalEntryView: View {
         .multilineTextAlignment(.center)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
-
+    
     private func noteView(for note: JournalNote) -> some View {
+        if let newText = editedTexts[note.id], newText != note.text {
+            note.text = newText
+        }
         let shouldFocus = focusModel.focusedNoteID == note.id
         return NoteRow(note: note, entry: entry, shouldFocus: shouldFocus, editedText: Binding(
             get: { editedTexts[note.id] ?? note.text },
@@ -206,6 +214,11 @@ struct TextViewWrapper: NSViewRepresentable {
                 focusModel.focusedNoteID = id
             }
         }
+        textView.onFocusLost = {
+            if focusModel.focusedNoteID == id {
+                focusModel.focusedNoteID = nil
+            }
+        }
         textView.isEditable = true
         textView.isRichText = false
         textView.font = NSFont.systemFont(ofSize: 15, weight: .light)
@@ -259,17 +272,43 @@ struct TextViewWrapper: NSViewRepresentable {
 
         init(_ parent: TextViewWrapper) {
             self.parent = parent
+            super.init()
+            NotificationCenter.default.addObserver(
+                self,
+                selector: #selector(didEndEditing(_:)),
+                name: NSText.didEndEditingNotification,
+                object: nil
+            )
         }
-
+        
+        deinit {
+            NotificationCenter.default.removeObserver(self)
+        }
+        
         func textDidChange(_ notification: Notification) {
             guard let textView = notification.object as? NSTextView else { return }
             parent.text = textView.string
+        }
+        
+        @objc func didEndEditing(_ notification: Notification) {
+//            guard let textView = notification.object as? NSTextView else { return }
+//            
+//            DispatchQueue.main.async {
+//                guard let entry = self.parent.focusModel.entry,
+//                      let focusedNoteID = self.parent.focusModel.focusedNoteID,
+//                      self.parent.id == focusedNoteID else { return }
+//                
+//                if let index = entry.notes.firstIndex(where: { $0.id == self.parent.id }) {
+////                    entry.notes[index].text = textView.string
+//                }
+//            }
         }
     }
 }
 
 class FocusableTextView: NSTextView {
     var onFocusGained: (() -> Void)?
+    var onFocusLost: (() -> Void)?
 
     override func becomeFirstResponder() -> Bool {
         let became = super.becomeFirstResponder()
@@ -277,5 +316,13 @@ class FocusableTextView: NSTextView {
             onFocusGained?()
         }
         return became
+    }
+    
+    override func resignFirstResponder() -> Bool {
+        let resigns = super.resignFirstResponder()
+        if resigns {
+            onFocusLost?()
+        }
+        return resigns
     }
 }

@@ -10,6 +10,7 @@ import SwiftData
 
 class JournalFocusModel: ObservableObject {
     @Published var focusedNoteID: UUID?
+    weak var entry: JournalEntry?
 }
 
 struct MainView: View {

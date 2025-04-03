@@ -33,6 +33,14 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
+         contextName = "closure #3 in closure #1 in JournalEntryView.body.getter:JournalEntryView.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "focusModel.owner">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
          contextName = "JournalEntryView.noteView(for:):JournalEntryView.swift">
          <PersistentStrings>
             <PersistentString
@@ -102,6 +110,9 @@
                value = "textView.string">
             </PersistentString>
          </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "closure #1 in TextViewWrapper.Coordinator.didEndEditing(_:):JournalEntryView.swift">
       </ContextState>
       <ContextState
          contextName = "closure #1 in TextViewWrapper.updateNSView(_:context:):JournalEntryView.swift">
