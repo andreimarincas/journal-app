@@ -142,26 +142,7 @@ struct JournalEntryView: View {
                         .padding(.leading, 26)
                 }
 
-                Button(action: {
-                    if let index = entry.notes.firstIndex(where: { $0.id == note.id }) {
-                        entry.notes.remove(at: index)
-                        entry.notes = entry.notes.map { note in
-                            let newNote = note
-                            if note.number > self.note.number {
-                                newNote.number -= 1
-                            }
-                            return newNote
-                        }
-                    }
-                }) {
-                    Image(systemName: "trash")
-                        .imageScale(.medium)
-                        .fontWeight(.thin)
-                        .padding(8)
-                }
-                .buttonStyle(.plain)
-                .padding(6)
-                .opacity(isHovering ? 1 : 0)
+                trashButton
             }
             .contentShape(Rectangle())
             .onTapGesture {
@@ -170,6 +151,29 @@ struct JournalEntryView: View {
             .onHover { hovering in
                 isHovering = hovering
             }
+        }
+        
+        private var trashButton: some View {
+            Button(action: {
+                if let index = entry.notes.firstIndex(where: { $0.id == note.id }) {
+                    entry.notes.remove(at: index)
+                    entry.notes = entry.notes.map { note in
+                        let newNote = note
+                        if note.number > self.note.number {
+                            newNote.number -= 1
+                        }
+                        return newNote
+                    }
+                }
+            }) {
+                Image(systemName: "trash")
+                    .imageScale(.medium)
+                    .fontWeight(.thin)
+                    .padding(8)
+            }
+            .buttonStyle(.plain)
+            .padding(6)
+            .opacity(isHovering ? 1 : 0)
         }
     }
 
