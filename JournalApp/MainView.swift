@@ -109,11 +109,11 @@ struct MainView: View {
             .background(Color("SidebarBackground"))
         }
         .navigationSplitViewColumnWidth(min: 180, ideal: 200, max: 220)
-        .onAppear {
-            if entries.isEmpty {
-                insertInitialEntry()
-            }
-        }
+//        .onAppear {
+//            if entries.isEmpty {
+//                insertInitialEntry()
+//            }
+//        }
     }
 
     @ViewBuilder
