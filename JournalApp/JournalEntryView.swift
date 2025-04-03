@@ -30,6 +30,13 @@ struct JournalEntryView: View {
             .padding()
             .contentShape(Rectangle()) // Ensures the full area is tappable
             .onTapGesture {
+                if let oldID = focusModel.focusedNoteID,
+                   let newText = editedTexts[oldID],
+                   let index = entry.notes.firstIndex(where: { $0.id == oldID }) {
+                    if newText != entry.notes[index].text {
+                        entry.notes[index].text = newText
+                    }
+                }
                 if let window = NSApplication.shared.keyWindow {
                     window.makeFirstResponder(nil)
                 }
@@ -92,7 +99,7 @@ struct JournalEntryView: View {
         let shouldFocus = focusModel.focusedNoteID == note.id
         return NoteRow(note: note, entry: entry, shouldFocus: shouldFocus, editedText: Binding(
             get: { editedTexts[note.id] ?? note.text },
-            set: { editedTexts[note.id] = $0 }
+            set: { if $0 != editedTexts[note.id] { editedTexts[note.id] = $0 }}
         ))
             .environmentObject(focusModel)
     }
@@ -234,7 +241,7 @@ struct TextViewWrapper: NSViewRepresentable {
     }
 
     func updateNSView(_ nsView: NSTextView, context: Context) {
-        if nsView.string != text {
+        if nsView.window?.firstResponder !== nsView, nsView.string != text {
             nsView.string = text
         }
 
@@ -286,8 +293,8 @@ struct TextViewWrapper: NSViewRepresentable {
         }
         
         @objc func didEndEditing(_ notification: Notification) {
-            guard let textView = notification.object as? NSTextView else { return }
-            parent.text = textView.string
+//            guard let textView = notification.object as? NSTextView else { return }
+//            parent.text = textView.string
         }
     }
 }

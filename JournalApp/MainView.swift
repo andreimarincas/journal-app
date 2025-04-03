@@ -167,7 +167,7 @@ struct MainView: View {
                 }
             }
         }
-        .id(UUID())
+        //.id(UUID())
     }
 
     @ViewBuilder
