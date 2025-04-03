@@ -193,6 +193,9 @@ struct MainView: View {
                     .onSubmit {
                         renamingEntry = nil
                     }
+                    .onExitCommand {
+                        renamingEntry = nil
+                    }
                 Spacer().frame(height: 28)
             }
         } else {
