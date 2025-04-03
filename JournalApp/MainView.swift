@@ -109,11 +109,16 @@ struct MainView: View {
             .background(Color("SidebarBackground"))
         }
         .navigationSplitViewColumnWidth(min: 300, ideal: 400, max: 500)
-//        .onAppear {
-//            if entries.isEmpty {
-//                insertInitialEntry()
-//            }
-//        }
+        .onAppear {
+#if DEBUG
+            if entries.isEmpty {
+                MockData.insertTestEntries(into: modelContext)
+            }
+#endif
+            DispatchQueue.main.async {
+                selectedEntry = entries.first
+            }
+        }
     }
 
     @ViewBuilder
@@ -219,19 +224,19 @@ struct MainView: View {
         }
     }
 
-    private func insertInitialEntry() {
-        let notes = [
-            JournalNote(number: 1, text: "Welcome to your journal."),
-            JournalNote(number: 2, text: "You can add a new entry using the + button."),
-            JournalNote(number: 3, text: "Each note inside an entry will be numbered."),
-        ]
-
-        let entry = JournalEntry(date: Date(), title: "Journal Entry", notes: notes)
-        modelContext.insert(entry)
-        DispatchQueue.main.async {
-            selectedEntry = entry
-        }
-    }
+//    private func insertInitialEntry() {
+//        let notes = [
+//            JournalNote(number: 1, text: "Welcome to your journal."),
+//            JournalNote(number: 2, text: "You can add a new entry using the + button."),
+//            JournalNote(number: 3, text: "Each note inside an entry will be numbered."),
+//        ]
+//
+//        let entry = JournalEntry(date: Date(), title: "Journal Entry", notes: notes)
+//        modelContext.insert(entry)
+//        DispatchQueue.main.async {
+//            selectedEntry = entry
+//        }
+//    }
     
     private func addEntry() {
         let note = JournalNote(number: 1, text: "")
