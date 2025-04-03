@@ -281,6 +281,12 @@ struct TextViewWrapper: NSViewRepresentable {
             NotificationCenter.default.removeObserver(self)
         }
         
+        @objc func textDidEndEditing(_ notification: Notification) {
+            guard let textView = notification.object as? NSTextView else { return }
+            let trimmedText = textView.string.trimmingCharacters(in: .whitespacesAndNewlines)
+            parent.text = trimmedText
+        }
+        
         func textDidChange(_ notification: Notification) {
             guard let textView = notification.object as? NSTextView else { return }
             parent.text = textView.string
