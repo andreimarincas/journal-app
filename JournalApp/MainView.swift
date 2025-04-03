@@ -108,7 +108,7 @@ struct MainView: View {
             .padding(.bottom, 26)
             .background(Color("SidebarBackground"))
         }
-        .navigationSplitViewColumnWidth(min: 180, ideal: 200, max: 220)
+        .navigationSplitViewColumnWidth(min: 300, ideal: 400, max: 500)
 //        .onAppear {
 //            if entries.isEmpty {
 //                insertInitialEntry()
