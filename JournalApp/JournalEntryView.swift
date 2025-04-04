@@ -18,6 +18,22 @@ enum JournalTone: CaseIterable {
         case .melancholy: return "✨ The sky carried weight I couldn’t name, only feel."
         }
     }
+    
+    var label: String {
+        switch self {
+        case .reflective: return "—Reflective"
+        case .hopeful: return "—Hopeful"
+        case .melancholy: return "—Melancholy"
+        }
+    }
+    
+    var color: Color {
+        switch self {
+        case .reflective: return Color("ToneReflective")
+        case .hopeful: return Color("ToneHopeful")
+        case .melancholy: return Color("ToneMelancholy")
+        }
+    }
 }
 
 struct JournalEntryView: View {
@@ -216,6 +232,24 @@ struct JournalEntryView: View {
             }
             .onHover { hovering in
                 isHovering = hovering
+            }
+            
+            if isAINote && !isFinalized {
+                ZStack() {
+                    HStack() {
+                        VStack {
+                            Spacer()
+                            Text(JournalTone.allCases[safe: aiToneIndex]?.label ?? "")
+                                .font(.callout)
+                                .italic()
+                                .foregroundStyle((JournalTone.allCases[safe: aiToneIndex]?.color ?? .secondary).opacity(0.8))
+                                .padding(.leading, 40)
+                                .padding(.top, 12)
+                                .padding(.bottom, 8)
+                        }
+                        Spacer()
+                    }
+                }
             }
         }
         
