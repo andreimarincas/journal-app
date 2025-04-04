@@ -148,6 +148,11 @@ struct JournalEntryView: View {
         @State private var height: CGFloat = 22
         @State private var showDeleteAlert = false
         
+        @State private var isHoveringTrash = false
+        @State private var isHoveringDone = false
+        @State private var isHoveringPrev = false
+        @State private var isHoveringNext = false
+        
         init(note: JournalNote, entry: JournalEntry, shouldFocus: Bool, editedText: Binding<String>, aiToneIndex: Binding<Int>, aiSuggestions: Binding<[JournalTone: String]>) {
             self.note = note
             self.entry = entry
@@ -236,6 +241,8 @@ struct JournalEntryView: View {
                     .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
+            .foregroundColor(isHoveringDone ? .primary : .secondary)
+            .onHover { isHoveringDone = $0 }
             .opacity(isAINote && isHovering ? 1 : 0)
         }
         
@@ -257,9 +264,11 @@ struct JournalEntryView: View {
                         .fontWeight(.medium)
                         .frame(minWidth: 32, minHeight: 32)
                         .contentShape(Rectangle())
-            }
+                    }
             .buttonStyle(.plain)
             .disabled(aiToneIndex == 0)
+            .foregroundColor(isHoveringPrev ? .primary : .secondary)
+            .onHover { isHoveringPrev = $0 }
 
             Text("\(aiToneIndex + 1)/\(JournalTone.allCases.count)")
                 .font(.callout)
@@ -287,6 +296,8 @@ struct JournalEntryView: View {
             }
             .buttonStyle(.plain)
             .disabled(aiToneIndex == JournalTone.allCases.count - 1)
+            .foregroundColor(isHoveringNext ? .primary : .secondary)
+            .onHover { isHoveringNext = $0 }
         }
             .buttonStyle(.plain)
             .opacity(isAINote && isHovering ? 1 : 0)
@@ -307,6 +318,8 @@ struct JournalEntryView: View {
                     .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
+            .foregroundColor(isHoveringTrash ? .primary : .secondary)
+            .onHover { isHoveringTrash = $0 }
             .opacity(isHovering ? 1 : 0)
             .alert("Delete this note?", isPresented: $showDeleteAlert) {
                 Button("Delete", role: .destructive) {
