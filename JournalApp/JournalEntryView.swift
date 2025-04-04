@@ -40,7 +40,6 @@ struct JournalEntryView: View {
     private(set) var entry: JournalEntry
     @EnvironmentObject private var focusModel: JournalFocusModel
     @State private var editedTexts: [UUID: String] = [:]
-    @State private var aiToneIndex = 0
     @State private var aiSuggestions: [JournalTone: String] = [:]
     
     init(entry: JournalEntry) {
@@ -142,7 +141,7 @@ struct JournalEntryView: View {
                 print($0)
                 if $0 != editedTexts[note.id] { editedTexts[note.id] = $0 }
             }
-        ), aiToneIndex: $aiToneIndex, aiSuggestions: $aiSuggestions).environmentObject(focusModel)
+        ), aiSuggestions: $aiSuggestions).environmentObject(focusModel)
     }
 
     private struct NoteRow: View {
@@ -151,7 +150,7 @@ struct JournalEntryView: View {
         let shouldFocus: Bool
         @Binding var editedText: String
         @State private var isFinalized = false
-        @Binding var aiToneIndex: Int
+        @State private var aiToneIndex = 0
         @Binding var aiSuggestions: [JournalTone: String]
         @State private var aiEdits: [JournalTone: String] = [:]
         
@@ -169,12 +168,11 @@ struct JournalEntryView: View {
         @State private var isHoveringPrev = false
         @State private var isHoveringNext = false
         
-        init(note: JournalNote, entry: JournalEntry, shouldFocus: Bool, editedText: Binding<String>, aiToneIndex: Binding<Int>, aiSuggestions: Binding<[JournalTone: String]>) {
+        init(note: JournalNote, entry: JournalEntry, shouldFocus: Bool, editedText: Binding<String>, aiSuggestions: Binding<[JournalTone: String]>) {
             self.note = note
             self.entry = entry
             self.shouldFocus = shouldFocus
             self._editedText = editedText
-            self._aiToneIndex = aiToneIndex
             self._aiSuggestions = aiSuggestions
         }
 
@@ -204,8 +202,28 @@ struct JournalEntryView: View {
                                 .padding(.top, 1)
                             Spacer()
                         }
-                        TextViewWrapper(text: $editedText, height: $height, shouldFocus: shouldFocus, id: note.id, isDimmed: isAINote, isHovered: isHovering)
-                            .frame(height: height)
+        TextViewWrapper(text: $editedText, height: $height, shouldFocus: shouldFocus, id: note.id, isDimmed: isAINote, isHovered: isHovering, toneCycleLeft: {
+                if let current = JournalTone.allCases[safe: aiToneIndex] {
+                    aiEdits[current] = editedText
+                }
+                if aiToneIndex > 0 {
+                    aiToneIndex -= 1
+                    if let previous = JournalTone.allCases[safe: aiToneIndex] {
+                        editedText = aiEdits[previous] ?? aiSuggestions[previous] ?? ""
+                    }
+                }
+            }, toneCycleRight: {
+                if let current = JournalTone.allCases[safe: aiToneIndex] {
+                    aiEdits[current] = editedText
+                }
+                if aiToneIndex < JournalTone.allCases.count - 1 {
+                    aiToneIndex += 1
+                    if let next = JournalTone.allCases[safe: aiToneIndex] {
+                        editedText = aiEdits[next] ?? aiSuggestions[next] ?? ""
+                    }
+                }
+            })
+            .frame(height: height)
                     }
                     .padding(.vertical, 4)
                     .padding(.top, 8)
@@ -397,7 +415,7 @@ struct JournalEntryView: View {
                 
                 Button(action: {
                     aiSuggestions = Dictionary(uniqueKeysWithValues: JournalTone.allCases.map { ($0, $0.text) })
-                    aiToneIndex = 0
+                    let aiToneIndex = 0
                     let selectedTone = JournalTone.allCases[aiToneIndex]
                     let nextNumber = (entry.notes.map(\.number).max() ?? 0) + 1
 //                    let newNote = JournalNote(number: nextNumber, text: "✨ The air felt heavy with things unsaid.")
@@ -439,6 +457,8 @@ struct TextViewWrapper: NSViewRepresentable {
     let id: UUID
     let isDimmed: Bool
     let isHovered: Bool
+    let toneCycleLeft: (() -> Void)?
+    let toneCycleRight: (() -> Void)?
     @EnvironmentObject var focusModel: JournalFocusModel
     @StateObject private var undoManager = CustomUndoManager()
     
@@ -475,6 +495,10 @@ struct TextViewWrapper: NSViewRepresentable {
         textView.isVerticallyResizable = true
         textView.isHorizontallyResizable = false
         textView.delegate = context.coordinator
+        textView.toneCycleLeft = toneCycleLeft
+        textView.toneCycleRight = toneCycleRight
+        textView.isHoveredNote = isHovered
+        textView.isActiveAINote = isDimmed
         
         if shouldFocus {
             DispatchQueue.main.async {
@@ -486,6 +510,10 @@ struct TextViewWrapper: NSViewRepresentable {
     }
 
     func updateNSView(_ nsView: NSTextView, context: Context) {
+        if let textView = nsView as? FocusableTextView {
+            textView.isHoveredNote = isHovered
+            textView.isActiveAINote = isDimmed
+        }
         if nsView.string != text {
             setAttrText(text, to: nsView)
         }
@@ -584,6 +612,10 @@ class FocusableTextView: NSTextView {
     var onFocusLost: (() -> Void)?
     var undoAction: (() -> Void)?
     var redoAction: (() -> Void)?
+    var toneCycleLeft: (() -> Void)?
+    var toneCycleRight: (() -> Void)?
+    var isHoveredNote: Bool = false
+    var isActiveAINote: Bool = false
     
     override func becomeFirstResponder() -> Bool {
         let became = super.becomeFirstResponder()
@@ -602,18 +634,25 @@ class FocusableTextView: NSTextView {
     }
     
     override func performKeyEquivalent(with event: NSEvent) -> Bool {
-        guard self == self.window?.firstResponder else {
-            return super.performKeyEquivalent(with: event)
-        }
         if event.modifierFlags.contains(.command) {
-            if event.charactersIgnoringModifiers == "z" {
-                undoAction?()
+            if self == self.window?.firstResponder {
+                if event.charactersIgnoringModifiers == "z" {
+                    undoAction?()
+                    return true
+                } else if event.charactersIgnoringModifiers == "Z" {
+                    redoAction?()
+                    return true
+                } else if event.charactersIgnoringModifiers == "\r" || event.charactersIgnoringModifiers == "s" {
+                    self.window?.makeFirstResponder(nil)
+                    return true
+                }
+            }
+        } else if isHoveredNote && isActiveAINote && self.window?.firstResponder !== self {
+            if event.keyCode == 123 {
+                toneCycleLeft?()
                 return true
-            } else if event.charactersIgnoringModifiers == "Z" {
-                redoAction?()
-                return true
-            } else if event.charactersIgnoringModifiers == "\r" || event.charactersIgnoringModifiers == "s" {
-                self.window?.makeFirstResponder(nil)
+            } else if event.keyCode == 124 {
+                toneCycleRight?()
                 return true
             }
         }

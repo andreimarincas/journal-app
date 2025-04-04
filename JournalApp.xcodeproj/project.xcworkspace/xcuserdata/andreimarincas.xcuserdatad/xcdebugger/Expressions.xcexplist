@@ -19,6 +19,12 @@
             <PersistentString
                value = "nsView.string">
             </PersistentString>
+            <PersistentString
+               value = "isDimmed">
+            </PersistentString>
+            <PersistentString
+               value = "isHovered">
+            </PersistentString>
          </PersistentStrings>
       </ContextState>
       <ContextState
@@ -90,6 +96,15 @@
       <ContextState
          contextName = "FocusableTextView.performKeyEquivalent(with:):JournalEntryView.swift">
          <PersistentStrings>
+            <PersistentString
+               value = "event.keyCode">
+            </PersistentString>
+            <PersistentString
+               value = "isHoveredNote">
+            </PersistentString>
+            <PersistentString
+               value = "isActiveAINote">
+            </PersistentString>
             <PersistentString
                value = "undoManager">
             </PersistentString>
