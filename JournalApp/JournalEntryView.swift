@@ -183,7 +183,7 @@ struct JournalEntryView: View {
                                 .padding(.top, 1)
                             Spacer()
                         }
-                        TextViewWrapper(text: $editedText, height: $height, shouldFocus: shouldFocus, id: note.id, isDimmed: isAINote)
+                        TextViewWrapper(text: $editedText, height: $height, shouldFocus: shouldFocus, id: note.id, isDimmed: isAINote, isHovered: isHovering)
                             .frame(height: height)
                     }
                     .padding(.vertical, 4)
@@ -386,6 +386,7 @@ struct TextViewWrapper: NSViewRepresentable {
     let shouldFocus: Bool
     let id: UUID
     let isDimmed: Bool
+    let isHovered: Bool
     @EnvironmentObject var focusModel: JournalFocusModel
     
     func makeNSView(context: Context) -> NSTextView {
@@ -443,7 +444,7 @@ struct TextViewWrapper: NSViewRepresentable {
             }
             if isDimmed {
                 let fullRange = NSRange(location: 0, length: nsView.string.utf16.count)
-                let textColor = nsView.window?.firstResponder !== nsView ? NSColor.systemGray : NSColor.labelColor
+                let textColor = nsView.window?.firstResponder !== nsView && !isHovered ? NSColor.systemGray : NSColor.labelColor
                 nsView.textStorage?.addAttribute(.foregroundColor, value: textColor, range: fullRange)
             }
         }
