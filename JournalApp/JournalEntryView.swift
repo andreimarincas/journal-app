@@ -204,7 +204,7 @@ struct JournalEntryView: View {
             }) {
                 Image(systemName: "checkmark")
                     .imageScale(.medium)
-                    .fontWeight(.thin)
+                    .fontWeight(.light)
                     .padding(8)
             }
             .buttonStyle(.plain)
@@ -217,7 +217,7 @@ struct JournalEntryView: View {
             }) {
                 Image(systemName: "trash")
                     .imageScale(.medium)
-                    .fontWeight(.thin)
+                    .fontWeight(.light)
                     .padding(8)
             }
             .buttonStyle(.plain)
