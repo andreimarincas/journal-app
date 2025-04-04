@@ -213,6 +213,10 @@ struct JournalEntryView: View {
         
         private var trashButton: some View {
             Button(action: {
+                if let window = NSApplication.shared.keyWindow {
+                    window.makeFirstResponder(nil)
+                }
+                focusModel.focusedNoteID = nil
                 showDeleteAlert = true
             }) {
                 Image(systemName: "trash")
