@@ -565,14 +565,10 @@ class FocusableTextView: NSTextView {
             } else if event.charactersIgnoringModifiers == "Z" {
                 redoAction?()
                 return true
+            } else if event.charactersIgnoringModifiers == "\r" || event.charactersIgnoringModifiers == "s" {
+                self.window?.makeFirstResponder(nil)
+                return true
             }
-        }
-        
-        if event.modifierFlags.contains(.command),
-           let characters = event.charactersIgnoringModifiers,
-           characters == "\r" {
-            self.window?.makeFirstResponder(nil)
-            return true
         }
         return super.performKeyEquivalent(with: event)
     }
