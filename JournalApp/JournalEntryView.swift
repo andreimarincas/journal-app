@@ -393,6 +393,7 @@ struct TextViewWrapper: NSViewRepresentable {
     let isDimmed: Bool
     let isHovered: Bool
     @EnvironmentObject var focusModel: JournalFocusModel
+    @StateObject private var undoManager = CustomUndoManager()
     
     func makeNSView(context: Context) -> NSTextView {
         let textView = FocusableTextView()
@@ -404,6 +405,18 @@ struct TextViewWrapper: NSViewRepresentable {
         textView.onFocusLost = {
             if focusModel.focusedNoteID == id {
                 focusModel.focusedNoteID = nil
+            }
+        }
+        textView.undoAction = {
+            if let restored = undoManager.undo(current: text) {
+                text = restored
+                setAttrText(restored, to: textView)
+            }
+        }
+        textView.redoAction = {
+            if let restored = undoManager.redo(current: text) {
+                text = restored
+                setAttrText(restored, to: textView)
             }
         }
         textView.isEditable = true
@@ -472,7 +485,7 @@ struct TextViewWrapper: NSViewRepresentable {
     }
 
     class Coordinator: NSObject, NSTextViewDelegate {
-        var parent: TextViewWrapper
+    var parent: TextViewWrapper
 
         init(_ parent: TextViewWrapper) {
             self.parent = parent
@@ -507,7 +520,14 @@ struct TextViewWrapper: NSViewRepresentable {
         
         func textDidChange(_ notification: Notification) {
             guard let textView = notification.object as? NSTextView else { return }
-            parent.text = textView.string
+            
+            let oldText = parent.text
+            let newText = textView.string
+            
+            if oldText != newText {
+                parent.undoManager.registerChange(previous: oldText, current: newText)
+                parent.text = newText
+            }
         }
     }
 }
@@ -515,7 +535,9 @@ struct TextViewWrapper: NSViewRepresentable {
 class FocusableTextView: NSTextView {
     var onFocusGained: (() -> Void)?
     var onFocusLost: (() -> Void)?
-
+    var undoAction: (() -> Void)?
+    var redoAction: (() -> Void)?
+    
     override func becomeFirstResponder() -> Bool {
         let became = super.becomeFirstResponder()
         if became {
@@ -533,6 +555,19 @@ class FocusableTextView: NSTextView {
     }
     
     override func performKeyEquivalent(with event: NSEvent) -> Bool {
+        guard self == self.window?.firstResponder else {
+            return super.performKeyEquivalent(with: event)
+        }
+        if event.modifierFlags.contains(.command) {
+            if event.charactersIgnoringModifiers == "z" {
+                undoAction?()
+                return true
+            } else if event.charactersIgnoringModifiers == "Z" {
+                redoAction?()
+                return true
+            }
+        }
+        
         if event.modifierFlags.contains(.command),
            let characters = event.charactersIgnoringModifiers,
            characters == "\r" {
