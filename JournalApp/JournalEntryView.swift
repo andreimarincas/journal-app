@@ -220,7 +220,12 @@ struct JournalEntryView: View {
                     responder.window?.makeFirstResponder(nil)
                 }
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                    editedText = editedText.replacingOccurrences(of: "✨", with: "").trimmingCharacters(in: .whitespacesAndNewlines)
+                    if editedText.trimmingCharacters(in: .whitespaces).hasPrefix("✨") {
+                        if let range = editedText.range(of: "✨") {
+                            editedText.removeSubrange(range)
+                            editedText = editedText.trimmingCharacters(in: .whitespaces)
+                        }
+                    }
                     isFinalized = true
                 }
             }) {
