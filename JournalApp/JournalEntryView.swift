@@ -137,6 +137,7 @@ struct JournalEntryView: View {
         @State private var isFinalized = false
         @Binding var aiToneIndex: Int
         @Binding var aiSuggestions: [JournalTone: String]
+        @State private var aiEdits: [JournalTone: String] = [:]
         
         var isAINote: Bool {
             !isFinalized && note.text.trimmingCharacters(in: .whitespacesAndNewlines).hasPrefix("✨")
@@ -234,14 +235,17 @@ struct JournalEntryView: View {
         
         private var toneCycleButtons: some View {
         HStack(spacing: 4) {
-            Button(action: {
-                if aiToneIndex > 0 {
-                    aiToneIndex -= 1
-                    if let current = JournalTone.allCases[safe: aiToneIndex] {
-                        editedText = aiSuggestions[current] ?? ""
-                    }
-                }
-            }) {
+                    Button(action: {
+                        if let current = JournalTone.allCases[safe: aiToneIndex] {
+                            aiEdits[current] = editedText
+                        }
+                        if aiToneIndex > 0 {
+                            aiToneIndex -= 1
+                            if let previous = JournalTone.allCases[safe: aiToneIndex] {
+                                editedText = aiEdits[previous] ?? aiSuggestions[previous] ?? ""
+                            }
+                        }
+                    }) {
                 Image(systemName: "chevron.left")
                     .imageScale(.medium)
                     .fontWeight(.medium)
@@ -256,14 +260,17 @@ struct JournalEntryView: View {
                 .frame(width: 20)
                 .multilineTextAlignment(.center)
 
-            Button(action: {
-                if aiToneIndex < JournalTone.allCases.count - 1 {
-                    aiToneIndex += 1
-                    if let current = JournalTone.allCases[safe: aiToneIndex] {
-                        editedText = aiSuggestions[current] ?? ""
-                    }
-                }
-            }) {
+                    Button(action: {
+                        if let current = JournalTone.allCases[safe: aiToneIndex] {
+                            aiEdits[current] = editedText
+                        }
+                        if aiToneIndex < JournalTone.allCases.count - 1 {
+                            aiToneIndex += 1
+                            if let next = JournalTone.allCases[safe: aiToneIndex] {
+                                editedText = aiEdits[next] ?? aiSuggestions[next] ?? ""
+                            }
+                        }
+                    }) {
                 Image(systemName: "chevron.right")
                     .imageScale(.medium)
                     .fontWeight(.medium)
