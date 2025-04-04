@@ -7,6 +7,7 @@
 
 import SwiftUI
 import SwiftData
+import AppKit
 
 class JournalFocusModel: ObservableObject {
     @Published var focusedNoteID: UUID?
@@ -22,6 +23,8 @@ struct MainView: View {
     @State private var justAddedEntryID: UUID?
     @StateObject private var focusModel = JournalFocusModel()
     @State private var entryToDelete: JournalEntry?
+    @State private var isAISummaryPanelVisible = false
+    @State private var summaryPanelWidth: CGFloat = 350
 
     var body: some View {
         navigationSplitView
@@ -33,30 +36,57 @@ struct MainView: View {
                 sidebarView(proxy: proxy)
             }.background(Color("SidebarBackground"))
         } detail: {
-            detailView
-                .navigationDestination(for: JournalEntry.self) { entry in
-                    JournalEntryView(entry: entry)
-                        .environmentObject(focusModel)
+            withAnimation(.easeInOut(duration: 0.2)) {
+                HStack(spacing: 0) {
+                    detailView
+                    if isAISummaryPanelVisible {
+//                        Divider()//.offset(x: -1)
+//                        Rectangle()
+//                            .fill(Color.clear)
+//                            .frame(width: 10)
+//                            .background(Color.black)
+//                            .offset(x: 3)
+                        ZStack(alignment: .leading) {
+                            AISummaryPanel()
+                                .frame(width: summaryPanelWidth)
+                            Rectangle()
+                                .fill(Color.clear)
+                                .frame(width: 6)
+//                                .background(Color.gray.opacity(0.1))
+//                                .background(Color(NSColor.textBackgroundColor))
+                                .background(Color("EntryBackground"))
+                                .gesture(
+                                    DragGesture(minimumDistance: 5)
+                                        .onChanged { value in
+                                            let newWidth = summaryPanelWidth + (-value.translation.width)
+                                            summaryPanelWidth = min(max(newWidth, 250), 600)
+                                        }
+                                )
+                                .offset(x: -3)
+                                .onHover { hovering in
+                                    if hovering {
+                                        NSCursor.resizeLeftRight.push()
+                                    } else {
+                                        NSCursor.pop()
+                                    }
+                                }
+                        }
+                        .transition(.move(edge: .trailing))
+                    }
                 }
+                .animation(.easeInOut(duration: 0.2), value: isAISummaryPanelVisible)
+            }
         }
         .navigationTitle(selectedEntry?.title.isEmpty == false ? selectedEntry!.title : "Journal Entry")
-//        .navigationSubtitle(selectedEntry?.date.formatted(date: .long, time: .shortened) ?? "")
-        /*.toolbar {
-            ToolbarItem(placement: .automatic) {
-                if let entry = selectedEntry {
-                    HStack {
-                        Spacer()
-                        Text("Entry date:")
-                            .fontWeight(.medium)
-                        Text(entry.date.formatted(date: .long, time: .shortened))
-                            .fontWeight(.light)
-                    }
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
-                    .frame(maxWidth: .infinity, alignment: .trailing)
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button {
+                    isAISummaryPanelVisible.toggle()
+                } label: {
+                    Label("AI Summary", systemImage: "sidebar.right")
                 }
             }
-        }*/
+        }
     }
 
     @ViewBuilder
@@ -283,5 +313,45 @@ struct MainView: View {
                 }
             }
         }
+    }
+}
+
+private struct AISummaryPanel: View {
+    var body: some View {
+//        HStack {
+//            Divider()
+//                .frame(width: 2)
+//                .background(Color.red)
+//                .offset(x: 26)
+            VStack(alignment: .leading, spacing: 12) {
+                HStack {
+                    Text("Summary")
+                        .font(.title)
+                        .fontWeight(.semibold)
+                        .padding(.leading, 20)
+                        .padding(.top, 20)
+                }
+                Divider().padding(.horizontal, 20)
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 8) {
+                    Text("""
+This entry explores the user's internal conflict between obligation and autonomy. Themes of guilt, inherited responsibility, and personal boundaries are highlighted throughout the notes.
+
+Key symbols include: the locked door (emotional separation), the unfinished conversation (regret), and the cold sunlight (clarity in solitude). The writing style shifts from reflective to resolute by the end.
+
+AI suggests the emotional arc moves from confusion → resistance → quiet strength.
+""")
+                        .font(.body)
+                        .lineSpacing(6)
+                        .foregroundColor(.primary)
+                        .padding(.leading, 6)
+                        Spacer()
+                    }
+                    .padding()
+                }
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(Color(NSColor.textBackgroundColor))
+//        }
     }
 }
