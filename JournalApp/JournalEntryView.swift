@@ -368,7 +368,7 @@ struct JournalEntryView: View {
                         .clipShape(Circle())
                         .shadow(radius: 3)
                         .symbolRenderingMode(.palette)
-                        .foregroundStyle(Color.yellow, Color.orange)
+                        .foregroundStyle(Color("SparklesYellow"), Color("SparklesOrange"))
                 }
                 .buttonStyle(.plain)
                 .padding(.top, 4)
