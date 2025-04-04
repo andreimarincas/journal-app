@@ -99,10 +99,11 @@ struct JournalEntryView: View {
             note.text = newText
         }
         let shouldFocus = focusModel.focusedNoteID == note.id
+        let isAINote = note.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false && note.text.hasPrefix("✨")
         return NoteRow(note: note, entry: entry, shouldFocus: shouldFocus, editedText: Binding(
             get: { editedTexts[note.id] ?? note.text },
             set: { if $0 != editedTexts[note.id] { editedTexts[note.id] = $0 }}
-        ))
+        ), isAINote: isAINote)
             .environmentObject(focusModel)
     }
 
@@ -111,16 +112,18 @@ struct JournalEntryView: View {
         let entry: JournalEntry
         let shouldFocus: Bool
         @Binding var editedText: String
+        let isAINote: Bool
         @EnvironmentObject private var focusModel: JournalFocusModel
         @State private var isHovering = false
         @State private var height: CGFloat = 22
         @State private var showDeleteAlert = false
         
-        init(note: JournalNote, entry: JournalEntry, shouldFocus: Bool, editedText: Binding<String>) {
+        init(note: JournalNote, entry: JournalEntry, shouldFocus: Bool, editedText: Binding<String>, isAINote: Bool) {
             self.note = note
             self.entry = entry
             self.shouldFocus = shouldFocus
             self._editedText = editedText
+            self.isAINote = isAINote
         }
 
         var body: some View {
@@ -129,8 +132,8 @@ struct JournalEntryView: View {
                     HStack(alignment: .top, spacing: 8) {
                         LinearGradient(
                             gradient: Gradient(stops: [
-                                .init(color: Color.accentColor.opacity(0.8), location: 0),
-                                .init(color: Color.accentColor.opacity(0.0), location: 1)
+                                .init(color: (isAINote ? Color.purple : Color.accentColor).opacity(0.8), location: 0),
+                                .init(color: (isAINote ? Color.purple : Color.accentColor).opacity(0.0), location: 1)
                             ]),
                             startPoint: .top,
                             endPoint: .bottom
@@ -220,6 +223,25 @@ struct JournalEntryView: View {
                         .background(Color(NSColor.controlAccentColor))
                         .clipShape(Circle())
                         .shadow(radius: 3)
+                }
+                .buttonStyle(.plain)
+                .padding(.top, 4)
+                .padding(.trailing, 8)
+                
+                Button(action: {
+                    let nextNumber = (entry.notes.map(\.number).max() ?? 0) + 1
+                    let newNote = JournalNote(number: nextNumber, text: "✨ The air felt heavy with things unsaid.")
+                    entry.notes.append(newNote)
+                    focusModel.focusedNoteID = newNote.id
+                }) {
+                    Image(systemName: "sparkles")
+                        .font(.system(size: 18, weight: .bold))
+                        .frame(width: 44, height: 44)
+                        .background(Color("AIButtonColor"))
+                        .clipShape(Circle())
+                        .shadow(radius: 3)
+                        .symbolRenderingMode(.palette)
+                        .foregroundStyle(Color.yellow, Color.orange)
                 }
                 .buttonStyle(.plain)
                 .padding(.top, 4)
