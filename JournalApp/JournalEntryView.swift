@@ -224,10 +224,11 @@ struct JournalEntryView: View {
                     isFinalized = true
                 }
             }) {
-                Image(systemName: "checkmark")
+            Image(systemName: "checkmark")
                     .imageScale(.medium)
                     .fontWeight(.medium)
-                    .padding(8)
+                    .frame(minWidth: 32, minHeight: 32)
+                    .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
             .opacity(isAINote && isHovering ? 1 : 0)
@@ -246,10 +247,11 @@ struct JournalEntryView: View {
                             }
                         }
                     }) {
-                Image(systemName: "chevron.left")
-                    .imageScale(.medium)
-                    .fontWeight(.medium)
-                    .padding(8)
+                    Image(systemName: "chevron.left")
+                        .imageScale(.medium)
+                        .fontWeight(.medium)
+                        .frame(minWidth: 32, minHeight: 32)
+                        .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
             .disabled(aiToneIndex == 0)
@@ -274,7 +276,8 @@ struct JournalEntryView: View {
                 Image(systemName: "chevron.right")
                     .imageScale(.medium)
                     .fontWeight(.medium)
-                    .padding(8)
+                    .frame(minWidth: 32, minHeight: 32)
+                    .contentShape(Rectangle())
                 
             }
             .buttonStyle(.plain)
@@ -295,9 +298,10 @@ struct JournalEntryView: View {
                 Image(systemName: "trash")
                     .imageScale(.medium)
                     .fontWeight(.medium)
+                    .frame(minWidth: 32, minHeight: 32)
+                    .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            .padding(6)
             .opacity(isHovering ? 1 : 0)
             .alert("Delete this note?", isPresented: $showDeleteAlert) {
                 Button("Delete", role: .destructive) {
