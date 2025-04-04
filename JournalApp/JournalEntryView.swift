@@ -267,6 +267,10 @@ struct JournalEntryView: View {
                     let nextNumber = (entry.notes.map(\.number).max() ?? 0) + 1
                     let newNote = JournalNote(number: nextNumber, text: "✨ The air felt heavy with things unsaid.")
                     entry.notes.append(newNote)
+                    if let window = NSApplication.shared.keyWindow {
+                        window.makeFirstResponder(nil)
+                    }
+                    focusModel.focusedNoteID = nil
                 }) {
                     Image(systemName: "sparkles")
                         .font(.system(size: 18, weight: .bold))
