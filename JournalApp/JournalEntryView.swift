@@ -188,6 +188,8 @@ struct JournalEntryView: View {
                     .padding(.vertical, 4)
                     .padding(.top, 8)
                     
+                    Spacer().frame(height: 16)
+                    
                     Divider()
                         .frame(height: 0.5)
                         .foregroundStyle(.secondary)
@@ -286,7 +288,6 @@ struct JournalEntryView: View {
                 Image(systemName: "trash")
                     .imageScale(.medium)
                     .fontWeight(.medium)
-                    .padding(8)
             }
             .buttonStyle(.plain)
             .padding(6)
