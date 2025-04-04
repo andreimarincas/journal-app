@@ -8,10 +8,24 @@
 import SwiftUI
 import SwiftData
 
+enum JournalTone: CaseIterable {
+    case reflective, hopeful, melancholy
+
+    var text: String {
+        switch self {
+        case .reflective: return "✨ I kept walking, not toward anything — just away from stillness."
+        case .hopeful: return "✨ There’s something beautiful forming, just past what I can see."
+        case .melancholy: return "✨ The sky carried weight I couldn’t name, only feel."
+        }
+    }
+}
+
 struct JournalEntryView: View {
     private(set) var entry: JournalEntry
     @EnvironmentObject private var focusModel: JournalFocusModel
     @State private var editedTexts: [UUID: String] = [:]
+    @State private var aiToneIndex = 0
+    @State private var aiSuggestions: [JournalTone: String] = [:]
     
     init(entry: JournalEntry) {
         self.entry = entry
@@ -112,7 +126,7 @@ struct JournalEntryView: View {
                 print($0)
                 if $0 != editedTexts[note.id] { editedTexts[note.id] = $0 }
             }
-        )).environmentObject(focusModel)
+        ), aiToneIndex: $aiToneIndex, aiSuggestions: $aiSuggestions).environmentObject(focusModel)
     }
 
     private struct NoteRow: View {
@@ -121,6 +135,8 @@ struct JournalEntryView: View {
         let shouldFocus: Bool
         @Binding var editedText: String
         @State private var isFinalized = false
+        @Binding var aiToneIndex: Int
+        @Binding var aiSuggestions: [JournalTone: String]
         
         var isAINote: Bool {
             !isFinalized && note.text.trimmingCharacters(in: .whitespacesAndNewlines).hasPrefix("✨")
@@ -131,11 +147,13 @@ struct JournalEntryView: View {
         @State private var height: CGFloat = 22
         @State private var showDeleteAlert = false
         
-        init(note: JournalNote, entry: JournalEntry, shouldFocus: Bool, editedText: Binding<String>) {
+        init(note: JournalNote, entry: JournalEntry, shouldFocus: Bool, editedText: Binding<String>, aiToneIndex: Binding<Int>, aiSuggestions: Binding<[JournalTone: String]>) {
             self.note = note
             self.entry = entry
             self.shouldFocus = shouldFocus
             self._editedText = editedText
+            self._aiToneIndex = aiToneIndex
+            self._aiSuggestions = aiSuggestions
         }
 
         var body: some View {
@@ -178,6 +196,7 @@ struct JournalEntryView: View {
                 }
 
                 HStack(spacing: 0) {
+                    toneCycleButtons
                     doneButton
                     trashButton
                 }
@@ -204,9 +223,54 @@ struct JournalEntryView: View {
             }) {
                 Image(systemName: "checkmark")
                     .imageScale(.medium)
-                    .fontWeight(.light)
+                    .fontWeight(.medium)
                     .padding(8)
             }
+            .buttonStyle(.plain)
+            .opacity(isAINote && isHovering ? 1 : 0)
+        }
+        
+        private var toneCycleButtons: some View {
+        HStack(spacing: 4) {
+            Button(action: {
+                if aiToneIndex > 0 {
+                    aiToneIndex -= 1
+                    if let current = JournalTone.allCases[safe: aiToneIndex] {
+                        editedText = aiSuggestions[current] ?? ""
+                    }
+                }
+            }) {
+                Image(systemName: "chevron.left")
+                    .imageScale(.medium)
+                    .fontWeight(.medium)
+                    .padding(8)
+            }
+            .buttonStyle(.plain)
+            .disabled(aiToneIndex == 0)
+
+            Text("\(aiToneIndex + 1)/\(JournalTone.allCases.count)")
+                .font(.callout)
+                .foregroundColor(.secondary)
+                .frame(width: 20)
+                .multilineTextAlignment(.center)
+
+            Button(action: {
+                if aiToneIndex < JournalTone.allCases.count - 1 {
+                    aiToneIndex += 1
+                    if let current = JournalTone.allCases[safe: aiToneIndex] {
+                        editedText = aiSuggestions[current] ?? ""
+                    }
+                }
+            }) {
+                Image(systemName: "chevron.right")
+                    .imageScale(.medium)
+                    .fontWeight(.medium)
+                    .padding(8)
+                
+            }
+            .buttonStyle(.plain)
+            .disabled(aiToneIndex == JournalTone.allCases.count - 1)
+        }
             .buttonStyle(.plain)
             .opacity(isAINote && isHovering ? 1 : 0)
         }
@@ -221,7 +285,7 @@ struct JournalEntryView: View {
             }) {
                 Image(systemName: "trash")
                     .imageScale(.medium)
-                    .fontWeight(.light)
+                    .fontWeight(.medium)
                     .padding(8)
             }
             .buttonStyle(.plain)
@@ -268,8 +332,12 @@ struct JournalEntryView: View {
                 .padding(.trailing, 8)
                 
                 Button(action: {
+                    aiSuggestions = Dictionary(uniqueKeysWithValues: JournalTone.allCases.map { ($0, $0.text) })
+                    aiToneIndex = 0
+                    let selectedTone = JournalTone.allCases[aiToneIndex]
                     let nextNumber = (entry.notes.map(\.number).max() ?? 0) + 1
-                    let newNote = JournalNote(number: nextNumber, text: "✨ The air felt heavy with things unsaid.")
+//                    let newNote = JournalNote(number: nextNumber, text: "✨ The air felt heavy with things unsaid.")
+                    let newNote = JournalNote(number: nextNumber, text: aiSuggestions[selectedTone] ?? "")
                     entry.notes.append(newNote)
                     if let window = NSApplication.shared.keyWindow {
                         window.makeFirstResponder(nil)
@@ -340,12 +408,8 @@ struct TextViewWrapper: NSViewRepresentable {
     }
 
     func updateNSView(_ nsView: NSTextView, context: Context) {
-        if nsView.window?.firstResponder !== nsView, nsView.string != text {
-            let textColor = isDimmed ? NSColor.darkGray : NSColor.labelColor
-            let attrs = [NSAttributedString.Key.font: NSFont.systemFont(ofSize: 15, weight: .light), .foregroundColor: textColor]
-            let attributed = NSAttributedString(string: text, attributes: attrs)
-            nsView.textStorage?.setAttributedString(attributed)
-            nsView.typingAttributes = attrs
+        if nsView.string != text {
+            setAttrText(text, to: nsView)
         }
 
         if let layoutManager = nsView.layoutManager,
@@ -365,7 +429,24 @@ struct TextViewWrapper: NSViewRepresentable {
             } else if shouldFocus {
                 nsView.window?.makeFirstResponder(nsView)
             }
+            if isDimmed {
+                let fullRange = NSRange(location: 0, length: nsView.string.utf16.count)
+                let textColor = nsView.window?.firstResponder !== nsView ? NSColor.systemGray : NSColor.labelColor
+                nsView.textStorage?.addAttribute(.foregroundColor, value: textColor, range: fullRange)
+            }
         }
+    }
+    
+    func setAttrText(_ text: String, to nsView: NSTextView) {
+        let dimmed = isDimmed// && nsView.window?.firstResponder != nsView
+        let textColor = dimmed ? NSColor.darkGray : NSColor.labelColor
+        let fontDescriptor = NSFont.systemFont(ofSize: 15, weight: .light).fontDescriptor
+        let italicDescriptor = dimmed ? fontDescriptor.withSymbolicTraits(.italic) : fontDescriptor
+        let font = NSFont(descriptor: italicDescriptor, size: 15) ?? NSFont.systemFont(ofSize: 15, weight: .light)
+        let attrs: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: textColor]
+        let attributed = NSAttributedString(string: text, attributes: attrs)
+        nsView.textStorage?.setAttributedString(attributed)
+        nsView.typingAttributes = attrs
     }
     
     func makeCoordinator() -> Coordinator {
