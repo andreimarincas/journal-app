@@ -45,6 +45,9 @@ struct JournalEntryView: View {
                 focusModel.entry = entry
             }
         }
+        .onChange(of: editedTexts) { oldValue, newValue in
+            print(newValue)
+        }
     }
 
     private var notesHeader: some View {
@@ -99,12 +102,17 @@ struct JournalEntryView: View {
             note.text = newText
         }
         let shouldFocus = focusModel.focusedNoteID == note.id
-        let isAINote = note.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false && note.text.hasPrefix("✨")
         return NoteRow(note: note, entry: entry, shouldFocus: shouldFocus, editedText: Binding(
-            get: { editedTexts[note.id] ?? note.text },
-            set: { if $0 != editedTexts[note.id] { editedTexts[note.id] = $0 }}
-        ), isAINote: isAINote)
-            .environmentObject(focusModel)
+            get: {
+                let result = editedTexts[note.id] ?? note.text
+                print(result)
+                return result
+            },
+            set: {
+                print($0)
+                if $0 != editedTexts[note.id] { editedTexts[note.id] = $0 }
+            }
+        )).environmentObject(focusModel)
     }
 
     private struct NoteRow: View {
@@ -112,18 +120,22 @@ struct JournalEntryView: View {
         let entry: JournalEntry
         let shouldFocus: Bool
         @Binding var editedText: String
-        let isAINote: Bool
+        @State private var isFinalized = false
+        
+        var isAINote: Bool {
+            !isFinalized && note.text.trimmingCharacters(in: .whitespacesAndNewlines).hasPrefix("✨")
+        }
+        
         @EnvironmentObject private var focusModel: JournalFocusModel
         @State private var isHovering = false
         @State private var height: CGFloat = 22
         @State private var showDeleteAlert = false
         
-        init(note: JournalNote, entry: JournalEntry, shouldFocus: Bool, editedText: Binding<String>, isAINote: Bool) {
+        init(note: JournalNote, entry: JournalEntry, shouldFocus: Bool, editedText: Binding<String>) {
             self.note = note
             self.entry = entry
             self.shouldFocus = shouldFocus
             self._editedText = editedText
-            self.isAINote = isAINote
         }
 
         var body: some View {
@@ -149,6 +161,7 @@ struct JournalEntryView: View {
                             Text("\(note.number).")
                                 .font(.system(size: 15, weight: .light))
                                 .foregroundColor(.secondary)
+                                .padding(.top, 1)
                             Spacer()
                         }
                         TextViewWrapper(text: $editedText, height: $height, shouldFocus: shouldFocus, id: note.id)
@@ -164,7 +177,10 @@ struct JournalEntryView: View {
                         .padding(.leading, 24)
                 }
 
-                trashButton
+                HStack(spacing: 0) {
+                    doneButton
+                    trashButton
+                }
             }
             .padding(.horizontal, 2)
             .contentShape(Rectangle())
@@ -174,6 +190,25 @@ struct JournalEntryView: View {
             .onHover { hovering in
                 isHovering = hovering
             }
+        }
+        
+        private var doneButton: some View {
+            Button(action: {
+                if let responder = NSApp.keyWindow?.firstResponder as? NSTextView {
+                    responder.window?.makeFirstResponder(nil)
+                }
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    editedText = editedText.replacingOccurrences(of: "✨", with: "").trimmingCharacters(in: .whitespacesAndNewlines)
+                    isFinalized = true
+                }
+            }) {
+                Image(systemName: "checkmark")
+                    .imageScale(.medium)
+                    .fontWeight(.thin)
+                    .padding(8)
+            }
+            .buttonStyle(.plain)
+            .opacity(isAINote && isHovering ? 1 : 0)
         }
         
         private var trashButton: some View {
@@ -232,7 +267,6 @@ struct JournalEntryView: View {
                     let nextNumber = (entry.notes.map(\.number).max() ?? 0) + 1
                     let newNote = JournalNote(number: nextNumber, text: "✨ The air felt heavy with things unsaid.")
                     entry.notes.append(newNote)
-                    focusModel.focusedNoteID = newNote.id
                 }) {
                     Image(systemName: "sparkles")
                         .font(.system(size: 18, weight: .bold))
@@ -298,7 +332,8 @@ struct TextViewWrapper: NSViewRepresentable {
 
     func updateNSView(_ nsView: NSTextView, context: Context) {
         if nsView.window?.firstResponder !== nsView, nsView.string != text {
-            nsView.string = text
+            let attributed = NSAttributedString(string: text, attributes: [.font: NSFont.systemFont(ofSize: 15, weight: .light)])
+            nsView.textStorage?.setAttributedString(attributed)
         }
 
         if let layoutManager = nsView.layoutManager,

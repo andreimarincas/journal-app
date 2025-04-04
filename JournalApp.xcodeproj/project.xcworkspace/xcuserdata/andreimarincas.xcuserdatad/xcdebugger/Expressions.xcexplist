@@ -3,17 +3,6 @@
    version = "1.0">
    <ContextStates>
       <ContextState
-         contextName = "MainView.deleteEntry(_:):MainView.swift">
-         <PersistentStrings>
-            <PersistentString
-               value = "entries">
-            </PersistentString>
-            <PersistentString
-               value = "selectedEntry">
-            </PersistentString>
-         </PersistentStrings>
-      </ContextState>
-      <ContextState
          contextName = "closure #2 in MainView.body.getter:MainView.swift">
          <PersistentStrings>
             <PersistentString
@@ -41,16 +30,46 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
+         contextName = "closure #1 in TextViewWrapper.updateNSView(_:context:):JournalEntryView.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "usedRect.height">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "closure #1 in JournalEntryView.NoteRow.doneButton.getter:JournalEntryView.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "editedText">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "TextViewWrapper.Coordinator.textDidEndEditing(_:):JournalEntryView.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "parent">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
          contextName = "JournalEntryView.noteView(for:):JournalEntryView.swift">
          <PersistentStrings>
             <PersistentString
+               value = "shouldFocus">
+            </PersistentString>
+            <PersistentString
                value = "focusedNoteID">
+            </PersistentString>
+            <PersistentString
+               value = "note.text">
             </PersistentString>
             <PersistentString
                value = "note.id">
             </PersistentString>
             <PersistentString
-               value = "shouldFocus">
+               value = "editedTexts">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -115,10 +134,13 @@
          contextName = "closure #1 in TextViewWrapper.Coordinator.didEndEditing(_:):JournalEntryView.swift">
       </ContextState>
       <ContextState
-         contextName = "closure #1 in TextViewWrapper.updateNSView(_:context:):JournalEntryView.swift">
+         contextName = "MainView.deleteEntry(_:):MainView.swift">
          <PersistentStrings>
             <PersistentString
-               value = "usedRect.height">
+               value = "entries">
+            </PersistentString>
+            <PersistentString
+               value = "selectedEntry">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
