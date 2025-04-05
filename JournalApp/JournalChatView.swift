@@ -56,6 +56,6 @@ struct JournalChatView: View {
                 Spacer()
             }
         }
-        .background(Color("ChatBackground"))
+        .background(Color("ChatViewBackground"))
     }
 }

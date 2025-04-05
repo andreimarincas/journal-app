@@ -38,6 +38,7 @@ struct MainView: View {
             }.background(Color("SidebarBackground"))
         } detail: {
             detailView
+                .background(Color("DetailViewBackground"))
                 .overlay(alignment: .trailing) {
                     if isAISummaryPanelVisible {
                         AISummaryPanel()
@@ -196,26 +197,33 @@ struct MainView: View {
                 HStack(spacing: 0) {
                     JournalChatView(entry: entry)
                         .frame(width: chatPanelWidth)
-                        .background(Color("ChatBackground"))
+                        .background(Color("ChatViewBackground"))
                         .animation(.easeInOut(duration: 0.15), value: chatPanelWidth)
                     
-                    Rectangle()
-                        .fill(Color.secondary.opacity(0.25))
-                        .frame(width: 1)
-                        .background(Color.clear.contentShape(Rectangle())) // Improves drag hit area
-                        .gesture(
-                            DragGesture(minimumDistance: 5)
-                                .onChanged { value in
-                                    chatPanelWidth = max(200, min(chatPanelWidth + value.translation.width, 600))
+                    ZStack {
+                        // Drag area
+                        Color.clear
+                            .contentShape(Rectangle()) // expands hit area
+                            .frame(width: 16)          // makes drag easier
+                            .gesture(
+                                DragGesture(minimumDistance: 5)
+                                    .onChanged { value in
+                                        chatPanelWidth = max(200, min(chatPanelWidth + value.translation.width, 600))
+                                    }
+                            )
+                            .onHover { hovering in
+                                if hovering {
+                                    NSCursor.resizeLeftRight.push()
+                                } else {
+                                    NSCursor.pop()
                                 }
-                        )
-                        .onHover { hovering in
-                            if hovering {
-                                NSCursor.resizeLeftRight.push()
-                            } else {
-                                NSCursor.pop()
                             }
-                        }
+
+                        // Visible divider
+                        Rectangle()
+                            .fill(Color.secondary.opacity(0.25))
+                            .frame(width: 1)
+                    }
                     
                     JournalEntryView(entry: entry)
                         .environmentObject(focusModel)
