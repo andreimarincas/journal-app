@@ -413,6 +413,20 @@ AI suggests the emotional arc moves from confusion → resistance → quiet stre
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color("AIPanelBackground"))
+        .background(
+            ZStack(alignment: .leading) {
+                Color("AIPanelBackground")
+                LinearGradient(
+                    gradient: Gradient(colors: [
+                        Color.white.opacity(0.08),
+                        Color.clear
+                    ]),
+                    startPoint: .leading,
+                    endPoint: .trailing
+                )
+                .frame(width: 8)
+                .padding(.leading, -4)
+            }
+        )
     }
 }
