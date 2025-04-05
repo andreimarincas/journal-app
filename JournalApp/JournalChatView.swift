@@ -22,7 +22,9 @@ struct JournalChatView: View {
     ]
     @State private var selectedMessageIndex = 0
     @FocusState private var isInputFocused: Bool
-    @State private var isHovering = false
+    @State private var isHoveringHide = false
+    @State private var isHoveringPopOut = false
+    @State private var isHoveringDock = false
     @Binding var isInOwnWindow: Bool
     var popOutWindow: (() -> Void)?
     
@@ -66,13 +68,13 @@ struct JournalChatView: View {
                         .padding(6)
                         .background(Color(NSColor.controlBackgroundColor))
                         .clipShape(Circle())
-                        .opacity(isHovering ? 1.0 : 0.5)
+                        .opacity(isHoveringHide ? 1.0 : 0.5)
                 }
                 .buttonStyle(PlainButtonStyle())
                 .padding(.top, 6)
                 .padding(.trailing, 0)
                 .onHover { hovering in
-                    isHovering = hovering
+                    isHoveringHide = hovering
                 }
                 if !isInOwnWindow {
                     Button(action: {
@@ -84,13 +86,13 @@ struct JournalChatView: View {
                             .padding(6)
                             .background(Color(NSColor.controlBackgroundColor))
                             .clipShape(Circle())
-                            .opacity(isHovering ? 1.0 : 0.5)
+                            .opacity(isHoveringPopOut ? 1.0 : 0.5)
                     }
                     .buttonStyle(PlainButtonStyle())
                     .padding(.top, 6)
                     .padding(.trailing, 0)
                     .onHover { hovering in
-                        isHovering = hovering
+                        isHoveringPopOut = hovering
                     }
                 }
                 if isInOwnWindow {
@@ -103,13 +105,13 @@ struct JournalChatView: View {
                             .padding(6)
                             .background(Color(NSColor.controlBackgroundColor))
                             .clipShape(Circle())
-                            .opacity(isHovering ? 1.0 : 0.5)
+                            .opacity(isHoveringDock ? 1.0 : 0.5)
                     }
                     .buttonStyle(PlainButtonStyle())
                     .padding(.top, 6)
                     .padding(.trailing, 0)
                     .onHover { hovering in
-                        isHovering = hovering
+                        isHoveringDock = hovering
                     }
                 }
             }
