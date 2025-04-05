@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct ChatMessage: Identifiable {
+struct ChatMessage: Identifiable, Equatable {
     let id = UUID()
     let text: String
     let isUser: Bool
@@ -101,10 +101,12 @@ struct MessagesView: View {
                 VStack(alignment: .leading, spacing: 16) {
                     ForEach(messages) { message in
                         MessageBubble(text: message.text, isUser: message.isUser)
+                            .transition(.move(edge: .bottom).combined(with: .opacity))
                     }
                     Color.clear.frame(height: 1).id("bottom")
                 }
                 .padding(.vertical, 8)
+                .animation(.easeInOut(duration: 0.2), value: messages)
                 .onChange(of: messages.count) {
                     withAnimation {
                         scrollProxy.scrollTo("bottom", anchor: .bottom)
