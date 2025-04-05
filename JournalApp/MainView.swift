@@ -79,7 +79,7 @@ struct MainView: View {
                 Button {
                     isAISummaryPanelVisible.toggle()
                 } label: {
-                    Label("AI Summary", systemImage: "sidebar.right")
+                    Label("AI Summary", systemImage: "doc.text.magnifyingglass")
                 }
             }
         }
