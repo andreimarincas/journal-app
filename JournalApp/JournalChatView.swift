@@ -50,7 +50,7 @@ struct JournalChatView: View {
                 }
                 if isInOwnWindow {
                     Button(action: {
-                        NSApp.keyWindow?.close()
+                        isInOwnWindow = false
                     }) {
                         Image(systemName: "arrow.down.left.topright.rectangle")
                             .frame(width: 28, height: 28)
@@ -81,20 +81,6 @@ struct JournalChatView: View {
         }
         .background(Color("ChatViewBackground"))
     }
-
-//    func popOutWindow() {
-//        if NSApp.keyWindow != nil {
-//            let newWindow = NSWindow(
-//                contentRect: NSRect(x: 0, y: 0, width: 420, height: 640),
-//                styleMask: [.titled, .closable, .resizable],
-//                backing: .buffered,
-//                defer: false
-//            )
-//            newWindow.title = "AI Companion"
-//            newWindow.contentView = NSHostingView(rootView: JournalChatView(entry: entry, isInOwnWindow: true))
-//            newWindow.makeKeyAndOrderFront(nil)
-//        }
-//    }
 }
 
 // Add this below MessagesView
@@ -142,7 +128,7 @@ struct ChatInputView: View {
                 .font(.system(size: 15, weight: .regular, design: .rounded))
                 .foregroundColor(.primary.opacity(0.85))
                 .padding(8)
-                .frame(minHeight: 48, maxHeight: 80)
+                .frame(minWidth: 56, maxHeight: 56)
                 .scrollContentBackground(.hidden)
                 .focused($isInputFocused)
                 .overlay(

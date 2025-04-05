@@ -28,6 +28,7 @@ struct MainView: View {
     @AppStorage("chatPanelWidth") private var chatPanelWidthRaw: Double = 400
     @State private var chatPanelWidth: CGFloat = 400
     @State private var isChatPoppedOut: Bool = false
+    @State private var poppedOutWindow: NSWindow?
 
     var body: some View {
         navigationSplitView
@@ -205,32 +206,32 @@ struct MainView: View {
                             .frame(width: chatPanelWidth)
                             .background(Color("ChatViewBackground"))
                             .animation(.easeInOut(duration: 0.15), value: chatPanelWidth)
-                    }
-                    
-                    ZStack {
-                        // Drag area
-                        Color.clear
-                            .contentShape(Rectangle()) // expands hit area
-                            .frame(width: 16)          // makes drag easier
-                            .gesture(
-                                DragGesture(minimumDistance: 5)
-                                    .onChanged { value in
-                                        chatPanelWidth = max(200, min(chatPanelWidth + value.translation.width, 600))
-                                        chatPanelWidthRaw = Double(chatPanelWidth)
-                                    }
-                            )
-                            .onHover { hovering in
-                                if hovering {
-                                    NSCursor.resizeLeftRight.push()
-                                } else {
-                                    NSCursor.pop()
-                                }
-                            }
 
-                        // Visible divider
-                        Rectangle()
-                            .fill(Color.secondary.opacity(0.25))
-                            .frame(width: 1)
+                        ZStack {
+                            // Drag area
+                            Color.clear
+                                .contentShape(Rectangle()) // expands hit area
+                                .frame(width: 16)          // makes drag easier
+                                .gesture(
+                                    DragGesture(minimumDistance: 5)
+                                        .onChanged { value in
+                                            chatPanelWidth = max(200, min(chatPanelWidth + value.translation.width, 600))
+                                            chatPanelWidthRaw = Double(chatPanelWidth)
+                                        }
+                                )
+                                .onHover { hovering in
+                                    if hovering {
+                                        NSCursor.resizeLeftRight.push()
+                                    } else {
+                                        NSCursor.pop()
+                                    }
+                                }
+
+                            // Visible divider
+                            Rectangle()
+                                .fill(Color.secondary.opacity(0.25))
+                                .frame(width: 1)
+                        }
                     }
                     
                     JournalEntryView(entry: entry)
@@ -246,7 +247,16 @@ struct MainView: View {
                         )
                         window.title = "AI Companion"
                         window.contentView = NSHostingView(rootView: JournalChatView(entry: entry, isInOwnWindow: $isChatPoppedOut))
+                        window.isReleasedWhenClosed = false
                         window.makeKeyAndOrderFront(nil)
+                        poppedOutWindow = window
+
+                        NotificationCenter.default.addObserver(forName: NSWindow.willCloseNotification, object: window, queue: .main) { _ in
+                            isChatPoppedOut = false
+                        }
+                    } else {
+                        poppedOutWindow?.close()
+                        poppedOutWindow = nil
                     }
                 }
             } else {
