@@ -8,8 +8,8 @@
 import Foundation
 
 final class CustomUndoManager: ObservableObject {
-    private var undoStack: [String] = []
-    private var redoStack: [String] = []
+    private(set) var undoStack: [String] = []
+    private(set) var redoStack: [String] = []
     private var debounceTimer: Timer?
     private var pendingChange: (previous: String, current: String)?
     private let debounceDelay: TimeInterval = 0.1

@@ -153,6 +153,7 @@ struct JournalEntryView: View {
         @State private var aiToneIndex = 0
         @Binding var aiSuggestions: [JournalTone: String]
         @State private var aiEdits: [JournalTone: String] = [:]
+        @StateObject private var undoManager = CustomUndoManager()
         
         var isAINote: Bool {
             !isFinalized && note.text.trimmingCharacters(in: .whitespacesAndNewlines).hasPrefix("✨")
@@ -164,9 +165,12 @@ struct JournalEntryView: View {
         @State private var showDeleteAlert = false
         
         @State private var isHoveringTrash = false
+        @State private var isHoveringTransform = false
         @State private var isHoveringDone = false
         @State private var isHoveringPrev = false
         @State private var isHoveringNext = false
+        @State private var isHoveringUndo = false
+        @State private var isHoveringRedo = false
         
         init(note: JournalNote, entry: JournalEntry, shouldFocus: Bool, editedText: Binding<String>, aiSuggestions: Binding<[JournalTone: String]>) {
             self.note = note
@@ -202,27 +206,27 @@ struct JournalEntryView: View {
                                 .padding(.top, 1)
                             Spacer()
                         }
-        TextViewWrapper(text: $editedText, height: $height, shouldFocus: shouldFocus, id: note.id, isDimmed: isAINote, isHovered: isHovering, toneCycleLeft: {
-                if let current = JournalTone.allCases[safe: aiToneIndex] {
-                    aiEdits[current] = editedText
-                }
-                if aiToneIndex > 0 {
-                    aiToneIndex -= 1
-                    if let previous = JournalTone.allCases[safe: aiToneIndex] {
-                        editedText = aiEdits[previous] ?? aiSuggestions[previous] ?? ""
+            TextViewWrapper(text: $editedText, height: $height, shouldFocus: shouldFocus, id: note.id, isDimmed: isAINote, isHovered: isHovering, toneCycleLeft: {
+                    if let current = JournalTone.allCases[safe: aiToneIndex] {
+                        aiEdits[current] = editedText
                     }
-                }
-            }, toneCycleRight: {
-                if let current = JournalTone.allCases[safe: aiToneIndex] {
-                    aiEdits[current] = editedText
-                }
-                if aiToneIndex < JournalTone.allCases.count - 1 {
-                    aiToneIndex += 1
-                    if let next = JournalTone.allCases[safe: aiToneIndex] {
-                        editedText = aiEdits[next] ?? aiSuggestions[next] ?? ""
+                    if aiToneIndex > 0 {
+                        aiToneIndex -= 1
+                        if let previous = JournalTone.allCases[safe: aiToneIndex] {
+                            editedText = aiEdits[previous] ?? aiSuggestions[previous] ?? ""
+                        }
                     }
-                }
-            })
+                }, toneCycleRight: {
+                    if let current = JournalTone.allCases[safe: aiToneIndex] {
+                        aiEdits[current] = editedText
+                    }
+                    if aiToneIndex < JournalTone.allCases.count - 1 {
+                        aiToneIndex += 1
+                        if let next = JournalTone.allCases[safe: aiToneIndex] {
+                            editedText = aiEdits[next] ?? aiSuggestions[next] ?? ""
+                        }
+                    }
+                }, undoManager: undoManager)
             .frame(height: height)
                     }
                     .padding(.vertical, 4)
@@ -240,6 +244,9 @@ struct JournalEntryView: View {
                 HStack(spacing: 0) {
                     toneCycleButtons
                     doneButton
+                    undoButton
+                    redoButton
+                    transformButton
                     trashButton
                 }
             }
@@ -297,60 +304,135 @@ struct JournalEntryView: View {
             .onHover { isHoveringDone = $0 }
             .opacity(isAINote && isHovering ? 1 : 0)
         }
-        
-        private var toneCycleButtons: some View {
-        HStack(spacing: 4) {
+
+        private var transformButton: some View {
+            Group {
+                if !isAINote {
                     Button(action: {
-                        if let current = JournalTone.allCases[safe: aiToneIndex] {
-                            aiEdits[current] = editedText
+                        if let responder = NSApp.keyWindow?.firstResponder as? NSTextView {
+                            responder.window?.makeFirstResponder(nil)
                         }
-                        if aiToneIndex > 0 {
-                            aiToneIndex -= 1
-                            if let previous = JournalTone.allCases[safe: aiToneIndex] {
-                                editedText = aiEdits[previous] ?? aiSuggestions[previous] ?? ""
+                        focusModel.focusedNoteID = nil
+                        editedText = editedText
+                            .split(separator: ".")
+                            .map { sentence in
+                                let trimmed = sentence.trimmingCharacters(in: .whitespaces)
+                                return trimmed.prefix(1).capitalized + trimmed.dropFirst()
                             }
+                            .joined(separator: ". ")
+                            .replacingOccurrences(of: "  ", with: " ")
+                    }) {
+                        Image(systemName: "wand.and.stars")
+                            .imageScale(.medium)
+                            .fontWeight(.medium)
+                            .frame(minWidth: 32, minHeight: 32)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .foregroundColor(isHoveringTransform ? .primary : .secondary)
+                    .onHover { isHoveringTransform = $0 }
+                    .opacity(isHovering ? 1 : 0)
+                }
+            }
+        }
+        
+        private var undoButton: some View {
+            Group {
+                if !isAINote {
+                    Button(action: {
+                        if let restored = undoManager.undo(current: editedText) {
+                            editedText = restored
                         }
                     }) {
-                    Image(systemName: "chevron.left")
+                        Image(systemName: "arrow.uturn.backward")
+                            .imageScale(.medium)
+                            .fontWeight(.medium)
+                            .frame(minWidth: 32, minHeight: 32)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .foregroundColor(isHoveringUndo ? .primary : .secondary)
+                    .onHover { isHoveringUndo = $0 }
+                    .opacity(isHovering ? 1 : 0)
+                    .disabled(undoManager.undoStack.isEmpty)
+                }
+            }
+        }
+        
+        private var redoButton: some View {
+            Group {
+                Button(action: {
+                    if let restored = undoManager.redo(current: editedText) {
+                        editedText = restored
+                    }
+                }) {
+                    Image(systemName: "arrow.uturn.forward")
                         .imageScale(.medium)
                         .fontWeight(.medium)
                         .frame(minWidth: 32, minHeight: 32)
                         .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .foregroundColor(isHoveringRedo ? .primary : .secondary)
+                .onHover { isHoveringRedo = $0 }
+                .disabled(undoManager.redoStack.isEmpty)
+                .opacity(isHovering ? 1 : 0)
+            }
+        }
+
+        private var toneCycleButtons: some View {
+            HStack(spacing: 4) {
+                Button(action: {
+                    if let current = JournalTone.allCases[safe: aiToneIndex] {
+                        aiEdits[current] = editedText
                     }
-            .buttonStyle(.plain)
-            .disabled(aiToneIndex == 0)
-            .foregroundColor(isHoveringPrev ? .primary : .secondary)
-            .onHover { isHoveringPrev = $0 }
-
-            Text("\(aiToneIndex + 1)/\(JournalTone.allCases.count)")
-                .font(.callout)
-                .foregroundColor(.secondary)
-                .frame(width: 20)
-                .multilineTextAlignment(.center)
-
-                    Button(action: {
-                        if let current = JournalTone.allCases[safe: aiToneIndex] {
-                            aiEdits[current] = editedText
+                    if aiToneIndex > 0 {
+                        aiToneIndex -= 1
+                        if let previous = JournalTone.allCases[safe: aiToneIndex] {
+                            editedText = aiEdits[previous] ?? aiSuggestions[previous] ?? ""
                         }
-                        if aiToneIndex < JournalTone.allCases.count - 1 {
-                            aiToneIndex += 1
-                            if let next = JournalTone.allCases[safe: aiToneIndex] {
-                                editedText = aiEdits[next] ?? aiSuggestions[next] ?? ""
-                            }
-                        }
-                    }) {
-                Image(systemName: "chevron.right")
+                    }
+                }) {
+                Image(systemName: "chevron.left")
                     .imageScale(.medium)
                     .fontWeight(.medium)
                     .frame(minWidth: 32, minHeight: 32)
                     .contentShape(Rectangle())
-                
+                }
+                .buttonStyle(.plain)
+                .disabled(aiToneIndex == 0)
+                .foregroundColor(isHoveringPrev ? .primary : .secondary)
+                .onHover { isHoveringPrev = $0 }
+
+                Text("\(aiToneIndex + 1)/\(JournalTone.allCases.count)")
+                    .font(.callout)
+                    .foregroundColor(.secondary)
+                    .frame(width: 20)
+                    .multilineTextAlignment(.center)
+
+                        Button(action: {
+                            if let current = JournalTone.allCases[safe: aiToneIndex] {
+                                aiEdits[current] = editedText
+                            }
+                            if aiToneIndex < JournalTone.allCases.count - 1 {
+                                aiToneIndex += 1
+                                if let next = JournalTone.allCases[safe: aiToneIndex] {
+                                    editedText = aiEdits[next] ?? aiSuggestions[next] ?? ""
+                                }
+                            }
+                        }) {
+                    Image(systemName: "chevron.right")
+                        .imageScale(.medium)
+                        .fontWeight(.medium)
+                        .frame(minWidth: 32, minHeight: 32)
+                        .contentShape(Rectangle())
+                    
+                }
+                .buttonStyle(.plain)
+                .disabled(aiToneIndex == JournalTone.allCases.count - 1)
+                .foregroundColor(isHoveringNext ? .primary : .secondary)
+                .onHover { isHoveringNext = $0 }
             }
-            .buttonStyle(.plain)
-            .disabled(aiToneIndex == JournalTone.allCases.count - 1)
-            .foregroundColor(isHoveringNext ? .primary : .secondary)
-            .onHover { isHoveringNext = $0 }
-        }
             .buttonStyle(.plain)
             .opacity(isAINote && isHovering ? 1 : 0)
         }
@@ -460,7 +542,7 @@ struct TextViewWrapper: NSViewRepresentable {
     let toneCycleLeft: (() -> Void)?
     let toneCycleRight: (() -> Void)?
     @EnvironmentObject var focusModel: JournalFocusModel
-    @StateObject private var undoManager = CustomUndoManager()
+    let undoManager: CustomUndoManager
     
     func makeNSView(context: Context) -> NSTextView {
         let textView = FocusableTextView()
