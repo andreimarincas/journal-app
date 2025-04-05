@@ -40,26 +40,18 @@ struct MainView: View {
                 HStack(spacing: 0) {
                     detailView
                     if isAISummaryPanelVisible {
-//                        Divider()//.offset(x: -1)
-//                        Rectangle()
-//                            .fill(Color.clear)
-//                            .frame(width: 10)
-//                            .background(Color.black)
-//                            .offset(x: 3)
                         ZStack(alignment: .leading) {
                             AISummaryPanel()
                                 .frame(width: summaryPanelWidth)
                             Rectangle()
                                 .fill(Color.clear)
                                 .frame(width: 6)
-//                                .background(Color.gray.opacity(0.1))
-//                                .background(Color(NSColor.textBackgroundColor))
-                                .background(Color("EntryBackground"))
+                                .background(Color("AIPanelBackground"))
                                 .gesture(
                                     DragGesture(minimumDistance: 5)
                                         .onChanged { value in
                                             let newWidth = summaryPanelWidth + (-value.translation.width)
-                                            summaryPanelWidth = min(max(newWidth, 250), 600)
+                                            summaryPanelWidth = min(max(newWidth, 300), 600)
                                         }
                                 )
                                 .offset(x: -3)
@@ -274,20 +266,6 @@ struct MainView: View {
 //            }
         }
     }
-
-//    private func insertInitialEntry() {
-//        let notes = [
-//            JournalNote(number: 1, text: "Welcome to your journal."),
-//            JournalNote(number: 2, text: "You can add a new entry using the + button."),
-//            JournalNote(number: 3, text: "Each note inside an entry will be numbered."),
-//        ]
-//
-//        let entry = JournalEntry(date: Date(), title: "Journal Entry", notes: notes)
-//        modelContext.insert(entry)
-//        DispatchQueue.main.async {
-//            selectedEntry = entry
-//        }
-//    }
     
     private func addEntry() {
         let note = JournalNote(number: 1, text: "")
@@ -318,22 +296,17 @@ struct MainView: View {
 
 private struct AISummaryPanel: View {
     var body: some View {
-//        HStack {
-//            Divider()
-//                .frame(width: 2)
-//                .background(Color.red)
-//                .offset(x: 26)
-            VStack(alignment: .leading, spacing: 12) {
-                HStack {
-                    Text("Summary")
-                        .font(.title)
-                        .fontWeight(.semibold)
-                        .padding(.leading, 20)
-                        .padding(.top, 20)
-                }
-                Divider().padding(.horizontal, 20)
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Text("Summary")
+                    .font(.title)
+                    .fontWeight(.semibold)
+                    .padding(.leading, 20)
+                    .padding(.top, 28)
+            }
+            Divider().padding(.horizontal, 16)
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
                     Text("""
 This entry explores the user's internal conflict between obligation and autonomy. Themes of guilt, inherited responsibility, and personal boundaries are highlighted throughout the notes.
 
@@ -341,17 +314,16 @@ Key symbols include: the locked door (emotional separation), the unfinished conv
 
 AI suggests the emotional arc moves from confusion → resistance → quiet strength.
 """)
-                        .font(.body)
+                        .font(.system(size: 14))
                         .lineSpacing(6)
                         .foregroundColor(.primary)
-                        .padding(.leading, 6)
-                        Spacer()
-                    }
-                    .padding()
                 }
+                .padding(.top, 24)
+                .padding(.horizontal, 32)
+                .padding(.bottom, 40)
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(Color(NSColor.textBackgroundColor))
-//        }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color("AIPanelBackground"))
     }
 }
