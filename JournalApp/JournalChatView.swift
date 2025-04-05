@@ -24,11 +24,28 @@ struct JournalChatView: View {
     @State private var isHovering = false
     @Binding var isInOwnWindow: Bool
     var popOutWindow: (() -> Void)?
-
+    
+    @State private var gptClient = GPTClient(apiKey: Bundle.main.object(forInfoDictionaryKey: "OpenAI_API_Key") as? String ?? "")
+    
     init(entry: JournalEntry, isInOwnWindow: Binding<Bool> = .constant(false), popOutWindow: (() -> Void)? = nil) {
         self.entry = entry
         self._isInOwnWindow = isInOwnWindow
         self.popOutWindow = popOutWindow
+    }
+
+    private func sendToGPT() {
+        Task {
+            let gptMessages = messages.map {
+                GPTMessage(role: $0.isUser ? "user" : "assistant", content: $0.text)
+            }
+
+            do {
+                let response = try await gptClient.send(messages: gptMessages)
+                messages.append(ChatMessage(text: response, isUser: false))
+            } catch {
+                messages.append(ChatMessage(text: "Error: \(error.localizedDescription)", isUser: false))
+            }
+        }
     }
 
     var body: some View {
@@ -85,6 +102,7 @@ struct JournalChatView: View {
 
             ChatInputView(isInputFocused: _isInputFocused, sendMessage: { message in
                 messages.append(ChatMessage(text: message, isUser: true))
+                sendToGPT()
             })
         }
         .background(Color("ChatViewBackground"))
