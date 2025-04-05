@@ -598,6 +598,7 @@ struct TextViewWrapper: NSViewRepresentable {
         }
         if nsView.string != text {
             setAttrText(text, to: nsView)
+            nsView.layoutManager?.ensureLayout(for: nsView.textContainer!)
         }
 
         if let layoutManager = nsView.layoutManager,
@@ -607,6 +608,10 @@ struct TextViewWrapper: NSViewRepresentable {
             DispatchQueue.main.async {
                 height = usedRect.height
             }
+        }
+        DispatchQueue.main.async {
+            nsView.invalidateIntrinsicContentSize()
+            nsView.setNeedsDisplay(nsView.bounds)
         }
         
         DispatchQueue.main.async {

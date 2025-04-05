@@ -27,6 +27,8 @@ struct MainView: View {
     @State private var summaryPanelWidth: CGFloat = 350
     @AppStorage("chatPanelWidth") private var chatPanelWidthRaw: Double = 400
     @State private var chatPanelWidth: CGFloat = 400
+    @State private var isChatVisible: Bool = true
+    @State private var isShowChatHovering = false
     @State private var isChatPoppedOut: Bool = false
     @State private var poppedOutWindow: NSWindow?
 
@@ -199,13 +201,13 @@ struct MainView: View {
                 }
             } else if let entry = selectedEntry {
                 HStack(spacing: 0) {
-                    if !isChatPoppedOut {
-                        JournalChatView(entry: entry, isInOwnWindow: $isChatPoppedOut, popOutWindow: {
+                    if !isChatPoppedOut && isChatVisible {
+                        JournalChatView(entry: entry, isInOwnWindow: $isChatPoppedOut, isChatVisible: $isChatVisible, popOutWindow: {
                             self.isChatPoppedOut = true
                         })
                             .frame(width: chatPanelWidth)
                             .background(Color("ChatViewBackground"))
-                            .animation(.easeInOut(duration: 0.15), value: chatPanelWidth)
+                            .transition(.move(edge: .leading))
 
                         ZStack {
                             // Drag area
@@ -229,14 +231,37 @@ struct MainView: View {
 
                             // Visible divider
                             Rectangle()
-                                .fill(Color.secondary.opacity(0.25))
+                                .fill(Color("ChatNotesSeparator"))
                                 .frame(width: 1)
                         }
                     }
                     
-                    JournalEntryView(entry: entry)
-                        .environmentObject(focusModel)
+                    ZStack(alignment: .topTrailing) {
+                        JournalEntryView(entry: entry)
+                            .environmentObject(focusModel)
+                        
+                        if !isChatVisible {
+                            Button(action: {
+                                isChatVisible = true
+                            }) {
+                                Image(systemName: "bubble.left")
+                                    .frame(width: 28, height: 28)
+                                    .font(.system(size: 16, weight: .regular))
+                                    .padding(6)
+                                    .background(Color(NSColor.controlBackgroundColor))
+                                    .clipShape(Circle())
+                                    .opacity(isShowChatHovering ? 1.0 : 0.5)
+                            }
+                            .buttonStyle(PlainButtonStyle())
+                            .padding(.top, 6)
+                            .padding(.trailing, 12)
+                            .onHover { hovering in
+                                isShowChatHovering = hovering
+                            }
+                        }
+                    }
                 }
+                .animation(.easeInOut(duration: 0.2), value: isChatVisible)
                 .onChange(of: isChatPoppedOut) { _, poppedOut in
                     if poppedOut {
                         let window = NSWindow(
