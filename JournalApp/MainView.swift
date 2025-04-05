@@ -27,6 +27,7 @@ struct MainView: View {
     @State private var summaryPanelWidth: CGFloat = 350
     @AppStorage("chatPanelWidth") private var chatPanelWidthRaw: Double = 400
     @State private var chatPanelWidth: CGFloat = 400
+    @State private var isChatPoppedOut: Bool = false
 
     var body: some View {
         navigationSplitView
@@ -197,10 +198,14 @@ struct MainView: View {
                 }
             } else if let entry = selectedEntry {
                 HStack(spacing: 0) {
-                    JournalChatView(entry: entry)
-                        .frame(width: chatPanelWidth)
-                        .background(Color("ChatViewBackground"))
-                        .animation(.easeInOut(duration: 0.15), value: chatPanelWidth)
+                    if !isChatPoppedOut {
+                        JournalChatView(entry: entry, isInOwnWindow: $isChatPoppedOut, popOutWindow: {
+                            self.isChatPoppedOut = true
+                        })
+                            .frame(width: chatPanelWidth)
+                            .background(Color("ChatViewBackground"))
+                            .animation(.easeInOut(duration: 0.15), value: chatPanelWidth)
+                    }
                     
                     ZStack {
                         // Drag area
@@ -230,6 +235,19 @@ struct MainView: View {
                     
                     JournalEntryView(entry: entry)
                         .environmentObject(focusModel)
+                }
+                .onChange(of: isChatPoppedOut) { _, poppedOut in
+                    if poppedOut {
+                        let window = NSWindow(
+                            contentRect: NSRect(x: 0, y: 0, width: 500, height: 600),
+                            styleMask: [.titled, .closable, .resizable],
+                            backing: .buffered,
+                            defer: false
+                        )
+                        window.title = "AI Companion"
+                        window.contentView = NSHostingView(rootView: JournalChatView(entry: entry, isInOwnWindow: $isChatPoppedOut))
+                        window.makeKeyAndOrderFront(nil)
+                    }
                 }
             } else {
                 ZStack {
