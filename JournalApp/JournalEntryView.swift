@@ -41,6 +41,7 @@ struct JournalEntryView: View {
     @EnvironmentObject private var focusModel: JournalFocusModel
     @State private var editedTexts: [UUID: String] = [:]
     @State private var aiSuggestions: [JournalTone: String] = [:]
+    @State private var containerWidth: CGFloat = 0
     
     init(entry: JournalEntry) {
         self.entry = entry
@@ -107,6 +108,15 @@ struct JournalEntryView: View {
                     }
                 }
                 .padding(.trailing, 12)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(
+                    GeometryReader { proxy in
+                        Color.clear
+                            .onChange(of: proxy.size.width) { _, newWidth in
+                                containerWidth = newWidth
+                            }
+                    }
+                )
             }
         }
     }
@@ -141,7 +151,7 @@ struct JournalEntryView: View {
                 print($0)
                 if $0 != editedTexts[note.id] { editedTexts[note.id] = $0 }
             }
-        ), aiSuggestions: $aiSuggestions).environmentObject(focusModel)
+        ), aiSuggestions: $aiSuggestions, containerWidth: containerWidth).environmentObject(focusModel)
     }
 
     private struct NoteRow: View {
@@ -163,6 +173,7 @@ struct JournalEntryView: View {
         @State private var isHovering = false
         @State private var height: CGFloat = 22
         @State private var showDeleteAlert = false
+        let containerWidth: CGFloat
         
         @State private var isHoveringTrash = false
         @State private var isHoveringTransform = false
@@ -172,12 +183,13 @@ struct JournalEntryView: View {
         @State private var isHoveringUndo = false
         @State private var isHoveringRedo = false
         
-        init(note: JournalNote, entry: JournalEntry, shouldFocus: Bool, editedText: Binding<String>, aiSuggestions: Binding<[JournalTone: String]>) {
+        init(note: JournalNote, entry: JournalEntry, shouldFocus: Bool, editedText: Binding<String>, aiSuggestions: Binding<[JournalTone: String]>, containerWidth: CGFloat) {
             self.note = note
             self.entry = entry
             self.shouldFocus = shouldFocus
             self._editedText = editedText
             self._aiSuggestions = aiSuggestions
+            self.containerWidth = containerWidth
         }
 
         var body: some View {
@@ -227,7 +239,10 @@ struct JournalEntryView: View {
                         }
                     }
                 }, undoManager: undoManager)
-            .frame(height: height)
+//            .frame(height: height)
+            .frame(maxWidth: .infinity, minHeight: height, maxHeight: height)
+            .id(containerWidth)
+            .onChange(of: height) { _, _ in }
                     }
                     .padding(.vertical, 4)
                     .padding(.top, 8)
