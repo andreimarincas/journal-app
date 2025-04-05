@@ -7,11 +7,17 @@
 
 import SwiftUI
 
+struct ChatMessage: Identifiable {
+    let id = UUID()
+    let text: String
+    let isUser: Bool
+}
+
 struct JournalChatView: View {
     let entry: JournalEntry
-    @State private var messages: [String] = [
-        "Hi, how are you feeling today?",
-        "Would you like to explore a thought or memory?"
+    @State private var messages: [ChatMessage] = [
+        ChatMessage(text: "Hi, how are you feeling today?", isUser: false),
+        ChatMessage(text: "Would you like to explore a thought or memory?", isUser: false)
     ]
     @State private var selectedMessageIndex = 0
     @FocusState private var isInputFocused: Bool
@@ -77,7 +83,9 @@ struct JournalChatView: View {
 
             Spacer()
 
-            ChatInputView(isInputFocused: _isInputFocused)
+            ChatInputView(isInputFocused: _isInputFocused, sendMessage: { message in
+                messages.append(ChatMessage(text: message, isUser: true))
+            })
         }
         .background(Color("ChatViewBackground"))
     }
@@ -85,34 +93,47 @@ struct JournalChatView: View {
 
 // Add this below MessagesView
 struct MessagesView: View {
-    let messages: [String]
+    let messages: [ChatMessage]
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 10) {
-                ForEach(0..<messages.count, id: \.self) { index in
-                    MessageBubble(text: messages[index])
+        ScrollViewReader { scrollProxy in
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    ForEach(messages) { message in
+                        MessageBubble(text: message.text, isUser: message.isUser)
+                    }
+                    Color.clear.frame(height: 1).id("bottom")
+                }
+                .padding(.vertical, 8)
+                .onChange(of: messages.count) {
+                    withAnimation {
+                        scrollProxy.scrollTo("bottom", anchor: .bottom)
+                    }
                 }
             }
-            .padding(.vertical, 8)
         }
     }
 }
 
 struct MessageBubble: View {
     let text: String
+    let isUser: Bool
 
     var body: some View {
-        HStack(alignment: .top) {
+        HStack {
+            if isUser { Spacer() }
+
             Text(text)
                 .font(.system(size: 15, weight: .regular, design: .rounded))
-                .foregroundColor(.primary.opacity(0.9))
+                .foregroundColor(isUser ? .white : .primary)
                 .lineSpacing(3)
                 .padding(12)
-                .background(Color.gray.opacity(0.1))
+                .background(isUser ? Color("UserMessageBubble") : Color.gray.opacity(0.1))
                 .clipShape(RoundedRectangle(cornerRadius: 12))
-                .frame(maxWidth: 380, alignment: .leading)
-            Spacer()
+                .frame(maxWidth: 380, alignment: isUser ? .trailing : .leading)
+                .multilineTextAlignment(isUser ? .trailing : .leading)
+
+            if !isUser { Spacer() }
         }
         .padding(.horizontal, 16)
     }
@@ -121,6 +142,7 @@ struct MessageBubble: View {
 struct ChatInputView: View {
     @State private var inputText: String = ""
     @FocusState var isInputFocused: Bool
+    let sendMessage: (String) -> Void
 
     var body: some View {
         HStack(alignment: .bottom, spacing: 4) {
@@ -139,8 +161,11 @@ struct ChatInputView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 10))
 
             Button {
-                // Handle sending message
-                inputText = ""
+                let trimmed = inputText.trimmingCharacters(in: .whitespacesAndNewlines)
+                if !trimmed.isEmpty {
+                    sendMessage(trimmed)
+                    inputText = ""
+                }
             } label: {
                 Image(systemName: "arrow.up.circle.fill")
                     .resizable()
