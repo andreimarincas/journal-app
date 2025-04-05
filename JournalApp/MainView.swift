@@ -25,6 +25,7 @@ struct MainView: View {
     @State private var entryToDelete: JournalEntry?
     @State private var isAISummaryPanelVisible = false
     @State private var summaryPanelWidth: CGFloat = 350
+    @State private var chatPanelWidth: CGFloat = 400
 
     var body: some View {
         navigationSplitView
@@ -36,38 +37,37 @@ struct MainView: View {
                 sidebarView(proxy: proxy)
             }.background(Color("SidebarBackground"))
         } detail: {
-            withAnimation(.easeInOut(duration: 0.2)) {
-                HStack(spacing: 0) {
-                    detailView
+            detailView
+                .overlay(alignment: .trailing) {
                     if isAISummaryPanelVisible {
-                        ZStack(alignment: .leading) {
-                            AISummaryPanel()
-                                .frame(width: summaryPanelWidth)
-                            Rectangle()
-                                .fill(Color.clear)
-                                .frame(width: 6)
-                                .background(Color("AIPanelBackground"))
-                                .gesture(
-                                    DragGesture(minimumDistance: 5)
-                                        .onChanged { value in
-                                            let newWidth = summaryPanelWidth + (-value.translation.width)
-                                            summaryPanelWidth = min(max(newWidth, 300), 600)
+                        AISummaryPanel()
+                            .frame(width: summaryPanelWidth)
+                            .background(Color("AIPanelBackground"))
+                            .transition(.move(edge: .trailing))
+                            .overlay(alignment: .leading) {
+                                Rectangle()
+                                    .fill(Color.clear)
+                                    .frame(width: 6)
+                                    .background(Color("AIPanelBackground"))
+                                    .gesture(
+                                        DragGesture(minimumDistance: 5)
+                                            .onChanged { value in
+                                                let newWidth = summaryPanelWidth + (-value.translation.width)
+                                                summaryPanelWidth = min(max(newWidth, 300), 600)
+                                            }
+                                    )
+                                    .offset(x: -3)
+                                    .onHover { hovering in
+                                        if hovering {
+                                            NSCursor.resizeLeftRight.push()
+                                        } else {
+                                            NSCursor.pop()
                                         }
-                                )
-                                .offset(x: -3)
-                                .onHover { hovering in
-                                    if hovering {
-                                        NSCursor.resizeLeftRight.push()
-                                    } else {
-                                        NSCursor.pop()
                                     }
-                                }
-                        }
-                        .transition(.move(edge: .trailing))
+                            }
                     }
                 }
                 .animation(.easeInOut(duration: 0.2), value: isAISummaryPanelVisible)
-            }
         }
         .navigationTitle(selectedEntry?.title.isEmpty == false ? selectedEntry!.title : "Journal Entry")
         .toolbar {
@@ -193,8 +193,33 @@ struct MainView: View {
                     .multilineTextAlignment(.center)
                 }
             } else if let entry = selectedEntry {
-                JournalEntryView(entry: entry)
-                    .environmentObject(focusModel)
+                HStack(spacing: 0) {
+                    JournalChatView(entry: entry)
+                        .frame(width: chatPanelWidth)
+                        .background(Color("ChatBackground"))
+                        .animation(.easeInOut(duration: 0.15), value: chatPanelWidth)
+                    
+                    Rectangle()
+                        .fill(Color.secondary.opacity(0.25))
+                        .frame(width: 1)
+                        .background(Color.clear.contentShape(Rectangle())) // Improves drag hit area
+                        .gesture(
+                            DragGesture(minimumDistance: 5)
+                                .onChanged { value in
+                                    chatPanelWidth = max(200, min(chatPanelWidth + value.translation.width, 600))
+                                }
+                        )
+                        .onHover { hovering in
+                            if hovering {
+                                NSCursor.resizeLeftRight.push()
+                            } else {
+                                NSCursor.pop()
+                            }
+                        }
+                    
+                    JournalEntryView(entry: entry)
+                        .environmentObject(focusModel)
+                }
             } else {
                 ZStack {
                     Color(nsColor: .windowBackgroundColor)
