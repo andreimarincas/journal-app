@@ -25,6 +25,7 @@ struct MainView: View {
     @State private var entryToDelete: JournalEntry?
     @State private var isAISummaryPanelVisible = false
     @State private var summaryPanelWidth: CGFloat = 350
+    @AppStorage("chatPanelWidth") private var chatPanelWidthRaw: Double = 400
     @State private var chatPanelWidth: CGFloat = 400
 
     var body: some View {
@@ -152,6 +153,7 @@ struct MainView: View {
         }
         .navigationSplitViewColumnWidth(min: 300, ideal: 400, max: 500)
         .onAppear {
+            chatPanelWidth = CGFloat(chatPanelWidthRaw)
 #if DEBUG
             if entries.isEmpty {
                 MockData.insertTestEntries(into: modelContext)
@@ -209,6 +211,7 @@ struct MainView: View {
                                 DragGesture(minimumDistance: 5)
                                     .onChanged { value in
                                         chatPanelWidth = max(200, min(chatPanelWidth + value.translation.width, 600))
+                                        chatPanelWidthRaw = Double(chatPanelWidth)
                                     }
                             )
                             .onHover { hovering in
