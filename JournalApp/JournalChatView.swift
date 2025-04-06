@@ -248,11 +248,11 @@ struct TypingIndicator: View {
     let timer = Timer.publish(every: 0.25, on: .main, in: .common).autoconnect()
 
     var body: some View {
-        HStack(spacing: 6) {
+        HStack(spacing: 4) {
             ForEach(0..<3) { index in
                 Circle()
-                    .frame(width: 6, height: 6)
-                    .offset(y: currentDot == index ? -6 : 0)
+                    .frame(width: 4, height: 4)
+                    .offset(y: currentDot == index ? -4 : 0)
                     .animation(.easeInOut(duration: 0.35), value: currentDot)
             }
         }
@@ -282,13 +282,7 @@ struct MessagesView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
                     ForEach(messages) { message in
-                        if message.isUser {
-                            MessageBubble(text: message.text, isUser: message.isUser)
-                                .transition(.move(edge: .bottom))
-                        } else {
-                            MessageBubble(text: message.text, isUser: message.isUser)
-                                .transition(.opacity)
-                        }
+                        MessageBubble(text: message.text, isUser: message.isUser)
                     }
                     if isTyping {
                         TypingIndicator()
@@ -296,7 +290,6 @@ struct MessagesView: View {
                     Color.clear.frame(height: 1).id("bottom")
                 }
                 .padding(.vertical, 8)
-                .animation(.easeInOut(duration: 0.2), value: messages)
                 .onChange(of: messages.count) {
                     withAnimation {
                         scrollProxy.scrollTo("bottom", anchor: .bottom)
