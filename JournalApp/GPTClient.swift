@@ -90,6 +90,22 @@ class GPTClient {
         return try await send(messages: messages)
     }
     
+    func enhanceNote(_ noteText: String) async throws -> String {
+        let messages = [
+            GPTMessage(role: "system", content:
+                """
+                You are a thoughtful and expressive assistant that helps users refine and elevate their journal notes.
+                Enhance the clarity, emotional depth, and poetic tone of the user's note.
+                Keep the note in the first person and retain its original meaning, but gently improve flow, imagery, and resonance.
+                Return only the enhanced version of the note, without commentary or explanation.
+                """
+            ),
+            GPTMessage(role: "user", content: noteText)
+        ]
+
+        return try await send(messages: messages)
+    }
+    
     func fetchUsage(startDate: String, endDate: String) async throws -> String {
         guard let url = URL(string: "https://api.openai.com/v1/dashboard/billing/usage?start_date=\(startDate)&end_date=\(endDate)") else {
             throw NSError(domain: "GPTClient", code: 2, userInfo: [NSLocalizedDescriptionKey: "Invalid usage URL"])

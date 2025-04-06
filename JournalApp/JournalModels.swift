@@ -9,7 +9,7 @@ import Foundation
 import SwiftData
 
 @Model
-class JournalEntry {
+final class JournalEntry {
     var id: UUID
     var date: Date
     @Attribute var title: String

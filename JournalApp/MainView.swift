@@ -144,7 +144,7 @@ struct MainView: View {
             focusModel.entry = selectedEntry
             focusModel.focusedNoteID = nil
             if let newEntry {
-                entryViewModel.entry = newEntry
+                entryViewModel.updateEntry(newEntry)
                 summaryViewModel.updateEntry(newEntry)
                 if isSummaryPanelVisible {
                     summaryViewModel.maybeSummarize()

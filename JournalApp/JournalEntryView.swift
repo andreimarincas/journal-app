@@ -198,6 +198,8 @@ struct JournalEntryView: View {
         @State private var isHoveringUndo = false
         @State private var isHoveringRedo = false
         
+        @State private var isEnhancing = false
+        
         init(note: JournalNote, entry: JournalEntry, shouldFocus: Bool, editedText: Binding<String>, aiSuggestions: Binding<[JournalTone: String]>, containerWidth: CGFloat, isSummaryPanelVisible: Binding<Bool>) {
             self.note = note
             self.entry = entry
@@ -359,14 +361,14 @@ struct JournalEntryView: View {
                             responder.window?.makeFirstResponder(nil)
                         }
                         focusModel.focusedNoteID = nil
-                        editedText = editedText
-                            .split(separator: ".")
-                            .map { sentence in
-                                let trimmed = sentence.trimmingCharacters(in: .whitespaces)
-                                return trimmed.prefix(1).capitalized + trimmed.dropFirst()
-                            }
-                            .joined(separator: ". ")
-                            .replacingOccurrences(of: "  ", with: " ")
+                        let previousText = editedText
+                        isEnhancing = true
+                        viewModel.enhance(note: note) { enhancedText in
+                            isEnhancing = false
+                            guard let enhancedText else { return }
+                            editedText = enhancedText
+                            undoManager.registerChange(previous: previousText, current: enhancedText)
+                        }
                     }) {
                         Image(systemName: "wand.and.stars")
                             .imageScale(.medium)
@@ -378,6 +380,7 @@ struct JournalEntryView: View {
                     .foregroundColor(isHoveringTransform ? .primary : .secondary)
                     .onHover { isHoveringTransform = $0 }
                     .opacity(isHovering ? 1 : 0)
+                    .disabled(isEnhancing)
                 }
             }
         }
