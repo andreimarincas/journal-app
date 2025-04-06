@@ -385,6 +385,8 @@ struct MainView: View {
 }
 
 private struct AISummaryPanel: View {
+    @Environment(\.colorScheme) private var colorScheme
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
@@ -419,7 +421,7 @@ AI suggests the emotional arc moves from confusion → resistance → quiet stre
                 Color("AIPanelBackground")
                 LinearGradient(
                     gradient: Gradient(colors: [
-                        Color.white.opacity(0.08),
+                        (colorScheme == .dark ? Color.white : Color.black).opacity(colorScheme == .dark ? 0.08 : 0.06),
                         Color.clear
                     ]),
                     startPoint: .leading,
