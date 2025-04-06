@@ -137,6 +137,7 @@ struct JournalChatView: View {
 struct ResizingTextView: NSViewRepresentable {
     @Binding var text: String
     @Binding var height: CGFloat
+    var onCommit: (() -> Void)?
 
     func makeNSView(context: Context) -> NSScrollView {
         let scrollView = NSTextView.scrollableTextView()
@@ -181,20 +182,34 @@ struct ResizingTextView: NSViewRepresentable {
     }
 
     func makeCoordinator() -> Coordinator {
-        Coordinator(text: $text)
+        Coordinator(text: $text, onCommit: onCommit)
     }
 
     class Coordinator: NSObject, NSTextViewDelegate {
         @Binding var text: String
+        var onCommit: (() -> Void)?
 
-        init(text: Binding<String>) {
+        init(text: Binding<String>, onCommit: (() -> Void)? = nil) {
             _text = text
+            self.onCommit = onCommit
         }
 
         func textDidChange(_ notification: Notification) {
             if let textView = notification.object as? NSTextView {
                 self.text = textView.string
             }
+        }
+
+        func textView(_ textView: NSTextView, doCommandBy commandSelector: Selector) -> Bool {
+            if commandSelector == #selector(NSResponder.insertNewline(_:)) {
+                if NSEvent.modifierFlags.contains(.shift) {
+                    return false // allow new line
+                } else {
+                    onCommit?()
+                    return true // prevent default enter behavior
+                }
+            }
+            return false
         }
     }
 }
@@ -208,7 +223,13 @@ struct ChatInputView: View {
     var body: some View {
         ZStack(alignment: .bottomLeading) {
             HStack(alignment: .bottom, spacing: 4) {
-                ResizingTextView(text: $inputText, height: $inputHeight)
+                ResizingTextView(text: $inputText, height: $inputHeight, onCommit: {
+                    let trimmed = inputText.trimmingCharacters(in: .whitespacesAndNewlines)
+                    if !trimmed.isEmpty {
+                        sendMessage(trimmed)
+                        inputText = ""
+                    }
+                })
                     .frame(height: inputHeight)
                     .animation(nil, value: inputHeight)
                     .background(Color("ChatInputBackground"))
