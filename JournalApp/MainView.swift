@@ -202,41 +202,6 @@ struct MainView: View {
                 }
             } else if let entry = selectedEntry {
                 HStack(spacing: 0) {
-                    if !isChatPoppedOut && isChatVisible {
-                        JournalChatView(entry: entry, isInOwnWindow: $isChatPoppedOut, isChatVisible: $isChatVisible, popOutWindow: {
-                            self.isChatPoppedOut = true
-                        })
-                            .frame(width: chatPanelWidth)
-                            .background(Color("ChatViewBackground"))
-                            .transition(.move(edge: .leading))
-
-                        ZStack {
-                            // Drag area
-                            Color.clear
-                                .contentShape(Rectangle()) // expands hit area
-                                .frame(width: 16)          // makes drag easier
-                                .gesture(
-                                    DragGesture(minimumDistance: 5)
-                                        .onChanged { value in
-                                            chatPanelWidth = max(200, min(chatPanelWidth + value.translation.width, 600))
-                                            chatPanelWidthRaw = Double(chatPanelWidth)
-                                        }
-                                )
-                                .onHover { hovering in
-                                    if hovering {
-                                        NSCursor.resizeLeftRight.push()
-                                    } else {
-                                        NSCursor.pop()
-                                    }
-                                }
-
-                            // Visible divider
-                            Rectangle()
-                                .fill(Color("ChatNotesSeparator"))
-                                .frame(width: 1)
-                        }
-                    }
-                    
                     ZStack(alignment: .topTrailing) {
                         JournalEntryView(entry: entry)
                             .environmentObject(focusModel)
@@ -260,6 +225,41 @@ struct MainView: View {
                                 isShowChatHovering = hovering
                             }
                         }
+                    }
+                    
+                    if !isChatPoppedOut && isChatVisible {
+                        ZStack {
+                            // Drag area
+                            Color.clear
+                                .contentShape(Rectangle())
+                                .frame(width: 16)
+                                .gesture(
+                                    DragGesture(minimumDistance: 5)
+                                        .onChanged { value in
+                                            chatPanelWidth = max(200, min(chatPanelWidth + value.translation.width, 600))
+                                            chatPanelWidthRaw = Double(chatPanelWidth)
+                                        }
+                                )
+                                .onHover { hovering in
+                                    if hovering {
+                                        NSCursor.resizeLeftRight.push()
+                                    } else {
+                                        NSCursor.pop()
+                                    }
+                                }
+ 
+                            // Visible divider
+                            Rectangle()
+                                .fill(Color("ChatNotesSeparator"))
+                                .frame(width: 1)
+                        }
+                        
+                        JournalChatView(entry: entry, isInOwnWindow: $isChatPoppedOut, isChatVisible: $isChatVisible, popOutWindow: {
+                            self.isChatPoppedOut = true
+                        })
+                            .frame(width: chatPanelWidth)
+                            .background(Color("ChatViewBackground"))
+                            .transition(.move(edge: .trailing))
                     }
                 }
                 .animation(.easeInOut(duration: 0.2), value: isChatVisible)
