@@ -31,12 +31,15 @@ struct JournalChatView: View {
     
     @State private var gptClient = GPTClientProvider.shared
     @State private var isTyping = false
+    
+    @Binding private var isSummaryPanelVisible: Bool
 
-    init(entry: JournalEntry, isInOwnWindow: Binding<Bool> = .constant(false), isChatVisible: Binding<Bool> = .constant(true), popOutWindow: (() -> Void)? = nil) {
+    init(entry: JournalEntry, isInOwnWindow: Binding<Bool> = .constant(false), isChatVisible: Binding<Bool> = .constant(true), popOutWindow: (() -> Void)? = nil, isSummaryPanelVisible: Binding<Bool> = .constant(false)) {
         self.entry = entry
         self._isInOwnWindow = isInOwnWindow
         self._isChatVisible = isChatVisible
         self.popOutWindow = popOutWindow
+        self._isSummaryPanelVisible = isSummaryPanelVisible
     }
 
     private func sendToGPT() {
@@ -121,14 +124,19 @@ struct JournalChatView: View {
                 .contentShape(Rectangle())
                 .onTapGesture {
                     isInputFocused = false
+                    isSummaryPanelVisible = false
                 }
 
             Spacer()
 
-            ChatInputView(isInputFocused: _isInputFocused, sendMessage: { message in
-                messages.append(ChatMessage(text: message, isUser: true))
-                sendToGPT()
-            })
+            ChatInputView(
+                isInputFocused: _isInputFocused,
+                sendMessage: { message in
+                    messages.append(ChatMessage(text: message, isUser: true))
+                    sendToGPT()
+                },
+                isSummaryPanelVisible: $isSummaryPanelVisible
+            )
         }
         .background(Color("ChatViewBackground"))
     }
@@ -219,6 +227,7 @@ struct ChatInputView: View {
     @State private var inputHeight: CGFloat = 36
     @FocusState var isInputFocused: Bool
     let sendMessage: (String) -> Void
+    let isSummaryPanelVisible: Binding<Bool>
 
     var body: some View {
         ZStack(alignment: .bottomLeading) {
@@ -230,14 +239,14 @@ struct ChatInputView: View {
                         inputText = ""
                     }
                 })
-                    .frame(height: inputHeight)
-                    .animation(nil, value: inputHeight)
-                    .background(Color("ChatInputBackground"))
-                    .clipShape(RoundedRectangle(cornerRadius: 10))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 10)
-                            .stroke(Color.gray.opacity(0.4), lineWidth: 1)
-                    )
+                .frame(height: inputHeight)
+                .animation(nil, value: inputHeight)
+                .background(Color("ChatInputBackground"))
+                .clipShape(RoundedRectangle(cornerRadius: 10))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 10)
+                        .stroke(Color.gray.opacity(0.4), lineWidth: 1)
+                )
 
                 Button {
                     let trimmed = inputText.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -260,6 +269,11 @@ struct ChatInputView: View {
         }
         .padding(.horizontal, 16)
         .padding(.bottom, 12)
+        .onChange(of: isInputFocused) { _, focused in
+            if focused {
+                isSummaryPanelVisible.wrappedValue = false
+            }
+        }
     }
 }
 

@@ -259,10 +259,10 @@ struct MainView: View {
                                 .frame(width: 16)
                                 .gesture(
                                     DragGesture(minimumDistance: 5)
-                                        .onChanged { value in
-                                            chatPanelWidth = max(200, min(chatPanelWidth + value.translation.width, 600))
-                                            chatPanelWidthRaw = Double(chatPanelWidth)
-                                        }
+                                .onChanged { value in
+                                    chatPanelWidth = max(200, min(chatPanelWidth - value.translation.width, 600))
+                                    chatPanelWidthRaw = Double(chatPanelWidth)
+                                }
                                 )
                                 .onHover { hovering in
                                     if hovering {
@@ -280,7 +280,7 @@ struct MainView: View {
                         
                         JournalChatView(entry: entry, isInOwnWindow: $isChatPoppedOut, isChatVisible: $isChatVisible, popOutWindow: {
                             self.isChatPoppedOut = true
-                        })
+                        }, isSummaryPanelVisible: $isSummaryPanelVisible)
                             .frame(width: chatPanelWidth)
                             .background(Color("ChatViewBackground"))
                             .transition(.move(edge: .trailing))
