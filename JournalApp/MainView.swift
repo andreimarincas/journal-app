@@ -27,7 +27,7 @@ struct MainView: View {
     @State private var summaryPanelWidth: CGFloat = 350
     @AppStorage("chatPanelWidth") private var chatPanelWidthRaw: Double = 400
     @State private var chatPanelWidth: CGFloat = 400
-    @State private var isChatVisible: Bool = true
+    @AppStorage("isChatVisible") private var isChatVisible: Bool = true
     @State private var isShowChatHovering = false
     @State private var isChatPoppedOut: Bool = false
     @State private var poppedOutWindow: NSWindow?
@@ -123,6 +123,7 @@ struct MainView: View {
             ToolbarItem(placement: .primaryAction) {
                 Button(action: addEntry) {
                     Label("New Entry", systemImage: "square.and.pencil")
+                        .foregroundColor(.primary)
                 }
             }
         }
