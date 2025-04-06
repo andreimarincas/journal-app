@@ -38,13 +38,15 @@ enum JournalTone: CaseIterable {
 
 struct JournalEntryView: View {
     private(set) var entry: JournalEntry
+    @Binding var isSummaryPanelVisible: Bool
     @EnvironmentObject private var focusModel: JournalFocusModel
     @State private var editedTexts: [UUID: String] = [:]
     @State private var aiSuggestions: [JournalTone: String] = [:]
     @State private var containerWidth: CGFloat = 0
     
-    init(entry: JournalEntry) {
+    init(entry: JournalEntry, isSummaryPanelVisible: Binding<Bool>) {
         self.entry = entry
+        self._isSummaryPanelVisible = isSummaryPanelVisible
     }
     
     var body: some View {
@@ -70,6 +72,7 @@ struct JournalEntryView: View {
                 if let window = NSApplication.shared.keyWindow {
                     window.makeFirstResponder(nil)
                 }
+                isSummaryPanelVisible = false
             }
             .onAppear {
                 focusModel.entry = entry
@@ -141,17 +144,25 @@ struct JournalEntryView: View {
             note.text = newText
         }
         let shouldFocus = focusModel.focusedNoteID == note.id
-        return NoteRow(note: note, entry: entry, shouldFocus: shouldFocus, editedText: Binding(
-            get: {
-                let result = editedTexts[note.id] ?? note.text
-                print(result)
-                return result
-            },
-            set: {
-                print($0)
-                if $0 != editedTexts[note.id] { editedTexts[note.id] = $0 }
-            }
-        ), aiSuggestions: $aiSuggestions, containerWidth: containerWidth).environmentObject(focusModel)
+        return NoteRow(
+            note: note,
+            entry: entry,
+            shouldFocus: shouldFocus,
+            editedText: Binding(
+                get: {
+                    let result = editedTexts[note.id] ?? note.text
+                    print(result)
+                    return result
+                },
+                set: {
+                    print($0)
+                    if $0 != editedTexts[note.id] { editedTexts[note.id] = $0 }
+                }
+            ),
+            aiSuggestions: $aiSuggestions,
+            containerWidth: containerWidth,
+            isSummaryPanelVisible: $isSummaryPanelVisible
+        ).environmentObject(focusModel)
     }
 
     private struct NoteRow: View {
@@ -163,6 +174,7 @@ struct JournalEntryView: View {
         @State private var aiToneIndex = 0
         @Binding var aiSuggestions: [JournalTone: String]
         @State private var aiEdits: [JournalTone: String] = [:]
+        @Binding var isSummaryPanelVisible: Bool
         @StateObject private var undoManager = CustomUndoManager()
         
         var isAINote: Bool {
@@ -183,13 +195,14 @@ struct JournalEntryView: View {
         @State private var isHoveringUndo = false
         @State private var isHoveringRedo = false
         
-        init(note: JournalNote, entry: JournalEntry, shouldFocus: Bool, editedText: Binding<String>, aiSuggestions: Binding<[JournalTone: String]>, containerWidth: CGFloat) {
+        init(note: JournalNote, entry: JournalEntry, shouldFocus: Bool, editedText: Binding<String>, aiSuggestions: Binding<[JournalTone: String]>, containerWidth: CGFloat, isSummaryPanelVisible: Binding<Bool>) {
             self.note = note
             self.entry = entry
             self.shouldFocus = shouldFocus
             self._editedText = editedText
             self._aiSuggestions = aiSuggestions
             self.containerWidth = containerWidth
+            self._isSummaryPanelVisible = isSummaryPanelVisible
         }
 
         var body: some View {
@@ -218,7 +231,14 @@ struct JournalEntryView: View {
                                 .padding(.top, 1)
                             Spacer()
                         }
-            TextViewWrapper(text: $editedText, height: $height, shouldFocus: shouldFocus, id: note.id, isDimmed: isAINote, isHovered: isHovering, toneCycleLeft: {
+            TextViewWrapper(
+                text: $editedText,
+                height: $height,
+                shouldFocus: shouldFocus,
+                id: note.id,
+                isDimmed: isAINote,
+                isHovered: isHovering,
+                toneCycleLeft: {
                     if let current = JournalTone.allCases[safe: aiToneIndex] {
                         aiEdits[current] = editedText
                     }
@@ -228,7 +248,8 @@ struct JournalEntryView: View {
                             editedText = aiEdits[previous] ?? aiSuggestions[previous] ?? ""
                         }
                     }
-                }, toneCycleRight: {
+                },
+                toneCycleRight: {
                     if let current = JournalTone.allCases[safe: aiToneIndex] {
                         aiEdits[current] = editedText
                     }
@@ -238,7 +259,8 @@ struct JournalEntryView: View {
                             editedText = aiEdits[next] ?? aiSuggestions[next] ?? ""
                         }
                     }
-                }, undoManager: undoManager)
+                },
+                undoManager: undoManager)
 //            .frame(height: height)
             .frame(maxWidth: .infinity, minHeight: height, maxHeight: height)
             .id(containerWidth)
@@ -272,6 +294,11 @@ struct JournalEntryView: View {
             }
             .onHover { hovering in
                 isHovering = hovering
+            }
+            .onChange(of: focusModel.focusedNoteID) { _, newValue in
+                if newValue == note.id {
+                    isSummaryPanelVisible = false
+                }
             }
             
             if isAINote && !isFinalized {

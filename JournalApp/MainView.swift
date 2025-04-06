@@ -23,7 +23,6 @@ struct MainView: View {
     @State private var justAddedEntryID: UUID?
     @StateObject private var focusModel = JournalFocusModel()
     @State private var entryToDelete: JournalEntry?
-    @State private var isAISummaryPanelVisible = false
     @StateObject private var summaryViewModel = SummaryPanelViewModel(entry: JournalEntry(date: Date(), title: "", notes: []))
     @State private var summaryPanelWidth: CGFloat = 350
     @AppStorage("chatPanelWidth") private var chatPanelWidthRaw: Double = 400
@@ -32,7 +31,7 @@ struct MainView: View {
     @State private var isShowChatHovering = false
     @State private var isChatPoppedOut: Bool = false
     @State private var poppedOutWindow: NSWindow?
-    @State private var isSummaryVisible: Bool = false
+    @State private var isSummaryPanelVisible: Bool = false
     
     var body: some View {
         navigationSplitView
@@ -47,16 +46,16 @@ struct MainView: View {
             detailView
                 .background(Color("DetailViewBackground"))
                 .overlay(alignment: .trailing) {
-                    if isAISummaryPanelVisible {
+                    if isSummaryPanelVisible {
                         SummaryPanel(viewModel: summaryViewModel)
                             .frame(width: summaryPanelWidth)
                             .background(Color("SummaryPanelBackground"))
                             .transition(.move(edge: .trailing))
                             .onAppear {
-                                isSummaryVisible = true
+                                isSummaryPanelVisible = true
                             }
                             .onDisappear {
-                                isSummaryVisible = false
+                                isSummaryPanelVisible = false
                             }
                             .overlay(alignment: .leading) {
                                 Rectangle()
@@ -81,13 +80,13 @@ struct MainView: View {
                             }
                     }
                 }
-                .animation(.easeInOut(duration: 0.2), value: isAISummaryPanelVisible)
+                .animation(.easeInOut(duration: 0.2), value: isSummaryPanelVisible)
         }
         .navigationTitle(selectedEntry?.title.isEmpty == false ? selectedEntry!.title : "Journal Entry")
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button {
-                    isAISummaryPanelVisible.toggle()
+                    isSummaryPanelVisible.toggle()
                 } label: {
                     Label("AI Summary", systemImage: "doc.text.magnifyingglass")
                 }
@@ -143,7 +142,7 @@ struct MainView: View {
             focusModel.focusedNoteID = nil
             if let newEntry {
                 summaryViewModel.updateEntry(newEntry)
-                if isSummaryVisible {
+                if isSummaryPanelVisible {
                     summaryViewModel.maybeSummarize()
                 }
             }
@@ -228,7 +227,7 @@ struct MainView: View {
             } else if let entry = selectedEntry {
                 HStack(spacing: 0) {
                     ZStack(alignment: .topTrailing) {
-                        JournalEntryView(entry: entry)
+                        JournalEntryView(entry: entry, isSummaryPanelVisible: $isSummaryPanelVisible)
                             .environmentObject(focusModel)
                         
                         if !isChatVisible {
