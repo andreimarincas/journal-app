@@ -283,11 +283,11 @@ struct TypingIndicator: View {
     let timer = Timer.publish(every: 0.25, on: .main, in: .common).autoconnect()
 
     var body: some View {
-        HStack(spacing: 4) {
+        HStack(spacing: 5) {
             ForEach(0..<3) { index in
                 Circle()
-                    .frame(width: 4, height: 4)
-                    .offset(y: currentDot == index ? -4 : 0)
+                    .frame(width: 5, height: 5)
+                    .offset(y: currentDot == index ? -5 : 0)
                     .animation(.easeInOut(duration: 0.35), value: currentDot)
             }
         }
