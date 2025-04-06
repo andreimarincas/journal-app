@@ -198,6 +198,7 @@ struct JournalEntryView: View {
         @State private var isHoveringNext = false
         @State private var isHoveringUndo = false
         @State private var isHoveringRedo = false
+        @State private var isHoveringChat = false
         
         @State private var isEnhancing = false
         
@@ -257,6 +258,7 @@ struct JournalEntryView: View {
                     undoButton
                     redoButton
                     transformButton
+                    chatButton
                     trashButton
                 }
             }
@@ -357,7 +359,31 @@ struct JournalEntryView: View {
             .onHover { isHoveringDone = $0 }
             .opacity(isAINote && isHovering ? 1 : 0)
         }
-
+        
+        private var chatButton: some View {
+            Group {
+                if !isAINote {
+                    Button(action: {
+                        print("Discuss note with AI: \(note.id)")
+                        focusModel.isChatVisible = true
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                            focusModel.pendingChatMessage = note.text
+                        }
+                    }) {
+                        Image(systemName: "bubble.left")
+                            .imageScale(.medium)
+                            .fontWeight(.medium)
+                            .frame(minWidth: 32, minHeight: 32)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .foregroundColor(isHoveringChat ? .primary : .secondary)
+                    .onHover { isHoveringChat = $0 }
+                    .opacity(isHovering ? 1 : 0)
+                }
+            }
+        }
+        
         private var transformButton: some View {
             Group {
                 if !isAINote {

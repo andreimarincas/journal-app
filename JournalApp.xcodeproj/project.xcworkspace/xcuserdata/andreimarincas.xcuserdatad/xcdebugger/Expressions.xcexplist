@@ -182,6 +182,20 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
+         contextName = "closure #1 in closure #1 in JournalEntryView.NoteRow.chatButton.getter:JournalEntryView.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "focusModel.pendingChatMessage">
+            </PersistentString>
+            <PersistentString
+               value = "focusModel.isChatVisible">
+            </PersistentString>
+            <PersistentString
+               value = "focusModel">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
          contextName = "closure #2 in TextViewWrapper.updateNSView(_:context:):JournalEntryView.swift">
          <PersistentStrings>
             <PersistentString

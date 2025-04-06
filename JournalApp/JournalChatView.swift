@@ -26,6 +26,7 @@ struct JournalChatView: View {
     @State private var isHoveringHide = false
     @State private var isHoveringPopOut = false
     @State private var isHoveringDock = false
+    @State private var isHoveringPinnedMessage = false
     @Binding var isInOwnWindow: Bool
     var popOutWindow: (() -> Void)?
     
@@ -33,6 +34,8 @@ struct JournalChatView: View {
     @State private var isTyping = false
     
     @Binding private var isSummaryPanelVisible: Bool
+    
+    @EnvironmentObject private var focusModel: JournalFocusModel
 
     init(entry: JournalEntry, isInOwnWindow: Binding<Bool> = .constant(false), isChatVisible: Binding<Bool> = .constant(true), popOutWindow: (() -> Void)? = nil, isSummaryPanelVisible: Binding<Bool> = .constant(false)) {
         self.entry = entry
@@ -119,7 +122,7 @@ struct JournalChatView: View {
                     }
                 }
             }
-
+            
             MessagesView(messages: messages, isTyping: isTyping)
                 .contentShape(Rectangle())
                 .onTapGesture {
@@ -139,6 +142,19 @@ struct JournalChatView: View {
             )
         }
         .background(Color("ChatViewBackground"))
+        .onChange(of: focusModel.pendingChatMessage) { _, newValue in
+            if let message = newValue {
+                insertUserMessage(message)
+            }
+        }
+    }
+    
+    func insertUserMessage(_ text: String) {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+
+        messages.append(ChatMessage(text: trimmed, isUser: true))
+        sendToGPT()
     }
 }
 

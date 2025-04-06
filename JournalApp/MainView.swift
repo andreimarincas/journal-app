@@ -12,6 +12,9 @@ import AppKit
 class JournalFocusModel: ObservableObject {
     @Published var focusedNoteID: UUID?
     weak var entry: JournalEntry?
+    
+    @Published var isChatVisible: Bool = true
+    @Published var pendingChatMessage: String? = nil
 }
 
 struct MainView: View {
@@ -34,12 +37,18 @@ struct MainView: View {
     @StateObject private var summaryViewModel = SummaryPanelViewModel(entry: JournalEntry(date: Date(), title: "", notes: []))
     
     @AppStorage("chatPanelWidth") private var chatPanelWidthRaw: Double = 300
-    @AppStorage("isChatVisible") private var isChatVisible: Bool = true
+    @AppStorage("isChatVisible") private var storedIsChatVisible: Bool = true
     
     var body: some View {
         navigationSplitView
+            .onAppear {
+                focusModel.isChatVisible = storedIsChatVisible
+            }
+            .onChange(of: focusModel.isChatVisible) { _, newValue in
+                storedIsChatVisible = newValue
+            }
     }
-
+    
     private var navigationSplitView: some View {
         NavigationSplitView {
             ScrollViewReader { proxy in
@@ -237,9 +246,9 @@ struct MainView: View {
                         JournalEntryView(entry: entry, viewModel: entryViewModel, isSummaryPanelVisible: $isSummaryPanelVisible)
                             .environmentObject(focusModel)
                         
-                        if !isChatVisible {
+                        if !storedIsChatVisible {
                             Button(action: {
-                                isChatVisible = true
+                                storedIsChatVisible = true
                             }) {
                                 Image(systemName: "bubble.left")
                                     .frame(width: 28, height: 28)
@@ -258,7 +267,7 @@ struct MainView: View {
                         }
                     }
                     
-                    if !isChatPoppedOut && isChatVisible {
+                    if !isChatPoppedOut && storedIsChatVisible {
                         ZStack {
                             // Drag area
                             Color.clear
@@ -285,15 +294,15 @@ struct MainView: View {
                                 .frame(width: 1)
                         }
                         
-                        JournalChatView(entry: entry, isInOwnWindow: $isChatPoppedOut, isChatVisible: $isChatVisible, popOutWindow: {
+                        JournalChatView(entry: entry, isInOwnWindow: $isChatPoppedOut, isChatVisible: $storedIsChatVisible, popOutWindow: {
                             self.isChatPoppedOut = true
-                        }, isSummaryPanelVisible: $isSummaryPanelVisible)
+                        }, isSummaryPanelVisible: $isSummaryPanelVisible).environmentObject(focusModel)
                             .frame(width: chatPanelWidth)
                             .background(Color("ChatViewBackground"))
                             .transition(.move(edge: .trailing))
                     }
                 }
-                .animation(.easeInOut(duration: 0.2), value: isChatVisible)
+                .animation(.easeInOut(duration: 0.2), value: storedIsChatVisible)
                 .onChange(of: isChatPoppedOut) { _, poppedOut in
                     if poppedOut {
                         let window = NSWindow(
