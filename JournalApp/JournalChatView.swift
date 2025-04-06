@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import AppKit
 
 struct ChatMessage: Identifiable, Equatable {
     let id = UUID()
@@ -133,7 +134,145 @@ struct JournalChatView: View {
     }
 }
 
-// Add this below MessagesView
+struct ResizingTextView: NSViewRepresentable {
+    @Binding var text: String
+    @Binding var height: CGFloat
+
+    func makeNSView(context: Context) -> NSScrollView {
+        let scrollView = NSTextView.scrollableTextView()
+        scrollView.hasVerticalScroller = true
+        scrollView.hasHorizontalScroller = false
+        scrollView.autohidesScrollers = true
+        scrollView.drawsBackground = false
+
+        if let textView = scrollView.documentView as? NSTextView {
+            textView.delegate = context.coordinator
+            textView.font = NSFont.systemFont(ofSize: 15)
+            textView.isEditable = true
+            textView.isSelectable = true
+            textView.isHorizontallyResizable = false
+            textView.isVerticallyResizable = true
+            textView.textContainer?.widthTracksTextView = true
+            textView.backgroundColor = .clear
+            textView.textContainerInset = NSSize(width: 4, height: 8)
+        }
+
+        return scrollView
+    }
+
+    func updateNSView(_ nsView: NSScrollView, context: Context) {
+        if let textView = nsView.documentView as? NSTextView {
+            if textView.string != text {
+                textView.string = text
+            }
+
+            guard let layoutManager = textView.layoutManager,
+                  let container = textView.textContainer else { return }
+
+            layoutManager.ensureLayout(for: container)
+            let usedRect = layoutManager.usedRect(for: container)
+            let calculatedHeight = usedRect.height + 16
+            let clampedHeight = min(max(calculatedHeight, 36), 92)
+
+            DispatchQueue.main.async {
+                self.height = clampedHeight
+            }
+        }
+    }
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(text: $text)
+    }
+
+    class Coordinator: NSObject, NSTextViewDelegate {
+        @Binding var text: String
+
+        init(text: Binding<String>) {
+            _text = text
+        }
+
+        func textDidChange(_ notification: Notification) {
+            if let textView = notification.object as? NSTextView {
+                self.text = textView.string
+            }
+        }
+    }
+}
+
+struct ChatInputView: View {
+    @State private var inputText: String = ""
+    @State private var inputHeight: CGFloat = 36
+    @FocusState var isInputFocused: Bool
+    let sendMessage: (String) -> Void
+
+    var body: some View {
+        ZStack(alignment: .bottomLeading) {
+            HStack(alignment: .bottom, spacing: 4) {
+                ResizingTextView(text: $inputText, height: $inputHeight)
+                    .frame(height: inputHeight)
+                    .animation(nil, value: inputHeight)
+                    .background(Color("ChatInputBackground"))
+                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 10)
+                            .stroke(Color.gray.opacity(0.4), lineWidth: 1)
+                    )
+
+                Button {
+                    let trimmed = inputText.trimmingCharacters(in: .whitespacesAndNewlines)
+                    if !trimmed.isEmpty {
+                        sendMessage(trimmed)
+                        inputText = ""
+                    }
+                } label: {
+                    Image(systemName: "arrow.up.circle.fill")
+                        .resizable()
+                        .frame(width: 28, height: 28)
+                        .foregroundStyle(.white, Color.accentColor)
+                }
+                .buttonStyle(.plain)
+                .padding(.bottom, 4)
+                .padding(.leading, 2)
+                .offset(x: 8)
+                .disabled(inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.bottom, 12)
+    }
+}
+
+struct TypingIndicator: View {
+    @State private var currentDot: Int = -1
+
+    let timer = Timer.publish(every: 0.25, on: .main, in: .common).autoconnect()
+
+    var body: some View {
+        HStack(spacing: 6) {
+            ForEach(0..<3) { index in
+                Circle()
+                    .frame(width: 6, height: 6)
+                    .offset(y: currentDot == index ? -6 : 0)
+                    .animation(.easeInOut(duration: 0.35), value: currentDot)
+            }
+        }
+        .foregroundColor(.gray)
+        .padding(12)
+        .background(Color.gray.opacity(0.1))
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .padding(.horizontal, 16)
+        .onReceive(timer) { _ in
+            withAnimation {
+                currentDot = (currentDot + 1) % 5
+            }
+        }
+    }
+}
+
+extension Notification.Name {
+    static let textViewHeightDidChange = Notification.Name("textViewHeightDidChange")
+}
+
 struct MessagesView: View {
     let messages: [ChatMessage]
     let isTyping: Bool
@@ -189,76 +328,5 @@ struct MessageBubble: View {
             if !isUser { Spacer() }
         }
         .padding(.horizontal, 16)
-    }
-}
-
-struct ChatInputView: View {
-    @State private var inputText: String = ""
-    @FocusState var isInputFocused: Bool
-    let sendMessage: (String) -> Void
-
-    var body: some View {
-        HStack(alignment: .bottom, spacing: 4) {
-            TextEditor(text: $inputText)
-                .font(.system(size: 15, weight: .regular, design: .rounded))
-                .foregroundColor(Color("ChatInputText"))
-                .padding(8)
-                .frame(minWidth: 56, maxHeight: 56)
-                .scrollContentBackground(.hidden)
-                .focused($isInputFocused)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 10)
-                        .stroke(Color.gray.opacity(0.4), lineWidth: 1)
-                )
-                .background(Color("ChatInputBackground"))
-                .clipShape(RoundedRectangle(cornerRadius: 10))
-
-            Button {
-                let trimmed = inputText.trimmingCharacters(in: .whitespacesAndNewlines)
-                if !trimmed.isEmpty {
-                    sendMessage(trimmed)
-                    inputText = ""
-                }
-            } label: {
-                Image(systemName: "arrow.up.circle.fill")
-                    .resizable()
-                    .frame(width: 28, height: 28)
-                    .foregroundStyle(.white, Color.accentColor)
-            }
-            .buttonStyle(.plain)
-            .padding(.bottom, 4)
-            .padding(.leading, 2)
-            .offset(x: 8)
-            .disabled(inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-        }
-        .padding(.horizontal, 16)
-        .padding(.bottom, 12)
-    }
-}
-
-struct TypingIndicator: View {
-    @State private var currentDot: Int = -1
-
-    let timer = Timer.publish(every: 0.25, on: .main, in: .common).autoconnect()
-
-    var body: some View {
-        HStack(spacing: 6) {
-            ForEach(0..<3) { index in
-                Circle()
-                    .frame(width: 6, height: 6)
-                    .offset(y: currentDot == index ? -6 : 0)
-                    .animation(.easeInOut(duration: 0.35), value: currentDot)
-            }
-        }
-        .foregroundColor(.gray)
-        .padding(12)
-        .background(Color.gray.opacity(0.1))
-        .clipShape(RoundedRectangle(cornerRadius: 12))
-        .padding(.horizontal, 16)
-        .onReceive(timer) { _ in
-            withAnimation {
-                currentDot = (currentDot + 1) % 5
-            }
-        }
     }
 }
