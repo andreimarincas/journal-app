@@ -8,10 +8,12 @@
 import Foundation
 
 class SummaryPanelViewModel: ObservableObject {
-    @Published var summaryText: String = "Loading summary..."
+    @Published var summaryText: String = ""
+    @Published var isSummarizing: Bool = false
     private let gptClient: GPTClient
     private var entry: JournalEntry
     private var lastSummarizedEntryID: UUID?
+    private var debounceWorkItem: DispatchWorkItem?
 
     init(entry: JournalEntry, gptClient: GPTClient = GPTClientProvider.shared) {
         self.gptClient = gptClient
@@ -19,6 +21,7 @@ class SummaryPanelViewModel: ObservableObject {
     }
 
     func summarizeNotes() {
+        isSummarizing = true
         Task {
             do {
                 let notesText = entry.notes.map { $0.text }.joined(separator: "\n\n")
@@ -26,10 +29,12 @@ class SummaryPanelViewModel: ObservableObject {
                 await MainActor.run {
                     self.summaryText = summary
                     self.lastSummarizedEntryID = entry.id
+                    self.isSummarizing = false
                 }
             } catch {
                 await MainActor.run {
                     self.summaryText = "⚠️ Error generating summary: \(error.localizedDescription)"
+                    self.isSummarizing = false
                 }
             }
         }
@@ -41,6 +46,12 @@ class SummaryPanelViewModel: ObservableObject {
 
     func maybeSummarize() {
         guard entry.id != lastSummarizedEntryID else { return }
-        summarizeNotes()
+
+        debounceWorkItem?.cancel()
+        let workItem = DispatchWorkItem { [weak self] in
+            self?.summarizeNotes()
+        }
+        debounceWorkItem = workItem
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4, execute: workItem)
     }
 }

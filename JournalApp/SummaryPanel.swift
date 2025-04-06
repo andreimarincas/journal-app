@@ -40,6 +40,7 @@ struct SummaryPanel: View {
                 .onHover { hovering in
                     isHoveringRegenerateButton = hovering
                 }
+                .disabled(viewModel.isSummarizing)
             }
             .padding(.horizontal, 20)
             .padding(.top, 28)

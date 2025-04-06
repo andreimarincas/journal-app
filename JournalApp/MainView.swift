@@ -32,7 +32,7 @@ struct MainView: View {
     @State private var isShowChatHovering = false
     @State private var isChatPoppedOut: Bool = false
     @State private var poppedOutWindow: NSWindow?
-    
+    @State private var isSummaryVisible: Bool = false
     
     var body: some View {
         navigationSplitView
@@ -52,6 +52,12 @@ struct MainView: View {
                             .frame(width: summaryPanelWidth)
                             .background(Color("SummaryPanelBackground"))
                             .transition(.move(edge: .trailing))
+                            .onAppear {
+                                isSummaryVisible = true
+                            }
+                            .onDisappear {
+                                isSummaryVisible = false
+                            }
                             .overlay(alignment: .leading) {
                                 Rectangle()
                                     .fill(Color.clear)
@@ -137,6 +143,9 @@ struct MainView: View {
             focusModel.focusedNoteID = nil
             if let newEntry {
                 summaryViewModel.updateEntry(newEntry)
+                if isSummaryVisible {
+                    summaryViewModel.maybeSummarize()
+                }
             }
         }
         .scrollContentBackground(.hidden)
