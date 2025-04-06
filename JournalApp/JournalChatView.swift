@@ -29,7 +29,7 @@ struct JournalChatView: View {
     @Binding var isInOwnWindow: Bool
     var popOutWindow: (() -> Void)?
     
-    @State private var gptClient = GPTClient(apiKey: Bundle.main.object(forInfoDictionaryKey: "OpenAI_API_Key") as? String ?? "")
+    @State private var gptClient = GPTClientProvider.shared
     @State private var isTyping = false
 
     init(entry: JournalEntry, isInOwnWindow: Binding<Bool> = .constant(false), isChatVisible: Binding<Bool> = .constant(true), popOutWindow: (() -> Void)? = nil) {

@@ -24,6 +24,7 @@ struct MainView: View {
     @StateObject private var focusModel = JournalFocusModel()
     @State private var entryToDelete: JournalEntry?
     @State private var isAISummaryPanelVisible = false
+    @StateObject private var summaryViewModel = SummaryPanelViewModel(entry: JournalEntry(date: Date(), title: "", notes: []))
     @State private var summaryPanelWidth: CGFloat = 350
     @AppStorage("chatPanelWidth") private var chatPanelWidthRaw: Double = 400
     @State private var chatPanelWidth: CGFloat = 400
@@ -31,7 +32,8 @@ struct MainView: View {
     @State private var isShowChatHovering = false
     @State private var isChatPoppedOut: Bool = false
     @State private var poppedOutWindow: NSWindow?
-
+    
+    
     var body: some View {
         navigationSplitView
     }
@@ -46,15 +48,15 @@ struct MainView: View {
                 .background(Color("DetailViewBackground"))
                 .overlay(alignment: .trailing) {
                     if isAISummaryPanelVisible {
-                        AISummaryPanel()
+                        SummaryPanel(viewModel: summaryViewModel)
                             .frame(width: summaryPanelWidth)
-                            .background(Color("AIPanelBackground"))
+                            .background(Color("SummaryPanelBackground"))
                             .transition(.move(edge: .trailing))
                             .overlay(alignment: .leading) {
                                 Rectangle()
                                     .fill(Color.clear)
                                     .frame(width: 6)
-                                    .background(Color("AIPanelBackground"))
+                                    .background(Color("SummaryPanelBackground"))
                                     .gesture(
                                         DragGesture(minimumDistance: 5)
                                             .onChanged { value in
@@ -86,7 +88,28 @@ struct MainView: View {
             }
         }
     }
-
+    
+    private var addEntryButton: some View {
+        Button(action: addEntry) {
+            Label("New Entry", systemImage: "square.and.pencil")
+                .foregroundColor(.primary)
+        }
+    }
+    
+    private var numberOfEntriesLabel: some View {
+        HStack {
+            Spacer()
+            Text("\(entries.count) entr\(entries.count == 1 ? "y" : "ies")")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+            Spacer()
+        }
+        .padding(.horizontal)
+        .padding(.vertical, 2)
+        .padding(.bottom, 26)
+        .background(Color("SidebarBackground"))
+    }
+    
     @ViewBuilder
     private func sidebarView(proxy: ScrollViewProxy) -> some View {
         List(selection: $selectedEntry) {
@@ -105,13 +128,16 @@ struct MainView: View {
                 }
             }
         }
-        .onChange(of: selectedEntry) { _, _ in
+        .onChange(of: selectedEntry) { _, newEntry in
             if let entry = selectedEntry, justAddedEntryID == entry.id {
                 proxy.scrollTo(entry.id, anchor: .top)
                 justAddedEntryID = nil
             }
             focusModel.entry = selectedEntry
             focusModel.focusedNoteID = nil
+            if let newEntry {
+                summaryViewModel.updateEntry(newEntry)
+            }
         }
         .scrollContentBackground(.hidden)
         .scrollIndicators(.hidden, axes: .horizontal)
@@ -121,10 +147,7 @@ struct MainView: View {
         .listRowInsets(.init(top: 6, leading: 12, bottom: 6, trailing: 8))
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
-                Button(action: addEntry) {
-                    Label("New Entry", systemImage: "square.and.pencil")
-                        .foregroundColor(.primary)
-                }
+                addEntryButton
             }
         }
         .alert("Delete this entry?", isPresented: Binding(
@@ -144,17 +167,7 @@ struct MainView: View {
             Text("This will permanently delete the entry and its notes.")
         }
         .safeAreaInset(edge: .bottom, spacing: 0) {
-            HStack {
-                Spacer()
-                Text("\(entries.count) entr\(entries.count == 1 ? "y" : "ies")")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                Spacer()
-            }
-            .padding(.horizontal)
-            .padding(.vertical, 2)
-            .padding(.bottom, 26)
-            .background(Color("SidebarBackground"))
+            numberOfEntriesLabel
         }
         .navigationSplitViewColumnWidth(min: 300, ideal: 400, max: 500)
         .onAppear {
@@ -166,6 +179,9 @@ struct MainView: View {
 #endif
             DispatchQueue.main.async {
                 selectedEntry = entries.first
+                if let entry = selectedEntry {
+                    summaryViewModel.updateEntry(entry)
+                }
             }
         }
     }
@@ -381,55 +397,5 @@ struct MainView: View {
                 }
             }
         }
-    }
-}
-
-private struct AISummaryPanel: View {
-    @Environment(\.colorScheme) private var colorScheme
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                Text("Summary")
-                    .font(.title)
-                    .fontWeight(.semibold)
-                    .padding(.leading, 20)
-                    .padding(.top, 28)
-            }
-            Divider().padding(.horizontal, 16)
-            ScrollView {
-                VStack(alignment: .leading, spacing: 16) {
-                    Text("""
-This entry explores the user's internal conflict between obligation and autonomy. Themes of guilt, inherited responsibility, and personal boundaries are highlighted throughout the notes.
-
-Key symbols include: the locked door (emotional separation), the unfinished conversation (regret), and the cold sunlight (clarity in solitude). The writing style shifts from reflective to resolute by the end.
-
-AI suggests the emotional arc moves from confusion → resistance → quiet strength.
-""")
-                        .font(.system(size: 14))
-                        .lineSpacing(6)
-                        .foregroundColor(.primary)
-                }
-                .padding(.top, 24)
-                .padding(.horizontal, 32)
-                .padding(.bottom, 40)
-            }
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(
-            ZStack(alignment: .leading) {
-                Color("AIPanelBackground")
-                LinearGradient(
-                    gradient: Gradient(colors: [
-                        (colorScheme == .dark ? Color.white : Color.black).opacity(colorScheme == .dark ? 0.08 : 0.06),
-                        Color.clear
-                    ]),
-                    startPoint: .leading,
-                    endPoint: .trailing
-                )
-                .frame(width: 8)
-                .padding(.leading, -4)
-            }
-        )
     }
 }

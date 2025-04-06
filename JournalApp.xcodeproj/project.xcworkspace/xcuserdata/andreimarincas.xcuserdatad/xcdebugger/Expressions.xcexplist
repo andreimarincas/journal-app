@@ -3,57 +3,13 @@
    version = "1.0">
    <ContextStates>
       <ContextState
-         contextName = "closure #2 in MainView.body.getter:MainView.swift">
+         contextName = "TextViewWrapper.makeNSView(context:):JournalEntryView.swift">
          <PersistentStrings>
             <PersistentString
-               value = "entries">
-            </PersistentString>
-         </PersistentStrings>
-      </ContextState>
-      <ContextState
-         contextName = "TextViewWrapper.updateNSView(_:context:):JournalEntryView.swift">
-         <PersistentStrings>
-            <PersistentString
-               value = "text">
+               value = "textView.string">
             </PersistentString>
             <PersistentString
-               value = "nsView.string">
-            </PersistentString>
-            <PersistentString
-               value = "isDimmed">
-            </PersistentString>
-            <PersistentString
-               value = "isHovered">
-            </PersistentString>
-         </PersistentStrings>
-      </ContextState>
-      <ContextState
-         contextName = "closure #3 in closure #1 in JournalEntryView.body.getter:JournalEntryView.swift">
-         <PersistentStrings>
-            <PersistentString
-               value = "focusModel.owner">
-            </PersistentString>
-         </PersistentStrings>
-      </ContextState>
-      <ContextState
-         contextName = "TextViewWrapper.Coordinator.textDidEndEditing(_:):JournalEntryView.swift">
-         <PersistentStrings>
-            <PersistentString
-               value = "parent">
-            </PersistentString>
-         </PersistentStrings>
-      </ContextState>
-      <ContextState
-         contextName = "closure #1 in TextViewWrapper.Coordinator.didEndEditing(_:):JournalEntryView.swift">
-      </ContextState>
-      <ContextState
-         contextName = "MainView.deleteEntry(_:):MainView.swift">
-         <PersistentStrings>
-            <PersistentString
-               value = "entries">
-            </PersistentString>
-            <PersistentString
-               value = "selectedEntry">
+               value = "undoManager">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -78,36 +34,8 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
-         contextName = "TextViewWrapper.Coordinator.textView(_:shouldChangeTextIn:replacementString:):JournalEntryView.swift">
-         <PersistentStrings>
-            <PersistentString
-               value = "textView.undoManager">
-            </PersistentString>
-         </PersistentStrings>
-      </ContextState>
-      <ContextState
-         contextName = "TextViewWrapper.updateFocus(for:):JournalEntryView.swift">
-         <PersistentStrings>
-            <PersistentString
-               value = "shouldFocus">
-            </PersistentString>
-         </PersistentStrings>
-      </ContextState>
-      <ContextState
          contextName = "FocusableTextView.performKeyEquivalent(with:):JournalEntryView.swift">
          <PersistentStrings>
-            <PersistentString
-               value = "event.keyCode">
-            </PersistentString>
-            <PersistentString
-               value = "isHoveredNote">
-            </PersistentString>
-            <PersistentString
-               value = "isActiveAINote">
-            </PersistentString>
-            <PersistentString
-               value = "undoManager">
-            </PersistentString>
             <PersistentString
                value = "customUndoManager">
             </PersistentString>
@@ -117,6 +45,85 @@
             <PersistentString
                value = "isFirstResponder">
             </PersistentString>
+            <PersistentString
+               value = "isActiveAINote">
+            </PersistentString>
+            <PersistentString
+               value = "event.keyCode">
+            </PersistentString>
+            <PersistentString
+               value = "isHoveredNote">
+            </PersistentString>
+            <PersistentString
+               value = "undoManager">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "closure #3 in closure #1 in JournalEntryView.body.getter:JournalEntryView.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "focusModel.owner">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "closure #1 in TextViewWrapper.updateNSView(_:context:):JournalEntryView.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "usedRect.height">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "closure #2 in closure #1 in JournalEntryView.body.getter:JournalEntryView.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "focusModel.focusedNoteID">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "SummaryPanelViewModel.summarizeNotes():SummaryPanelViewModel.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "entry.id">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "MainView.deleteEntry(_:):MainView.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "entries">
+            </PersistentString>
+            <PersistentString
+               value = "selectedEntry">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "closure #2 in MainView.deleteEntry(_:):MainView.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "entries">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "closure #2 in MainView.body.getter:MainView.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "entries">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "TextViewWrapper.Coordinator.textDidEndEditing(_:):JournalEntryView.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "parent">
+            </PersistentString>
          </PersistentStrings>
       </ContextState>
       <ContextState
@@ -124,6 +131,45 @@
          <PersistentStrings>
             <PersistentString
                value = "textView.undoManager">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "TextViewWrapper.Coordinator.textDidChange(_:):JournalEntryView.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "textView.string">
+            </PersistentString>
+            <PersistentString
+               value = "NSApp.mainWindow?.undoManager">
+            </PersistentString>
+            <PersistentString
+               value = "textView.undoManager">
+            </PersistentString>
+            <PersistentString
+               value = "NSApp.mainWindow?.firstResponder">
+            </PersistentString>
+            <PersistentString
+               value = "textView.customUndoManager">
+            </PersistentString>
+            <PersistentString
+               value = "parent">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "TextViewWrapper.Coordinator.textView(_:shouldChangeTextIn:replacementString:):JournalEntryView.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "textView.undoManager">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "closure #1 in JournalEntryView.NoteRow.doneButton.getter:JournalEntryView.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "editedText">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -139,71 +185,33 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
-         contextName = "closure #2 in MainView.deleteEntry(_:):MainView.swift">
-         <PersistentStrings>
-            <PersistentString
-               value = "entries">
-            </PersistentString>
-         </PersistentStrings>
-      </ContextState>
-      <ContextState
-         contextName = "TextViewWrapper.makeNSView(context:):JournalEntryView.swift">
-         <PersistentStrings>
-            <PersistentString
-               value = "undoManager">
-            </PersistentString>
-            <PersistentString
-               value = "textView.string">
-            </PersistentString>
-         </PersistentStrings>
-      </ContextState>
-      <ContextState
-         contextName = "closure #2 in closure #1 in JournalEntryView.body.getter:JournalEntryView.swift">
-         <PersistentStrings>
-            <PersistentString
-               value = "focusModel.focusedNoteID">
-            </PersistentString>
-         </PersistentStrings>
-      </ContextState>
-      <ContextState
          contextName = "closure #1 in closure #2 in MainView.body.getter:MainView.swift">
       </ContextState>
       <ContextState
-         contextName = "closure #1 in JournalEntryView.NoteRow.doneButton.getter:JournalEntryView.swift">
+         contextName = "TextViewWrapper.updateNSView(_:context:):JournalEntryView.swift">
          <PersistentStrings>
             <PersistentString
-               value = "editedText">
+               value = "nsView.string">
+            </PersistentString>
+            <PersistentString
+               value = "isDimmed">
+            </PersistentString>
+            <PersistentString
+               value = "isHovered">
+            </PersistentString>
+            <PersistentString
+               value = "text">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
       <ContextState
-         contextName = "TextViewWrapper.Coordinator.textDidChange(_:):JournalEntryView.swift">
-         <PersistentStrings>
-            <PersistentString
-               value = "parent">
-            </PersistentString>
-            <PersistentString
-               value = "textView.string">
-            </PersistentString>
-            <PersistentString
-               value = "textView.customUndoManager">
-            </PersistentString>
-            <PersistentString
-               value = "NSApp.mainWindow?.firstResponder">
-            </PersistentString>
-            <PersistentString
-               value = "NSApp.mainWindow?.undoManager">
-            </PersistentString>
-            <PersistentString
-               value = "textView.undoManager">
-            </PersistentString>
-         </PersistentStrings>
+         contextName = "closure #1 in TextViewWrapper.Coordinator.didEndEditing(_:):JournalEntryView.swift">
       </ContextState>
       <ContextState
-         contextName = "closure #1 in TextViewWrapper.updateNSView(_:context:):JournalEntryView.swift">
+         contextName = "TextViewWrapper.updateFocus(for:):JournalEntryView.swift">
          <PersistentStrings>
             <PersistentString
-               value = "usedRect.height">
+               value = "shouldFocus">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
