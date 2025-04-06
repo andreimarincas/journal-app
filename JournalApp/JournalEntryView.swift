@@ -188,6 +188,7 @@ struct JournalEntryView: View {
         @State private var isHovering = false
         @State private var height: CGFloat = 22
         @State private var showDeleteAlert = false
+        
         let containerWidth: CGFloat
         
         @State private var isHoveringTrash = false
@@ -236,40 +237,7 @@ struct JournalEntryView: View {
                                 .padding(.top, 1)
                             Spacer()
                         }
-            TextViewWrapper(
-                text: $editedText,
-                height: $height,
-                shouldFocus: shouldFocus,
-                id: note.id,
-                isDimmed: isAINote,
-                isHovered: isHovering,
-                toneCycleLeft: {
-                    if let current = JournalTone.allCases[safe: aiToneIndex] {
-                        aiEdits[current] = editedText
-                    }
-                    if aiToneIndex > 0 {
-                        aiToneIndex -= 1
-                        if let previous = JournalTone.allCases[safe: aiToneIndex] {
-                            editedText = aiEdits[previous] ?? aiSuggestions[previous] ?? ""
-                        }
-                    }
-                },
-                toneCycleRight: {
-                    if let current = JournalTone.allCases[safe: aiToneIndex] {
-                        aiEdits[current] = editedText
-                    }
-                    if aiToneIndex < JournalTone.allCases.count - 1 {
-                        aiToneIndex += 1
-                        if let next = JournalTone.allCases[safe: aiToneIndex] {
-                            editedText = aiEdits[next] ?? aiSuggestions[next] ?? ""
-                        }
-                    }
-                },
-                undoManager: undoManager)
-//            .frame(height: height)
-            .frame(maxWidth: .infinity, minHeight: height, maxHeight: height)
-            .id(containerWidth)
-            .onChange(of: height) { _, _ in }
+                        noteTextView
                     }
                     .padding(.vertical, 4)
                     .padding(.top, 8)
@@ -323,6 +291,43 @@ struct JournalEntryView: View {
                     }
                 }
             }
+        }
+        
+        private var noteTextView: some View {
+            TextViewWrapper(
+                text: $editedText,
+                height: $height,
+                shouldFocus: shouldFocus,
+                id: note.id,
+                isDimmed: isAINote,
+                isHovered: isHovering,
+                toneCycleLeft: {
+                    if let current = JournalTone.allCases[safe: aiToneIndex] {
+                        aiEdits[current] = editedText
+                    }
+                    if aiToneIndex > 0 {
+                        aiToneIndex -= 1
+                        if let previous = JournalTone.allCases[safe: aiToneIndex] {
+                            editedText = aiEdits[previous] ?? aiSuggestions[previous] ?? ""
+                        }
+                    }
+                },
+                toneCycleRight: {
+                    if let current = JournalTone.allCases[safe: aiToneIndex] {
+                        aiEdits[current] = editedText
+                    }
+                    if aiToneIndex < JournalTone.allCases.count - 1 {
+                        aiToneIndex += 1
+                        if let next = JournalTone.allCases[safe: aiToneIndex] {
+                            editedText = aiEdits[next] ?? aiSuggestions[next] ?? ""
+                        }
+                    }
+                },
+                undoManager: undoManager
+            )
+            .frame(maxWidth: .infinity, minHeight: height, maxHeight: height)
+            .id(containerWidth)
+            .onChange(of: height) { _, _ in }
         }
         
         private var doneButton: some View {
