@@ -620,9 +620,8 @@ struct TextViewWrapper: NSViewRepresentable {
            let textContainer = nsView.textContainer {
             layoutManager.ensureLayout(for: textContainer)
             let usedRect = layoutManager.usedRect(for: textContainer)
-            let newHeight = usedRect.height
-            if height != newHeight {
-                height = newHeight
+            DispatchQueue.main.async {
+                height = usedRect.height
             }
         }
         DispatchQueue.main.async {
