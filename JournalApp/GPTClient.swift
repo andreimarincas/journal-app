@@ -65,7 +65,16 @@ class GPTClient {
     
     func summarizeEntry(notes: String) async throws -> String {
         let messages = [
-            GPTMessage(role: "system", content: "You are a helpful assistant that summarizes journal notes into a clear emotional reflection. Focus on recurring themes, emotional tone, and symbolic motifs."),
+            GPTMessage(role: "system", content:
+                """
+                You are a thoughtful assistant that helps users reflect on their journal entries by summarizing them in the user's own voice.
+                Write in the **first person**, keeping the tone intimate and emotionally resonant.
+                Preserve recurring themes, emotional undertones, and symbolic language from the notes.
+                Avoid summarizing as an external narrator — write as if you are the person who wrote the notes, capturing what they might be trying to understand or say to themselves.
+                """
+//                       •    “Capture what I might be trying to tell myself, gently, beneath the surface of these notes.”
+//                       •    “Reflect my internal emotional arc, using the same metaphors or images I used.”
+            ),
             GPTMessage(role: "user", content: "Summarize the following journal entry notes:\n\n\(notes)")
         ]
 
