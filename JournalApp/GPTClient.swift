@@ -81,6 +81,15 @@ class GPTClient {
         return try await send(messages: messages)
     }
     
+    func generateTitle(for entryText: String) async throws -> String {
+        let systemPrompt = "Generate a concise, emotionally aware title (max 10 words) for the following journal entry:"
+        let messages = [
+            GPTMessage(role: "system", content: systemPrompt),
+            GPTMessage(role: "user", content: entryText)
+        ]
+        return try await send(messages: messages)
+    }
+    
     func fetchUsage(startDate: String, endDate: String) async throws -> String {
         guard let url = URL(string: "https://api.openai.com/v1/dashboard/billing/usage?start_date=\(startDate)&end_date=\(endDate)") else {
             throw NSError(domain: "GPTClient", code: 2, userInfo: [NSLocalizedDescriptionKey: "Invalid usage URL"])

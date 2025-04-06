@@ -23,15 +23,18 @@ struct MainView: View {
     @State private var justAddedEntryID: UUID?
     @StateObject private var focusModel = JournalFocusModel()
     @State private var entryToDelete: JournalEntry?
-    @StateObject private var summaryViewModel = SummaryPanelViewModel(entry: JournalEntry(date: Date(), title: "", notes: []))
     @State private var summaryPanelWidth: CGFloat = 350
-    @AppStorage("chatPanelWidth") private var chatPanelWidthRaw: Double = 400
     @State private var chatPanelWidth: CGFloat = 400
-    @AppStorage("isChatVisible") private var isChatVisible: Bool = true
     @State private var isShowChatHovering = false
     @State private var isChatPoppedOut: Bool = false
     @State private var poppedOutWindow: NSWindow?
     @State private var isSummaryPanelVisible: Bool = false
+    
+    @StateObject private var entryViewModel = JournalEntryViewModel(entry: JournalEntry(date: Date(), title: "", notes: []))
+    @StateObject private var summaryViewModel = SummaryPanelViewModel(entry: JournalEntry(date: Date(), title: "", notes: []))
+    
+    @AppStorage("chatPanelWidth") private var chatPanelWidthRaw: Double = 300
+    @AppStorage("isChatVisible") private var isChatVisible: Bool = true
     
     var body: some View {
         navigationSplitView
@@ -141,6 +144,7 @@ struct MainView: View {
             focusModel.entry = selectedEntry
             focusModel.focusedNoteID = nil
             if let newEntry {
+                entryViewModel.entry = newEntry
                 summaryViewModel.updateEntry(newEntry)
                 if isSummaryPanelVisible {
                     summaryViewModel.maybeSummarize()
@@ -179,6 +183,9 @@ struct MainView: View {
         }
         .navigationSplitViewColumnWidth(min: 300, ideal: 400, max: 500)
         .onAppear {
+            if chatPanelWidthRaw == 0 {
+                chatPanelWidthRaw = 300
+            }
             chatPanelWidth = CGFloat(chatPanelWidthRaw)
 #if DEBUG
             if entries.isEmpty {
@@ -227,7 +234,7 @@ struct MainView: View {
             } else if let entry = selectedEntry {
                 HStack(spacing: 0) {
                     ZStack(alignment: .topTrailing) {
-                        JournalEntryView(entry: entry, isSummaryPanelVisible: $isSummaryPanelVisible)
+                        JournalEntryView(entry: entry, viewModel: entryViewModel, isSummaryPanelVisible: $isSummaryPanelVisible)
                             .environmentObject(focusModel)
                         
                         if !isChatVisible {

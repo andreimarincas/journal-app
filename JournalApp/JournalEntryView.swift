@@ -38,14 +38,16 @@ enum JournalTone: CaseIterable {
 
 struct JournalEntryView: View {
     private(set) var entry: JournalEntry
+    @State private var viewModel: JournalEntryViewModel
     @Binding var isSummaryPanelVisible: Bool
     @EnvironmentObject private var focusModel: JournalFocusModel
     @State private var editedTexts: [UUID: String] = [:]
     @State private var aiSuggestions: [JournalTone: String] = [:]
     @State private var containerWidth: CGFloat = 0
     
-    init(entry: JournalEntry, isSummaryPanelVisible: Binding<Bool>) {
+    init(entry: JournalEntry, viewModel: JournalEntryViewModel, isSummaryPanelVisible: Binding<Bool>) {
         self.entry = entry
+        self.viewModel = viewModel
         self._isSummaryPanelVisible = isSummaryPanelVisible
     }
     
@@ -106,7 +108,7 @@ struct JournalEntryView: View {
                 VStack(alignment: .leading, spacing: 0) {
                     ForEach(entry.notes.sorted(by: { $0.number < $1.number })) { note in
                         ZStack {
-                            noteView(for: note)
+                            noteView(for: note).environmentObject(viewModel)
                         }
                     }
                 }
@@ -176,6 +178,7 @@ struct JournalEntryView: View {
         @State private var aiEdits: [JournalTone: String] = [:]
         @Binding var isSummaryPanelVisible: Bool
         @StateObject private var undoManager = CustomUndoManager()
+        @EnvironmentObject var viewModel: JournalEntryViewModel
         
         var isAINote: Bool {
             !isFinalized && note.text.trimmingCharacters(in: .whitespacesAndNewlines).hasPrefix("✨")
@@ -322,6 +325,7 @@ struct JournalEntryView: View {
         
         private var doneButton: some View {
             Button(action: {
+                viewModel.generateTitle()
                 if let responder = NSApp.keyWindow?.firstResponder as? NSTextView {
                     responder.window?.makeFirstResponder(nil)
                 }
