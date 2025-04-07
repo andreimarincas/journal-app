@@ -1,10 +1,3 @@
-extension JournalFocusModel {
-    func clearChatFocus() {
-        pendingChatMessage = nil
-        pendingChatMessageContext = nil
-        pinnedNoteID = nil
-    }
-}
 //
 //  JournalEntryView.swift
 //  JournalApp
@@ -391,9 +384,7 @@ struct JournalEntryView: View {
                 if !isAINote {
                     Button(action: {
                         guard !shouldFocusInChat else {
-                            focusModel.pendingChatMessage = nil
-                            focusModel.pendingChatMessageContext = nil
-                            focusModel.pinnedNoteID = nil
+                            focusModel.clearChatFocus()
                             return
                         }
                         let sortedNotes = entry.notes.sorted(by: { $0.number < $1.number })
@@ -591,9 +582,7 @@ struct JournalEntryView: View {
                         return newNote
                     }
                     if focusModel.pinnedNoteID == note.id {
-                        focusModel.pendingChatMessage = nil
-                        focusModel.pendingChatMessageContext = nil
-                        focusModel.pinnedNoteID = nil
+                        focusModel.clearChatFocus()
                     }
                 }
                 Button("Cancel", role: .cancel) {}

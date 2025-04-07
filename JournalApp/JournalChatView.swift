@@ -122,8 +122,6 @@ struct JournalChatView: View {
         .onChange(of: focusModel.pinnedNoteID) { _, newValue in
             if let message = focusModel.pendingChatMessage {
                 chatViewModel.insertUserMessage(message, context: focusModel.pendingChatMessageContext, pinnedNoteID: focusModel.pinnedNoteID)
-//                focusModel.pendingChatMessage = nil
-//                focusModel.pendingChatMessageContext = nil
             }
         }
     }

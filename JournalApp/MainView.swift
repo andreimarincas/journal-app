@@ -10,15 +10,6 @@ import SwiftData
 import AppKit
 import Combine
 
-class JournalFocusModel: ObservableObject {
-    @Published var focusedNoteID: UUID?
-    @Published var pinnedNoteID: UUID?
-    weak var entry: JournalEntry?
-    
-    @ObservationIgnored var pendingChatMessage: String? = nil
-    @ObservationIgnored var pendingChatMessageContext: ChatNoteContext?
-}
-
 struct ChatNoteContext {
     let entryNotes: [String]
     let noteIndex: Int
