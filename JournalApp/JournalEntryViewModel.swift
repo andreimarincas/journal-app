@@ -101,7 +101,8 @@ class JournalEntryViewModel: ObservableObject {
             try? await Task.sleep(nanoseconds: 1_000_000_000) // 1 second debounce
             guard let self else { return }
             do {
-                let suggestions = try await self.gptClient.generateNewNotes(basedOn: entry.notes.map(\.text))
+                let recentNotes = Array(entry.notes.suffix(3)).map(\.text)
+                let suggestions = try await self.gptClient.generateNewNotes(basedOn: recentNotes)
                 await MainActor.run {
                     var aiSuggestions: [AISuggestion] = []
                     for (index, tone) in JournalTone.allCases.enumerated() {

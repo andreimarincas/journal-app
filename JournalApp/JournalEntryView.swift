@@ -815,7 +815,15 @@ struct TextViewWrapper: NSViewRepresentable {
         let fontDescriptor = NSFont.systemFont(ofSize: 15, weight: .light).fontDescriptor
         let italicDescriptor = dimmed ? fontDescriptor.withSymbolicTraits(.italic) : fontDescriptor
         let font = NSFont(descriptor: italicDescriptor, size: 15) ?? NSFont.systemFont(ofSize: 15, weight: .light)
-        let attrs: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: textColor]
+        let paragraphStyle = NSMutableParagraphStyle()
+        paragraphStyle.lineHeightMultiple = 1.3
+        paragraphStyle.paragraphSpacing = 6
+
+        let attrs: [NSAttributedString.Key: Any] = [
+            .font: font,
+            .foregroundColor: textColor,
+            .paragraphStyle: paragraphStyle
+        ]
         let attributed = NSAttributedString(string: text, attributes: attrs)
         nsView.textStorage?.setAttributedString(attributed)
         nsView.typingAttributes = attrs
