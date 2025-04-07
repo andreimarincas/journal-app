@@ -172,7 +172,6 @@ struct JournalEntryView: View {
                     }
                 }
             ),
-            aiSuggestions: $aiSuggestions,
             isChatVisible: $isChatVisible,
             containerWidth: containerWidth,
             isSummaryPanelVisible: $isSummaryPanelVisible
@@ -186,9 +185,6 @@ struct JournalEntryView: View {
         let shouldFocusInChat: Bool
         @Binding var editedText: String
         @State private var isFinalized = false
-        @State private var aiToneIndex = 0
-        @Binding var aiSuggestions: [JournalTone: String]
-        @State private var aiEdits: [JournalTone: String] = [:]
         @Binding var isSummaryPanelVisible: Bool
         @StateObject private var undoManager = CustomUndoManager()
         @EnvironmentObject var viewModel: JournalEntryViewModel
@@ -216,13 +212,12 @@ struct JournalEntryView: View {
         
         @State private var isEnhancing = false
         
-        init(note: JournalNote, entry: JournalEntry, shouldFocus: Bool, shouldFocusInChat: Bool, editedText: Binding<String>, aiSuggestions: Binding<[JournalTone: String]>, isChatVisible: Binding<Bool>, containerWidth: CGFloat, isSummaryPanelVisible: Binding<Bool>) {
+        init(note: JournalNote, entry: JournalEntry, shouldFocus: Bool, shouldFocusInChat: Bool, editedText: Binding<String>, isChatVisible: Binding<Bool>, containerWidth: CGFloat, isSummaryPanelVisible: Binding<Bool>) {
             self.note = note
             self.entry = entry
             self.shouldFocus = shouldFocus
             self.shouldFocusInChat = shouldFocusInChat
             self._editedText = editedText
-            self._aiSuggestions = aiSuggestions
             self._isChatVisible = isChatVisible
             self.containerWidth = containerWidth
             self._isSummaryPanelVisible = isSummaryPanelVisible
@@ -300,10 +295,10 @@ struct JournalEntryView: View {
                     HStack() {
                         VStack {
                             Spacer()
-                            Text(JournalTone.allCases[safe: aiToneIndex]?.label ?? "")
+                            Text(viewModel.currentAISuggestion?.tone.label ?? "")
                                 .font(.callout)
                                 .italic()
-                                .foregroundStyle((JournalTone.allCases[safe: aiToneIndex]?.color ?? .secondary).opacity(0.8))
+                                .foregroundStyle((viewModel.currentAISuggestion?.tone.color ?? .secondary).opacity(0.8))
                                 .padding(.leading, 40)
                                 .padding(.top, 12)
                                 .padding(.bottom, 8)
@@ -323,26 +318,34 @@ struct JournalEntryView: View {
                 isDimmed: isAINote,
                 isHovered: isHovering,
                 toneCycleLeft: {
-                    if let current = JournalTone.allCases[safe: aiToneIndex] {
-                        aiEdits[current] = editedText
+                    viewModel.cycleAISuggestion(inReverse: true)
+                    if let newText = viewModel.currentAISuggestion?.text {
+                        editedText = newText
                     }
-                    if aiToneIndex > 0 {
-                        aiToneIndex -= 1
-                        if let previous = JournalTone.allCases[safe: aiToneIndex] {
-                            editedText = aiEdits[previous] ?? aiSuggestions[previous] ?? ""
-                        }
-                    }
+//                    if let current = viewModel.latestAISuggestions[safe: aiToneIndex]?.tone {
+//                        aiEdits[current] = editedText
+//                    }
+//                    if aiToneIndex > 0 {
+//                        aiToneIndex -= 1
+//                        if let previous = JournalTone.allCases[safe: aiToneIndex] {
+//                            editedText = aiEdits[previous] ?? aiSuggestions[previous] ?? ""
+//                        }
+//                    }
                 },
                 toneCycleRight: {
-                    if let current = JournalTone.allCases[safe: aiToneIndex] {
-                        aiEdits[current] = editedText
+                    viewModel.cycleAISuggestion()
+                    if let newText = viewModel.currentAISuggestion?.text {
+                        editedText = newText
                     }
-                    if aiToneIndex < JournalTone.allCases.count - 1 {
-                        aiToneIndex += 1
-                        if let next = JournalTone.allCases[safe: aiToneIndex] {
-                            editedText = aiEdits[next] ?? aiSuggestions[next] ?? ""
-                        }
-                    }
+//                    if let current = viewModel.latestAISuggestions[safe: aiToneIndex]?.tone {
+//                        aiEdits[current] = editedText
+//                    }
+//                    if aiToneIndex < JournalTone.allCases.count - 1 {
+//                        aiToneIndex += 1
+//                        if let next = viewModel.latestAISuggestions[safe: aiToneIndex]?.tone {
+//                            editedText = aiEdits[next] ?? aiSuggestions[next] ?? ""
+//                        }
+//                    }
                 },
                 undoManager: undoManager
             )
@@ -414,9 +417,9 @@ struct JournalEntryView: View {
                             .frame(minWidth: 32, minHeight: 32)
                             .contentShape(Rectangle())
                     }
+                    .onHover { isHoveringChat = $0 }
                     .buttonStyle(.plain)
                     .foregroundColor(isHoveringChat ? .primary : .secondary)
-                    .onHover { isHoveringChat = $0 }
                     .opacity(isHovering || shouldFocusInChat ? 1 : 0)
                 }
             }
@@ -479,79 +482,67 @@ struct JournalEntryView: View {
         
         private var redoButton: some View {
             Group {
-                Button(action: {
-                    if let restored = undoManager.redo(current: editedText) {
-                        editedText = restored
+                if !isAINote {
+                    Button(action: {
+                        if let restored = undoManager.redo(current: editedText) {
+                            editedText = restored
+                        }
+                    }) {
+                        Image(systemName: "arrow.uturn.forward")
+                            .imageScale(.medium)
+                            .fontWeight(.medium)
+                            .frame(minWidth: 32, minHeight: 32)
+                            .contentShape(Rectangle())
                     }
-                }) {
-                    Image(systemName: "arrow.uturn.forward")
-                        .imageScale(.medium)
-                        .fontWeight(.medium)
-                        .frame(minWidth: 32, minHeight: 32)
-                        .contentShape(Rectangle())
+                    .buttonStyle(.plain)
+                    .foregroundColor(isHoveringRedo ? .primary : .secondary)
+                    .onHover { isHoveringRedo = $0 }
+                    .disabled(undoManager.redoStack.isEmpty)
+                    .opacity(isHovering || shouldFocusInChat ? 1 : 0)
                 }
-                .buttonStyle(.plain)
-                .foregroundColor(isHoveringRedo ? .primary : .secondary)
-                .onHover { isHoveringRedo = $0 }
-                .disabled(undoManager.redoStack.isEmpty)
-                .opacity(isHovering || shouldFocusInChat ? 1 : 0)
             }
         }
 
         private var toneCycleButtons: some View {
             HStack(spacing: 4) {
                 Button(action: {
-                    if let current = JournalTone.allCases[safe: aiToneIndex] {
-                        aiEdits[current] = editedText
-                    }
-                    if aiToneIndex > 0 {
-                        aiToneIndex -= 1
-                        if let previous = JournalTone.allCases[safe: aiToneIndex] {
-                            editedText = aiEdits[previous] ?? aiSuggestions[previous] ?? ""
-                        }
+                    viewModel.cycleAISuggestion(inReverse: true)
+                    if let newText = viewModel.currentAISuggestion?.text {
+                        editedText = newText
                     }
                 }) {
-                Image(systemName: "chevron.left")
-                    .imageScale(.medium)
-                    .fontWeight(.medium)
-                    .frame(minWidth: 32, minHeight: 32)
-                    .contentShape(Rectangle())
+                    Image(systemName: "chevron.left")
+                        .imageScale(.medium)
+                        .fontWeight(.medium)
+                        .frame(minWidth: 32, minHeight: 32)
+                        .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
-                .disabled(aiToneIndex == 0)
                 .foregroundColor(isHoveringPrev ? .primary : .secondary)
                 .onHover { isHoveringPrev = $0 }
 
-                Text("\(aiToneIndex + 1)/\(JournalTone.allCases.count)")
+                Text("\(viewModel.currentAISuggestionIndex + 1)/\(JournalTone.allCases.count)")
                     .font(.callout)
                     .foregroundColor(.secondary)
                     .frame(width: 20)
                     .multilineTextAlignment(.center)
 
-                        Button(action: {
-                            if let current = JournalTone.allCases[safe: aiToneIndex] {
-                                aiEdits[current] = editedText
-                            }
-                            if aiToneIndex < JournalTone.allCases.count - 1 {
-                                aiToneIndex += 1
-                                if let next = JournalTone.allCases[safe: aiToneIndex] {
-                                    editedText = aiEdits[next] ?? aiSuggestions[next] ?? ""
-                                }
-                            }
-                        }) {
+                Button(action: {
+                    viewModel.cycleAISuggestion()
+                    if let newText = viewModel.currentAISuggestion?.text {
+                        editedText = newText
+                    }
+                }) {
                     Image(systemName: "chevron.right")
                         .imageScale(.medium)
                         .fontWeight(.medium)
                         .frame(minWidth: 32, minHeight: 32)
                         .contentShape(Rectangle())
-                    
                 }
                 .buttonStyle(.plain)
-                .disabled(aiToneIndex == JournalTone.allCases.count - 1)
                 .foregroundColor(isHoveringNext ? .primary : .secondary)
                 .onHover { isHoveringNext = $0 }
             }
-            .buttonStyle(.plain)
             .opacity(isAINote && isHovering ? 1 : 0)
         }
         
@@ -616,17 +607,18 @@ struct JournalEntryView: View {
                 .padding(.trailing, 8)
                 
                 Button(action: {
-                    aiSuggestions = Dictionary(uniqueKeysWithValues: JournalTone.allCases.map { ($0, $0.text) })
-                    let aiToneIndex = 0
-                    let selectedTone = JournalTone.allCases[aiToneIndex]
-                    let nextNumber = (entry.notes.map(\.number).max() ?? 0) + 1
-//                    let newNote = JournalNote(number: nextNumber, text: "✨ The air felt heavy with things unsaid.")
-                    let newNote = JournalNote(number: nextNumber, text: aiSuggestions[selectedTone] ?? "")
-                    entry.notes.append(newNote)
                     if let window = NSApplication.shared.keyWindow {
                         window.makeFirstResponder(nil)
                     }
                     focusModel.focusedNoteID = nil
+                    viewModel.generateAISuggestions(for: entry) { aiSuggestions in
+                        guard let aiSuggestions, !aiSuggestions.isEmpty,
+                                aiSuggestions.count == JournalTone.allCases.count else { return }
+                        let nextNumber = (entry.notes.map(\.number).max() ?? 0) + 1
+                        let aiText = viewModel.currentAISuggestion?.text ?? ""
+                        let newNote = JournalNote(number: nextNumber, text: aiText)
+                        entry.notes.append(newNote)
+                    }
                 }) {
                     Image(systemName: "sparkles")
                         .font(.system(size: 18, weight: .bold))
@@ -637,6 +629,7 @@ struct JournalEntryView: View {
                         .symbolRenderingMode(.palette)
                         .foregroundStyle(Color("SparklesYellow"), Color("SparklesOrange"))
                 }
+                .disabled(viewModel.isGeneratingAISuggestions)
                 .buttonStyle(.plain)
                 .padding(.top, 4)
             }
@@ -654,6 +647,9 @@ struct JournalEntryView: View {
 
 extension JournalEntryView {
     private var noteHorizon: some View {
+        guard !viewModel.isGeneratingAISuggestions else {
+            return AnyView(EmptyView())
+        }
         return AnyView(
             VStack(alignment: .leading) {
                 Color.clear
@@ -662,7 +658,7 @@ extension JournalEntryView {
                     .padding(.top, 8)
                     .background(
                         RoundedRectangle(cornerRadius: 4)
-                            .fill(Color.white)
+                            .fill(Color("EntryBackground"))
                             .padding(.leading, 10)
                             .opacity(isHoveringNoteHorizon ? 1 : 0)
                     )
@@ -679,7 +675,7 @@ extension JournalEntryView {
                             Divider()
                                 .frame(height: 1)
                                 .background(Color.secondary.opacity(0.06))
-                            Text("Click to add note")
+                            Text("Start writing...")
                                 .font(.system(size: 14, weight: .thin))
                                 .italic()
                                 .foregroundColor(.primary.opacity(0.8))

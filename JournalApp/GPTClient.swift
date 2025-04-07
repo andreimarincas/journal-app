@@ -88,6 +88,29 @@ class GPTClient {
 
         return try await send(messages: messages)
     }
+
+    func generateNewNotes(basedOn existingNotes: [String]) async throws -> [String] {
+        guard !existingNotes.isEmpty else { return [] }
+
+        let notesText = existingNotes.joined(separator: "\n\n")
+
+        @Sendable func note(for prompt: String) async throws -> String {
+            let messages = [
+                GPTMessage(role: "system", content: prompt.replacingOccurrences(of: "{existingNotes}", with: notesText)),
+                GPTMessage(role: "user", content: notesText)
+            ]
+            return try await send(messages: messages)
+        }
+
+        async let reflective = note(for: GPTPrompts.generateReflectiveNotePrompt)
+        async let hopeful = note(for: GPTPrompts.generateHopefulNotePrompt)
+        async let melancholy = note(for: GPTPrompts.generateMelancholyNotePrompt)
+
+        return try await [reflective, hopeful, melancholy].map {
+            $0.trimmingCharacters(in: .whitespacesAndNewlines)
+                .replacingOccurrences(of: #"^\d+\.\s*"#, with: "", options: .regularExpression)
+        }
+    }
     
     func fetchUsage(startDate: String, endDate: String) async throws -> String {
         guard let url = URL(string: "https://api.openai.com/v1/dashboard/billing/usage?start_date=\(startDate)&end_date=\(endDate)") else {

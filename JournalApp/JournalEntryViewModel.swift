@@ -9,10 +9,29 @@ import Foundation
 
 class JournalEntryViewModel: ObservableObject {
     @Published private(set) var entry: JournalEntry
+    @Published var isGeneratingAISuggestions: Bool = false
     private let gptClient = GPTClientProvider.shared
     private var generateTitleTask: Task<Void, Never>?
     private var enhanceNoteTasks: [UUID: Task<Void, Never>] = [:]
+    
+    @Published var latestAISuggestions: [AISuggestion] = []
+    @Published var currentAISuggestionIndex: Int = 0
 
+    var currentAISuggestion: AISuggestion? {
+        latestAISuggestions.indices.contains(currentAISuggestionIndex)
+            ? latestAISuggestions[currentAISuggestionIndex]
+            : nil
+    }
+
+    func cycleAISuggestion(inReverse: Bool = false) {
+        guard !latestAISuggestions.isEmpty else { return }
+        if inReverse {
+            currentAISuggestionIndex = (currentAISuggestionIndex - 1 + latestAISuggestions.count) % latestAISuggestions.count
+        } else {
+            currentAISuggestionIndex = (currentAISuggestionIndex + 1) % latestAISuggestions.count
+        }
+    }
+    
     init(entry: JournalEntry) {
         self.entry = entry
     }
@@ -74,5 +93,34 @@ class JournalEntryViewModel: ObservableObject {
         }
 
         enhanceNoteTasks[noteID] = task
+    }
+    
+    func generateAISuggestions(for entry: JournalEntry, completion: @escaping ([AISuggestion]?) -> Void) {
+        isGeneratingAISuggestions = true
+        Task { [weak self] in
+            try? await Task.sleep(nanoseconds: 1_000_000_000) // 1 second debounce
+            guard let self else { return }
+            do {
+                let suggestions = try await self.gptClient.generateNewNotes(basedOn: entry.notes.map(\.text))
+                await MainActor.run {
+                    var aiSuggestions: [AISuggestion] = []
+                    for (index, tone) in JournalTone.allCases.enumerated() {
+                        guard suggestions.indices.contains(index) else { continue }
+                        let aiSuggestion = AISuggestion(tone: tone, text: "✨ " + suggestions[index])
+                        aiSuggestions.append(aiSuggestion)
+                    }
+                    self.latestAISuggestions = aiSuggestions
+                    self.currentAISuggestionIndex = 0
+                    self.isGeneratingAISuggestions = false
+                    completion(aiSuggestions)
+                }
+            } catch {
+                print("Failed to generate AI suggestions: \(error)")
+                await MainActor.run {
+                    self.isGeneratingAISuggestions = false
+                    completion(nil)
+                }
+            }
+        }
     }
 }

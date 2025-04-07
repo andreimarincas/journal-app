@@ -35,3 +35,9 @@ class JournalNote {
         self.text = text
     }
 }
+
+struct AISuggestion: Identifiable {
+    let id = UUID()
+    let tone: JournalTone
+    let text: String
+}
