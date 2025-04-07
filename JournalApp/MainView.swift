@@ -138,13 +138,14 @@ struct MainView: View {
                 }
             }
         }
-        .onChange(of: selectedEntry) { _, newEntry in
+        .onChange(of: selectedEntry) { oldEntry, newEntry in
             if let entry = selectedEntry, justAddedEntryID == entry.id {
                 proxy.scrollTo(entry.id, anchor: .top)
                 justAddedEntryID = nil
             }
             focusModel.entry = selectedEntry
             focusModel.focusedNoteID = nil
+            focusModel.clearChatFocus()
             if let newEntry {
                 entryViewModel.updateEntry(newEntry)
                 summaryViewModel.updateEntry(newEntry)
