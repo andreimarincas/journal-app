@@ -387,6 +387,9 @@ struct JournalEntryView: View {
                             focusModel.clearChatFocus()
                             return
                         }
+                        if let responder = NSApp.keyWindow?.firstResponder as? NSTextView {
+                            responder.window?.makeFirstResponder(nil)
+                        }
                         let sortedNotes = entry.notes.sorted(by: { $0.number < $1.number })
                         guard let index = sortedNotes.firstIndex(where: { $0.id == note.id }) else { return }
                         let allNoteTexts = sortedNotes.map { $0.text }
