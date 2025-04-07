@@ -45,6 +45,7 @@ struct JournalEntryView: View {
     @State private var aiSuggestions: [JournalTone: String] = [:]
     @State private var containerWidth: CGFloat = 0
     @Binding var isChatVisible: Bool
+    @State private var isHoveringNoteHorizon : Bool = false
     
     init(entry: JournalEntry, viewModel: JournalEntryViewModel, isSummaryPanelVisible: Binding<Bool>, isChatVisible: Binding<Bool>) {
         self.entry = entry
@@ -113,6 +114,7 @@ struct JournalEntryView: View {
                             noteView(for: note).environmentObject(viewModel)
                         }
                     }
+                    noteHorizon
                 }
                 .padding(.trailing, 12)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -623,6 +625,66 @@ struct JournalEntryView: View {
                 Spacer()
             }
         }
+    }
+}
+
+extension JournalEntryView {
+    private var noteHorizon: some View {
+        return AnyView(
+            VStack(alignment: .leading) {
+                Color.clear
+                    .frame(height: 56)
+                    .contentShape(Rectangle())
+                    .padding(.top, 8)
+                    .background(
+                        RoundedRectangle(cornerRadius: 4)
+                            .fill(Color.white)
+                            .padding(.leading, 10)
+                            .opacity(isHoveringNoteHorizon ? 1 : 0)
+                    )
+                    .onHover { hovering in
+                        isHoveringNoteHorizon = hovering
+                        if hovering {
+                            withAnimation {
+                                focusModel.focusedNoteID = nil
+                            }
+                        }
+                    }
+                    .overlay(
+                        HStack {
+                            Divider()
+                                .frame(height: 1)
+                                .background(Color.secondary.opacity(0.06))
+                            Text("Click to add note")
+                                .font(.system(size: 14, weight: .thin))
+                                .italic()
+                                .foregroundColor(.primary.opacity(0.8))
+                            Divider()
+                                .frame(height: 1)
+                                .background(Color.secondary.opacity(0.3))
+                        }
+                        .padding(.leading, 16)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .opacity(isHoveringNoteHorizon ? 0.7 : 0)
+                        .allowsHitTesting(false)
+                    )
+                    .onTapGesture {
+                        let newNumber = (entry.notes.map(\.number).max() ?? 0) + 1
+                        let newNote = JournalNote(number: newNumber, text: "")
+                        entry.notes.append(newNote)
+                        focusModel.focusedNoteID = newNote.id
+                    }
+                Divider()
+                    .frame(height: 0.5)
+                    .foregroundStyle(.secondary)
+                    .padding(.bottom, 4)
+                    .padding(.leading, 11)
+                    .offset(y: -8)
+                    .opacity(isHoveringNoteHorizon ? 1 : 0)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding([.leading])
+        )
     }
 }
 
