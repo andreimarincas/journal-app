@@ -65,16 +65,7 @@ class GPTClient {
     
     func summarizeEntry(notes: String) async throws -> String {
         let messages = [
-            GPTMessage(role: "system", content:
-                """
-                You are a thoughtful assistant that helps users reflect on their journal entries by summarizing them in the user's own voice.
-                Write in the **first person**, keeping the tone intimate and emotionally resonant.
-                Preserve recurring themes, emotional undertones, and symbolic language from the notes.
-                Avoid summarizing as an external narrator — write as if you are the person who wrote the notes, capturing what they might be trying to understand or say to themselves.
-                """
-//                       •    “Capture what I might be trying to tell myself, gently, beneath the surface of these notes.”
-//                       •    “Reflect my internal emotional arc, using the same metaphors or images I used.”
-            ),
+            GPTMessage(role: "system", content: GPTPrompts.summarizePrompt),
             GPTMessage(role: "user", content: "Summarize the following journal entry notes:\n\n\(notes)")
         ]
 
@@ -82,9 +73,8 @@ class GPTClient {
     }
     
     func generateTitle(for entryText: String) async throws -> String {
-        let systemPrompt = "Generate a concise, emotionally aware title (max 10 words) for the following journal entry:"
         let messages = [
-            GPTMessage(role: "system", content: systemPrompt),
+            GPTMessage(role: "system", content: GPTPrompts.generateTitlePrompt),
             GPTMessage(role: "user", content: entryText)
         ]
         return try await send(messages: messages)
@@ -92,14 +82,7 @@ class GPTClient {
     
     func enhanceNote(_ noteText: String) async throws -> String {
         let messages = [
-            GPTMessage(role: "system", content:
-                """
-                You are a thoughtful and expressive assistant that helps users refine and elevate their journal notes.
-                Enhance the clarity, emotional depth, and poetic tone of the user's note.
-                Keep the note in the first person and retain its original meaning, but gently improve flow, imagery, and resonance.
-                Return only the enhanced version of the note, without commentary or explanation.
-                """
-            ),
+            GPTMessage(role: "system", content: GPTPrompts.enhanceNotePrompt),
             GPTMessage(role: "user", content: noteText)
         ]
 
