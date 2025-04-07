@@ -1,3 +1,10 @@
+extension JournalFocusModel {
+    func clearChatFocus() {
+        pendingChatMessage = nil
+        pendingChatMessageContext = nil
+        pinnedNoteID = nil
+    }
+}
 //
 //  JournalEntryView.swift
 //  JournalApp
@@ -150,10 +157,12 @@ struct JournalEntryView: View {
             note.text = newText
         }
         let shouldFocus = focusModel.focusedNoteID == note.id
+        let shouldFocusInChat = focusModel.pinnedNoteID == note.id
         return NoteRow(
             note: note,
             entry: entry,
             shouldFocus: shouldFocus,
+            shouldFocusInChat: shouldFocusInChat,
             editedText: Binding(
                 get: {
                     let result = editedTexts[note.id] ?? note.text
@@ -162,7 +171,12 @@ struct JournalEntryView: View {
                 },
                 set: {
                     print($0)
-                    if $0 != editedTexts[note.id] { editedTexts[note.id] = $0 }
+                    if $0 != editedTexts[note.id] {
+                        editedTexts[note.id] = $0
+                        if focusModel.pinnedNoteID == note.id {
+                            focusModel.clearChatFocus()
+                        }
+                    }
                 }
             ),
             aiSuggestions: $aiSuggestions,
@@ -176,6 +190,7 @@ struct JournalEntryView: View {
         let note: JournalNote
         let entry: JournalEntry
         let shouldFocus: Bool
+        let shouldFocusInChat: Bool
         @Binding var editedText: String
         @State private var isFinalized = false
         @State private var aiToneIndex = 0
@@ -208,10 +223,11 @@ struct JournalEntryView: View {
         
         @State private var isEnhancing = false
         
-        init(note: JournalNote, entry: JournalEntry, shouldFocus: Bool, editedText: Binding<String>, aiSuggestions: Binding<[JournalTone: String]>, isChatVisible: Binding<Bool>, containerWidth: CGFloat, isSummaryPanelVisible: Binding<Bool>) {
+        init(note: JournalNote, entry: JournalEntry, shouldFocus: Bool, shouldFocusInChat: Bool, editedText: Binding<String>, aiSuggestions: Binding<[JournalTone: String]>, isChatVisible: Binding<Bool>, containerWidth: CGFloat, isSummaryPanelVisible: Binding<Bool>) {
             self.note = note
             self.entry = entry
             self.shouldFocus = shouldFocus
+            self.shouldFocusInChat = shouldFocusInChat
             self._editedText = editedText
             self._aiSuggestions = aiSuggestions
             self._isChatVisible = isChatVisible
@@ -236,7 +252,7 @@ struct JournalEntryView: View {
                             RoundedRectangle(cornerRadius: 2)
                                 .frame(width: 4)
                         )
-                        .opacity(focusModel.focusedNoteID == note.id ? 1 : 0)
+                        .opacity(shouldFocus || shouldFocusInChat ? 1 : 0)
                         .offset(y: 2)
                         VStack {
                             Text("\(note.number).")
@@ -273,6 +289,9 @@ struct JournalEntryView: View {
             .contentShape(Rectangle())
             .onTapGesture {
                 focusModel.focusedNoteID = note.id
+                if focusModel.pinnedNoteID != note.id {
+                    focusModel.clearChatFocus()
+                }
             }
             .onHover { hovering in
                 isHovering = hovering
@@ -371,6 +390,12 @@ struct JournalEntryView: View {
             Group {
                 if !isAINote {
                     Button(action: {
+                        guard !shouldFocusInChat else {
+                            focusModel.pendingChatMessage = nil
+                            focusModel.pendingChatMessageContext = nil
+                            focusModel.pinnedNoteID = nil
+                            return
+                        }
                         let sortedNotes = entry.notes.sorted(by: { $0.number < $1.number })
                         guard let index = sortedNotes.firstIndex(where: { $0.id == note.id }) else { return }
                         let allNoteTexts = sortedNotes.map { $0.text }
@@ -380,13 +405,16 @@ struct JournalEntryView: View {
                             noteIndex: index,
                             userMessage: note.text
                         )
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
-                            focusModel.pendingChatMessage = note.text
-                        }
                         
+                        focusModel.pendingChatMessage = note.text
                         isChatVisible = true
+                        
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                            focusModel.pinnedNoteID = note.id
+                        }
                     }) {
-                        Image(systemName: "bubble.left")
+                        Image(systemName: shouldFocusInChat ? "bubble.left.fill" : "bubble.left")
+                            .foregroundColor(shouldFocusInChat ? .accentColor : .secondary)
                             .imageScale(.medium)
                             .fontWeight(.medium)
                             .frame(minWidth: 32, minHeight: 32)
@@ -395,7 +423,7 @@ struct JournalEntryView: View {
                     .buttonStyle(.plain)
                     .foregroundColor(isHoveringChat ? .primary : .secondary)
                     .onHover { isHoveringChat = $0 }
-                    .opacity(isHovering ? 1 : 0)
+                    .opacity(isHovering || shouldFocusInChat ? 1 : 0)
                 }
             }
         }
@@ -426,7 +454,7 @@ struct JournalEntryView: View {
                     .buttonStyle(.plain)
                     .foregroundColor(isHoveringTransform ? .primary : .secondary)
                     .onHover { isHoveringTransform = $0 }
-                    .opacity(isHovering ? 1 : 0)
+                    .opacity(isHovering || shouldFocusInChat ? 1 : 0)
                     .disabled(isEnhancing)
                 }
             }
@@ -449,7 +477,7 @@ struct JournalEntryView: View {
                     .buttonStyle(.plain)
                     .foregroundColor(isHoveringUndo ? .primary : .secondary)
                     .onHover { isHoveringUndo = $0 }
-                    .opacity(isHovering ? 1 : 0)
+                    .opacity(isHovering || shouldFocusInChat ? 1 : 0)
                     .disabled(undoManager.undoStack.isEmpty)
                 }
             }
@@ -472,7 +500,7 @@ struct JournalEntryView: View {
                 .foregroundColor(isHoveringRedo ? .primary : .secondary)
                 .onHover { isHoveringRedo = $0 }
                 .disabled(undoManager.redoStack.isEmpty)
-                .opacity(isHovering ? 1 : 0)
+                .opacity(isHovering || shouldFocusInChat ? 1 : 0)
             }
         }
 
@@ -550,18 +578,22 @@ struct JournalEntryView: View {
             .buttonStyle(.plain)
             .foregroundColor(isHoveringTrash ? .primary : .secondary)
             .onHover { isHoveringTrash = $0 }
-            .opacity(isHovering ? 1 : 0)
+            .opacity(isHovering || shouldFocusInChat ? 1 : 0)
             .alert("Delete this note?", isPresented: $showDeleteAlert) {
                 Button("Delete", role: .destructive) {
-                    if let index = entry.notes.firstIndex(where: { $0.id == note.id }) {
-                        entry.notes.remove(at: index)
-                        entry.notes = entry.notes.map { note in
-                            let newNote = note
-                            if note.number > self.note.number {
-                                newNote.number -= 1
-                            }
-                            return newNote
+                    guard let index = entry.notes.firstIndex(where: { $0.id == note.id }) else { return }
+                    entry.notes.remove(at: index)
+                    entry.notes = entry.notes.map { note in
+                        let newNote = note
+                        if note.number > self.note.number {
+                            newNote.number -= 1
                         }
+                        return newNote
+                    }
+                    if focusModel.pinnedNoteID == note.id {
+                        focusModel.pendingChatMessage = nil
+                        focusModel.pendingChatMessageContext = nil
+                        focusModel.pinnedNoteID = nil
                     }
                 }
                 Button("Cancel", role: .cancel) {}
@@ -705,6 +737,9 @@ struct TextViewWrapper: NSViewRepresentable {
         textView.onFocusGained = {
             if focusModel.focusedNoteID != id {
                 focusModel.focusedNoteID = id
+            }
+            if focusModel.pinnedNoteID != id {
+                focusModel.clearChatFocus()
             }
         }
         textView.onFocusLost = {

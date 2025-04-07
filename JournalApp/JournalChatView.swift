@@ -162,11 +162,11 @@ struct JournalChatView: View {
             )
         }
         .background(Color("ChatViewBackground"))
-        .onChange(of: focusModel.pendingChatMessage) { _, newValue in
-            if let message = newValue {
+        .onChange(of: focusModel.pinnedNoteID) { _, newValue in
+            if let message = focusModel.pendingChatMessage {
                 insertUserMessage(message)
-                focusModel.pendingChatMessage = nil
-                focusModel.pendingChatMessageContext = nil
+//                focusModel.pendingChatMessage = nil
+//                focusModel.pendingChatMessageContext = nil
             }
         }
     }
@@ -347,6 +347,7 @@ extension Notification.Name {
 }
 
 struct MessagesView: View {
+    @EnvironmentObject private var focusModel: JournalFocusModel
     let messages: [ChatMessage]
     let isTyping: Bool
 
@@ -354,8 +355,18 @@ struct MessagesView: View {
         ScrollViewReader { scrollProxy in
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
+                    let pinnedNoteID = focusModel.pinnedNoteID
+                    let pendingText = focusModel.pendingChatMessageContext?.userMessage
+                    let matchingMessages = messages.filter { $0.text == pendingText && $0.isUser }
+                    let lastMatchingMessageID = matchingMessages.last?.id
                     ForEach(messages) { message in
-                        MessageBubble(text: message.text, isUser: message.isUser)
+                        let isFocusedMessage = pinnedNoteID != nil && message.id == lastMatchingMessageID
+
+                        MessageBubble(
+                            text: message.text,
+                            isUser: message.isUser,
+                            isFocused: isFocusedMessage
+                        )
                     }
                     if isTyping {
                         TypingIndicator()
@@ -370,12 +381,14 @@ struct MessagesView: View {
                 }
             }
         }
+        .environmentObject(focusModel)
     }
 }
 
 struct MessageBubble: View {
     let text: String
     let isUser: Bool
+    var isFocused: Bool = false
 
     var body: some View {
         HStack {
@@ -386,7 +399,7 @@ struct MessageBubble: View {
                 .foregroundColor(isUser ? .white : .primary)
                 .lineSpacing(3)
                 .padding(12)
-                .background(isUser ? Color("UserMessageBubble") : Color.gray.opacity(0.1))
+                .background(isUser ? (isFocused ? Color.accentColor : Color("UserMessageBubble")) : Color.gray.opacity(0.1))
                 .clipShape(RoundedRectangle(cornerRadius: 12))
                 .frame(maxWidth: 380, alignment: isUser ? .trailing : .leading)
                 .multilineTextAlignment(isUser ? .trailing : .leading)
