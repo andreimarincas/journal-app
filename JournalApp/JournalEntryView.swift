@@ -44,11 +44,13 @@ struct JournalEntryView: View {
     @State private var editedTexts: [UUID: String] = [:]
     @State private var aiSuggestions: [JournalTone: String] = [:]
     @State private var containerWidth: CGFloat = 0
+    @Binding var isChatVisible: Bool
     
-    init(entry: JournalEntry, viewModel: JournalEntryViewModel, isSummaryPanelVisible: Binding<Bool>) {
+    init(entry: JournalEntry, viewModel: JournalEntryViewModel, isSummaryPanelVisible: Binding<Bool>, isChatVisible: Binding<Bool>) {
         self.entry = entry
         self.viewModel = viewModel
         self._isSummaryPanelVisible = isSummaryPanelVisible
+        self._isChatVisible = isChatVisible
     }
     
     var body: some View {
@@ -162,6 +164,7 @@ struct JournalEntryView: View {
                 }
             ),
             aiSuggestions: $aiSuggestions,
+            isChatVisible: $isChatVisible,
             containerWidth: containerWidth,
             isSummaryPanelVisible: $isSummaryPanelVisible
         ).environmentObject(focusModel)
@@ -179,6 +182,7 @@ struct JournalEntryView: View {
         @Binding var isSummaryPanelVisible: Bool
         @StateObject private var undoManager = CustomUndoManager()
         @EnvironmentObject var viewModel: JournalEntryViewModel
+        @Binding var isChatVisible: Bool
         
         var isAINote: Bool {
             !isFinalized && note.text.trimmingCharacters(in: .whitespacesAndNewlines).hasPrefix("✨")
@@ -202,12 +206,13 @@ struct JournalEntryView: View {
         
         @State private var isEnhancing = false
         
-        init(note: JournalNote, entry: JournalEntry, shouldFocus: Bool, editedText: Binding<String>, aiSuggestions: Binding<[JournalTone: String]>, containerWidth: CGFloat, isSummaryPanelVisible: Binding<Bool>) {
+        init(note: JournalNote, entry: JournalEntry, shouldFocus: Bool, editedText: Binding<String>, aiSuggestions: Binding<[JournalTone: String]>, isChatVisible: Binding<Bool>, containerWidth: CGFloat, isSummaryPanelVisible: Binding<Bool>) {
             self.note = note
             self.entry = entry
             self.shouldFocus = shouldFocus
             self._editedText = editedText
             self._aiSuggestions = aiSuggestions
+            self._isChatVisible = isChatVisible
             self.containerWidth = containerWidth
             self._isSummaryPanelVisible = isSummaryPanelVisible
         }
@@ -364,11 +369,20 @@ struct JournalEntryView: View {
             Group {
                 if !isAINote {
                     Button(action: {
-                        print("Discuss note with AI: \(note.id)")
-                        focusModel.isChatVisible = true
+                        let sortedNotes = entry.notes.sorted(by: { $0.number < $1.number })
+                        guard let index = sortedNotes.firstIndex(where: { $0.id == note.id }) else { return }
+                        let allNoteTexts = sortedNotes.map { $0.text }
+                        
+                        focusModel.pendingChatMessageContext = ChatNoteContext(
+                            entryNotes: allNoteTexts,
+                            noteIndex: index,
+                            userMessage: note.text
+                        )
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
                             focusModel.pendingChatMessage = note.text
                         }
+                        
+                        isChatVisible = true
                     }) {
                         Image(systemName: "bubble.left")
                             .imageScale(.medium)
@@ -621,7 +635,7 @@ struct TextViewWrapper: NSViewRepresentable {
     let isHovered: Bool
     let toneCycleLeft: (() -> Void)?
     let toneCycleRight: (() -> Void)?
-    @EnvironmentObject var focusModel: JournalFocusModel
+    @EnvironmentObject private var focusModel: JournalFocusModel
     let undoManager: CustomUndoManager
     
     func makeNSView(context: Context) -> NSTextView {

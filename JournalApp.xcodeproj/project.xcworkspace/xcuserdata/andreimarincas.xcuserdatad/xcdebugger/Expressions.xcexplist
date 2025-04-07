@@ -124,6 +124,12 @@
             <PersistentString
                value = "entries">
             </PersistentString>
+            <PersistentString
+               value = "focusModel.isChatVisible">
+            </PersistentString>
+            <PersistentString
+               value = "storedIsChatVisible">
+            </PersistentString>
          </PersistentStrings>
       </ContextState>
       <ContextState

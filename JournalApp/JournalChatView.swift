@@ -47,9 +47,29 @@ struct JournalChatView: View {
 
     private func sendToGPT() {
         Task {
-            let gptMessages = messages.map {
-                GPTMessage(role: $0.isUser ? "user" : "assistant", content: $0.text)
+            var gptMessages: [GPTMessage] = []
+
+            if let context = focusModel.pendingChatMessageContext, context.entryNotes.count > 1 {
+                let allNotes = context.entryNotes.enumerated().map { "\($0 + 1). \($1)" }.joined(separator: "\n")
+                let systemPrompt = """
+                You are talking to someone who just wrote this journal entry:
+
+                \(allNotes)
+
+                They’ve selected note #\(context.noteIndex + 1):
+                “\(context.userMessage)”
+
+                These notes may contain emotional symbols or memories. Feel free to reference earlier notes if they relate.
+                Respond warmly and reflectively, with awareness of the full entry, but focusing on that selected note.
+                """
+
+                gptMessages.append(GPTMessage(role: "system", content: systemPrompt))
             }
+
+            gptMessages.append(contentsOf: messages.map {
+                GPTMessage(role: $0.isUser ? "user" : "assistant", content: $0.text)
+            })
+
             isTyping = true
             do {
                 let response = try await gptClient.send(messages: gptMessages)
@@ -145,6 +165,8 @@ struct JournalChatView: View {
         .onChange(of: focusModel.pendingChatMessage) { _, newValue in
             if let message = newValue {
                 insertUserMessage(message)
+                focusModel.pendingChatMessage = nil
+                focusModel.pendingChatMessageContext = nil
             }
         }
     }

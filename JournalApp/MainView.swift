@@ -8,13 +8,20 @@
 import SwiftUI
 import SwiftData
 import AppKit
+import Combine
 
 class JournalFocusModel: ObservableObject {
     @Published var focusedNoteID: UUID?
     weak var entry: JournalEntry?
     
-    @Published var isChatVisible: Bool = true
     @Published var pendingChatMessage: String? = nil
+    @Published var pendingChatMessageContext: ChatNoteContext?
+}
+
+struct ChatNoteContext {
+    let entryNotes: [String]
+    let noteIndex: Int
+    let userMessage: String
 }
 
 struct MainView: View {
@@ -24,7 +31,7 @@ struct MainView: View {
     @State private var renamingEntry: JournalEntry?
     @FocusState private var isRenamingFocused: Bool
     @State private var justAddedEntryID: UUID?
-    @StateObject private var focusModel = JournalFocusModel()
+    @State private var focusModel = JournalFocusModel()
     @State private var entryToDelete: JournalEntry?
     @State private var summaryPanelWidth: CGFloat = 350
     @State private var chatPanelWidth: CGFloat = 400
@@ -37,16 +44,10 @@ struct MainView: View {
     @StateObject private var summaryViewModel = SummaryPanelViewModel(entry: JournalEntry(date: Date(), title: "", notes: []))
     
     @AppStorage("chatPanelWidth") private var chatPanelWidthRaw: Double = 300
-    @AppStorage("isChatVisible") private var storedIsChatVisible: Bool = true
+    @AppStorage("isChatVisible") private var isChatVisible: Bool = true
     
     var body: some View {
         navigationSplitView
-            .onAppear {
-                focusModel.isChatVisible = storedIsChatVisible
-            }
-            .onChange(of: focusModel.isChatVisible) { _, newValue in
-                storedIsChatVisible = newValue
-            }
     }
     
     private var navigationSplitView: some View {
@@ -243,12 +244,12 @@ struct MainView: View {
             } else if let entry = selectedEntry {
                 HStack(spacing: 0) {
                     ZStack(alignment: .topTrailing) {
-                        JournalEntryView(entry: entry, viewModel: entryViewModel, isSummaryPanelVisible: $isSummaryPanelVisible)
+                        JournalEntryView(entry: entry, viewModel: entryViewModel, isSummaryPanelVisible: $isSummaryPanelVisible, isChatVisible: $isChatVisible)
                             .environmentObject(focusModel)
                         
-                        if !storedIsChatVisible {
+                        if !isChatVisible {
                             Button(action: {
-                                storedIsChatVisible = true
+                                isChatVisible = true
                             }) {
                                 Image(systemName: "bubble.left")
                                     .frame(width: 28, height: 28)
@@ -267,7 +268,7 @@ struct MainView: View {
                         }
                     }
                     
-                    if !isChatPoppedOut && storedIsChatVisible {
+                    if !isChatPoppedOut && isChatVisible {
                         ZStack {
                             // Drag area
                             Color.clear
@@ -294,7 +295,7 @@ struct MainView: View {
                                 .frame(width: 1)
                         }
                         
-                        JournalChatView(entry: entry, isInOwnWindow: $isChatPoppedOut, isChatVisible: $storedIsChatVisible, popOutWindow: {
+                        JournalChatView(entry: entry, isInOwnWindow: $isChatPoppedOut, isChatVisible: $isChatVisible, popOutWindow: {
                             self.isChatPoppedOut = true
                         }, isSummaryPanelVisible: $isSummaryPanelVisible).environmentObject(focusModel)
                             .frame(width: chatPanelWidth)
@@ -302,7 +303,7 @@ struct MainView: View {
                             .transition(.move(edge: .trailing))
                     }
                 }
-                .animation(.easeInOut(duration: 0.2), value: storedIsChatVisible)
+                .animation(.easeInOut(duration: 0.2), value: isChatVisible)
                 .onChange(of: isChatPoppedOut) { _, poppedOut in
                     if poppedOut {
                         let window = NSWindow(
