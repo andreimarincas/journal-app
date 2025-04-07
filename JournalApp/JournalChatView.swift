@@ -17,10 +17,7 @@ struct ChatMessage: Identifiable, Equatable {
 struct JournalChatView: View {
     let entry: JournalEntry
     @Binding var isChatVisible: Bool
-    @State private var messages: [ChatMessage] = [
-        ChatMessage(text: "Hi, how are you feeling today?", isUser: false),
-        ChatMessage(text: "Would you like to explore a thought or memory?", isUser: false)
-    ]
+    
     @State private var selectedMessageIndex = 0
     @FocusState private var isInputFocused: Bool
     @State private var isHoveringHide = false
@@ -30,56 +27,16 @@ struct JournalChatView: View {
     @Binding var isInOwnWindow: Bool
     var popOutWindow: (() -> Void)?
     
-    @State private var gptClient = GPTClientProvider.shared
-    @State private var isTyping = false
-    
     @Binding private var isSummaryPanelVisible: Bool
-    
+    @StateObject private var chatViewModel = JournalChatViewModel()
     @EnvironmentObject private var focusModel: JournalFocusModel
-
+    
     init(entry: JournalEntry, isInOwnWindow: Binding<Bool> = .constant(false), isChatVisible: Binding<Bool> = .constant(true), popOutWindow: (() -> Void)? = nil, isSummaryPanelVisible: Binding<Bool> = .constant(false)) {
         self.entry = entry
         self._isInOwnWindow = isInOwnWindow
         self._isChatVisible = isChatVisible
         self.popOutWindow = popOutWindow
         self._isSummaryPanelVisible = isSummaryPanelVisible
-    }
-
-    private func sendToGPT() {
-        Task {
-            var gptMessages: [GPTMessage] = []
-
-            if let context = focusModel.pendingChatMessageContext, context.entryNotes.count > 1 {
-                let allNotes = context.entryNotes.enumerated().map { "\($0 + 1). \($1)" }.joined(separator: "\n")
-                let systemPrompt = """
-                You are talking to someone who just wrote this journal entry:
-
-                \(allNotes)
-
-                They’ve selected note #\(context.noteIndex + 1):
-                “\(context.userMessage)”
-
-                These notes may contain emotional symbols or memories. Feel free to reference earlier notes if they relate.
-                Respond warmly and reflectively, with awareness of the full entry, but focusing on that selected note.
-                """
-
-                gptMessages.append(GPTMessage(role: "system", content: systemPrompt))
-            }
-
-            gptMessages.append(contentsOf: messages.map {
-                GPTMessage(role: $0.isUser ? "user" : "assistant", content: $0.text)
-            })
-
-            isTyping = true
-            do {
-                let response = try await gptClient.send(messages: gptMessages)
-                isTyping = false
-                messages.append(ChatMessage(text: response, isUser: false))
-            } catch {
-                isTyping = false
-                messages.append(ChatMessage(text: "Error: \(error.localizedDescription)", isUser: false))
-            }
-        }
     }
 
     var body: some View {
@@ -143,7 +100,7 @@ struct JournalChatView: View {
                 }
             }
             
-            MessagesView(messages: messages, isTyping: isTyping)
+            MessagesView(messages: chatViewModel.messages, isTyping: chatViewModel.isTyping)
                 .contentShape(Rectangle())
                 .onTapGesture {
                     isInputFocused = false
@@ -155,8 +112,8 @@ struct JournalChatView: View {
             ChatInputView(
                 isInputFocused: _isInputFocused,
                 sendMessage: { message in
-                    messages.append(ChatMessage(text: message, isUser: true))
-                    sendToGPT()
+                    chatViewModel.messages.append(ChatMessage(text: message, isUser: true))
+                    chatViewModel.sendToGPT(context: focusModel.pendingChatMessageContext, pinnedNoteID: focusModel.pinnedNoteID)
                 },
                 isSummaryPanelVisible: $isSummaryPanelVisible
             )
@@ -164,19 +121,11 @@ struct JournalChatView: View {
         .background(Color("ChatViewBackground"))
         .onChange(of: focusModel.pinnedNoteID) { _, newValue in
             if let message = focusModel.pendingChatMessage {
-                insertUserMessage(message)
+                chatViewModel.insertUserMessage(message, context: focusModel.pendingChatMessageContext, pinnedNoteID: focusModel.pinnedNoteID)
 //                focusModel.pendingChatMessage = nil
 //                focusModel.pendingChatMessageContext = nil
             }
         }
-    }
-    
-    func insertUserMessage(_ text: String) {
-        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else { return }
-
-        messages.append(ChatMessage(text: trimmed, isUser: true))
-        sendToGPT()
     }
 }
 
