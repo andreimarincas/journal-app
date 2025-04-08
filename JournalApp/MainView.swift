@@ -243,6 +243,7 @@ struct MainView: View {
                         
                         if !isChatVisible {
                             Button(action: {
+                                focusModel.clearNoteFocus()
                                 isChatVisible = true
                             }) {
                                 Image(systemName: "bubble.left")

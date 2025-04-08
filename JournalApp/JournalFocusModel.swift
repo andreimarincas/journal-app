@@ -7,6 +7,7 @@
 
 import Foundation
 import Combine
+import SwiftUI
 
 class JournalFocusModel: ObservableObject {
     @Published var focusedNoteID: UUID?
@@ -20,5 +21,12 @@ class JournalFocusModel: ObservableObject {
         pendingChatMessage = nil
         pendingChatMessageContext = nil
         pinnedNoteID = nil
+    }
+    
+    func clearNoteFocus() {
+        if let responder = NSApp.keyWindow?.firstResponder as? FocusableTextView {
+            responder.window?.makeFirstResponder(nil)
+        }
+        focusedNoteID = nil
     }
 }
