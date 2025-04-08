@@ -332,6 +332,7 @@ struct JournalEntryView: View {
                 undoManager: undoManager
             )
             .frame(maxWidth: .infinity, minHeight: height, maxHeight: height)
+            .clipped()
             .id(containerWidth)
             .onChange(of: height) { _, _ in }
         }
@@ -701,6 +702,8 @@ struct TextViewWrapper: NSViewRepresentable {
     let toneCycleRight: (() -> Void)?
     @EnvironmentObject private var focusModel: JournalFocusModel
     let undoManager: CustomUndoManager
+    private let paragraphSpacing: CGFloat = 6
+    private let fixedHeight: CGFloat = 56
     
     func makeNSView(context: Context) -> NSTextView {
         let textView = FocusableTextView()
@@ -761,13 +764,13 @@ struct TextViewWrapper: NSViewRepresentable {
             setAttrText(text, to: nsView)
             nsView.layoutManager?.ensureLayout(for: nsView.textContainer!)
         }
-
+        
         if let layoutManager = nsView.layoutManager,
            let textContainer = nsView.textContainer {
             layoutManager.ensureLayout(for: textContainer)
             let usedRect = layoutManager.usedRect(for: textContainer)
             DispatchQueue.main.async {
-                height = usedRect.height
+                height = shouldFocus ? max(usedRect.height + paragraphSpacing, fixedHeight) : fixedHeight
             }
         }
         DispatchQueue.main.async {
