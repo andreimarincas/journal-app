@@ -112,8 +112,7 @@ struct JournalChatView: View {
             ChatInputView(
                 isInputFocused: _isInputFocused,
                 sendMessage: { message in
-                    chatViewModel.messages.append(ChatMessage(text: message, isUser: true))
-                    chatViewModel.sendToGPT(context: focusModel.pendingChatMessageContext, pinnedNoteID: focusModel.pinnedNoteID)
+                    chatViewModel.sendInputUserMessage(text: message)
                 },
                 isSummaryPanelVisible: $isSummaryPanelVisible
             )
@@ -121,8 +120,14 @@ struct JournalChatView: View {
         .background(Color("ChatViewBackground"))
         .onChange(of: focusModel.pinnedNoteID) { _, newValue in
             if let message = focusModel.pendingChatMessage {
-                chatViewModel.insertUserMessage(message, context: focusModel.pendingChatMessageContext, pinnedNoteID: focusModel.pinnedNoteID)
+                chatViewModel.sendFocusedNoteToGPT(message: message, context: focusModel.pendingChatMessageContext, pinnedNoteID: focusModel.pinnedNoteID)
             }
+        }
+        .onAppear {
+            chatViewModel.startChat(title: entry.title, notes: entry.notes.map(\.text))
+        }
+        .onChange(of: entry.id) { _, newID in
+            chatViewModel.startChat(title: entry.title, notes: entry.notes.map(\.text))
         }
     }
 }

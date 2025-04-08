@@ -382,6 +382,7 @@ struct JournalEntryView: View {
                         
                         focusModel.pendingChatMessageContext = ChatNoteContext(
                             entryNotes: allNoteTexts,
+                            entryTitle: entry.title,
                             noteIndex: index,
                             userMessage: note.text
                         )

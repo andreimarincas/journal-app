@@ -33,6 +33,26 @@ class GPTClient {
     init(apiKey: String) {
         self.apiKey = apiKey
     }
+    
+    func generateGeneralChatGreeting(title: String?) async throws -> String {
+        var prompt = GPTPrompts.generalChatGreetingPrompt
+        if let title, !title.isEmpty {
+            prompt += "\n\nThe journal entry is titled: \"\(title)\"."
+        }
+ 
+        let messages = [
+            GPTMessage(role: "system", content: prompt)
+        ]
+ 
+        return try await send(messages: messages)
+    }
+    
+    func generateContextualChatGreeting(title: String?, notes: [String]) async throws -> String {
+        let trimmedNotes = notes.count <= 5 ? notes : Array(notes.suffix(3))
+        let prompt = GPTPrompts.contextualChatGreetingPrompt(title: title, notes: trimmedNotes)
+        let messages = [GPTMessage(role: "system", content: prompt)]
+        return try await send(messages: messages)
+    }
 
     func send(messages: [GPTMessage]) async throws -> String {
         let requestBody = GPTRequest(

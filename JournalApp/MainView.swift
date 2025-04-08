@@ -12,6 +12,7 @@ import Combine
 
 struct ChatNoteContext {
     let entryNotes: [String]
+    let entryTitle: String?
     let noteIndex: Int
     let userMessage: String
 }
