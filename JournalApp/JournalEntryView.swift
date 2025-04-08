@@ -252,7 +252,7 @@ struct JournalEntryView: View {
                             Text("\(note.number).")
                                 .font(.system(size: 15, weight: .light))
                                 .foregroundColor(.secondary)
-                                .padding(.top, 1)
+                                .padding(.top, 7)
                             Spacer()
                         }
                         noteTextView
