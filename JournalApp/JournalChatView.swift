@@ -9,13 +9,6 @@ import SwiftUI
 import AppKit
 import MarkdownUI
 
-struct ChatMessage: Identifiable, Equatable {
-    let id = UUID()
-    let text: String
-    let isUser: Bool
-    var isSystem: Bool = false
-}
-
 extension Theme {
     static let custom = Theme()
         .text {
@@ -314,41 +307,64 @@ struct MessagesView: View {
     @EnvironmentObject private var focusModel: JournalFocusModel
     let messages: [ChatMessage]
     let isTyping: Bool
-
+    
     var body: some View {
         ScrollViewReader { scrollProxy in
             ScrollView {
-                VStack(alignment: .leading, spacing: 16) {
-                    let pinnedNoteID = focusModel.pinnedNoteID
-                    let pendingText = focusModel.pendingChatMessageContext?.userMessage
-                    let matchingMessages = messages.filter { $0.text == pendingText && $0.isUser }
-                    let lastMatchingMessageID = matchingMessages.last?.id
-                    ForEach(messages) { message in
-                        if message.isSystem {
-                            SystemMessageView(text: message.text)
-                        } else {
-                            let isFocusedMessage = pinnedNoteID != nil && message.id == lastMatchingMessageID
-                            MessageBubble(
-                                text: message.text,
-                                isUser: message.isUser,
-                                isFocused: isFocusedMessage
-                            )
+                messagesContentView
+                    .padding(.vertical, 8)
+                    .onChange(of: messages.count) {
+                        withAnimation {
+                            scrollProxy.scrollTo("bottom", anchor: .bottom)
                         }
                     }
-                    if isTyping {
-                        TypingIndicator()
-                    }
-                    Color.clear.frame(height: 1).id("bottom")
-                }
-                .padding(.vertical, 8)
-                .onChange(of: messages.count) {
-                    withAnimation {
-                        scrollProxy.scrollTo("bottom", anchor: .bottom)
-                    }
-                }
             }
         }
         .environmentObject(focusModel)
+    }
+    
+    var messagesContentView: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            let pinnedNoteID = focusModel.pinnedNoteID
+            let pendingText = focusModel.pendingChatMessageContext?.userMessage
+            let matchingMessages = messages.filter { $0.text == pendingText && $0.isUser }
+            let lastMatchingMessageID = matchingMessages.last?.id
+            
+            let processedMessages = messages.reduce(into: [(ChatMessage, Bool)]()) { result, message in
+                let ts = message.timestamp
+                let showDivider: Bool
+                if let last = result.last?.0.timestamp {
+                    showDivider = ts.timeIntervalSince(last) > 300
+                } else {
+                    showDivider = true
+                }
+                result.append((message, showDivider))
+            }
+            
+            ForEach(processedMessages, id: \.0.id) { message, showDivider in
+                Group {
+                    if showDivider {
+                        TimestampDividerView(date: message.timestamp)
+                    }
+                    
+                    if message.isSystem {
+                        SystemMessageView(text: message.text)
+                    } else {
+                        let isFocusedMessage = pinnedNoteID != nil && message.id == lastMatchingMessageID
+                        MessageBubble(
+                            text: message.text,
+                            isUser: message.isUser,
+                            isFocused: isFocusedMessage,
+                            timestamp: message.timestamp
+                        )
+                    }
+                }
+            }
+            if isTyping {
+                TypingIndicator()
+            }
+            Color.clear.frame(height: 1).id("bottom")
+        }
     }
 }
 
@@ -365,32 +381,50 @@ struct SystemMessageView: View {
     }
 }
 
+struct TimestampDividerView: View {
+    let date: Date
+
+    var body: some View {
+        Text(Self.formatter.string(from: date))
+            .font(.caption2)
+            .foregroundColor(.gray)
+            .padding(.vertical, 8)
+            .frame(maxWidth: .infinity)
+    }
+
+    static var formatter: DateFormatter {
+        let df = DateFormatter()
+        df.timeStyle = .short
+        df.dateStyle = .none
+        return df
+    }
+}
+
 struct MessageBubble: View {
     let text: String
     let isUser: Bool
     var isFocused: Bool = false
+    let timestamp: Date?
 
     var body: some View {
         HStack {
-            if isUser { Spacer() }
-            
             if !isUser {
                 Markdown(text)
                     .markdownTheme(.custom)
                     .markdownBlockStyle(\.blockquote) { configuration in
-                      configuration.label
-                        .padding()
-                        .markdownTextStyle {
-                          FontCapsVariant(.lowercaseSmallCaps)
-                          FontWeight(.semibold)
-                          BackgroundColor(nil)
-                        }
-                        .overlay(alignment: .leading) {
-                          Rectangle()
-                            .fill(Color.teal)
-                            .frame(width: 4)
-                        }
-                        .background(Color.teal.opacity(0.5))
+                        configuration.label
+                            .padding()
+                            .markdownTextStyle {
+                                FontCapsVariant(.lowercaseSmallCaps)
+                                FontWeight(.semibold)
+                                BackgroundColor(nil)
+                            }
+                            .overlay(alignment: .leading) {
+                                Rectangle()
+                                    .fill(Color.teal)
+                                    .frame(width: 4)
+                            }
+                            .background(Color.teal.opacity(0.5))
                     }
                     .textSelection(.enabled)
                     .padding(12)
@@ -399,7 +433,9 @@ struct MessageBubble: View {
                     .clipShape(RoundedRectangle(cornerRadius: 12))
                     .frame(maxWidth: 380, alignment: isUser ? .trailing : .leading)
                     .multilineTextAlignment(isUser ? .trailing : .leading)
+                Spacer()
             } else {
+                Spacer()
                 Text(text)
                     .font(.system(size: 15, weight: .regular, design: .rounded))
                     .textSelection(.enabled)
@@ -411,9 +447,13 @@ struct MessageBubble: View {
                     .frame(maxWidth: 380, alignment: isUser ? .trailing : .leading)
                     .multilineTextAlignment(isUser ? .trailing : .leading)
             }
-
-            if !isUser { Spacer() }
         }
         .padding(.horizontal, 16)
+    }
+    
+    static var timeFormatter: DateFormatter {
+        let formatter = DateFormatter()
+        formatter.timeStyle = .short
+        return formatter
     }
 }

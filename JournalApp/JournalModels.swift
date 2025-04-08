@@ -41,3 +41,20 @@ struct AISuggestion: Identifiable {
     let tone: JournalTone
     let text: String
 }
+
+@Model
+class ChatMessage {
+    @Attribute(.unique) var id: UUID
+    var text: String
+    var isUser: Bool
+    var isSystem: Bool
+    var timestamp: Date
+
+    init(id: UUID = UUID(), text: String, isUser: Bool, isSystem: Bool = false, timestamp: Date = Date()) {
+        self.id = id
+        self.text = text
+        self.isUser = isUser
+        self.isSystem = isSystem
+        self.timestamp = timestamp
+    }
+}
