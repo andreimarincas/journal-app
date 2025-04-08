@@ -322,30 +322,12 @@ struct JournalEntryView: View {
                     if let newText = viewModel.currentAISuggestion?.text {
                         editedText = newText
                     }
-//                    if let current = viewModel.latestAISuggestions[safe: aiToneIndex]?.tone {
-//                        aiEdits[current] = editedText
-//                    }
-//                    if aiToneIndex > 0 {
-//                        aiToneIndex -= 1
-//                        if let previous = JournalTone.allCases[safe: aiToneIndex] {
-//                            editedText = aiEdits[previous] ?? aiSuggestions[previous] ?? ""
-//                        }
-//                    }
                 },
                 toneCycleRight: {
                     viewModel.cycleAISuggestion()
                     if let newText = viewModel.currentAISuggestion?.text {
                         editedText = newText
                     }
-//                    if let current = viewModel.latestAISuggestions[safe: aiToneIndex]?.tone {
-//                        aiEdits[current] = editedText
-//                    }
-//                    if aiToneIndex < JournalTone.allCases.count - 1 {
-//                        aiToneIndex += 1
-//                        if let next = viewModel.latestAISuggestions[safe: aiToneIndex]?.tone {
-//                            editedText = aiEdits[next] ?? aiSuggestions[next] ?? ""
-//                        }
-//                    }
                 },
                 undoManager: undoManager
             )
