@@ -105,7 +105,13 @@ struct JournalEntryView: View {
     @ViewBuilder
     private var notesList: some View {
         if entry.notes.isEmpty {
-            emptyNotesView
+            ZStack {
+                emptyNotesView
+                VStack {
+                    noteHorizon
+                    Spacer()
+                }
+            }
         } else {
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
