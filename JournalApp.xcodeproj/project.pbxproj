@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		771B301B2DA5704300F76BB9 /* MarkdownUI in Frameworks */ = {isa = PBXBuildFile; productRef = 771B301A2DA5704300F76BB9 /* MarkdownUI */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		7767163A2D9BEECA002C4A88 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -66,6 +70,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				771B301B2DA5704300F76BB9 /* MarkdownUI in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -126,6 +131,7 @@
 			);
 			name = JournalApp;
 			packageProductDependencies = (
+				771B301A2DA5704300F76BB9 /* MarkdownUI */,
 			);
 			productName = JournalApp;
 			productReference = 776716262D9BEEC9002C4A88 /* JournalApp.app */;
@@ -209,6 +215,9 @@
 			);
 			mainGroup = 7767161D2D9BEEC9002C4A88;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				771B30192DA5704300F76BB9 /* XCRemoteSwiftPackageReference "MarkdownUI" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 776716272D9BEEC9002C4A88 /* Products */;
 			projectDirPath = "";
@@ -567,6 +576,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		771B30192DA5704300F76BB9 /* XCRemoteSwiftPackageReference "MarkdownUI" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/gonzalezreal/MarkdownUI.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.4.1;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		771B301A2DA5704300F76BB9 /* MarkdownUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 771B30192DA5704300F76BB9 /* XCRemoteSwiftPackageReference "MarkdownUI" */;
+			productName = MarkdownUI;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 7767161E2D9BEEC9002C4A88 /* Project object */;
 }

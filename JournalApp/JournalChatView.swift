@@ -7,12 +7,22 @@
 
 import SwiftUI
 import AppKit
+import MarkdownUI
 
 struct ChatMessage: Identifiable, Equatable {
     let id = UUID()
     let text: String
     let isUser: Bool
     var isSystem: Bool = false
+}
+
+extension Theme {
+    static let custom = Theme()
+        .text {
+            FontFamily(.system(.rounded))
+            FontSize(15)
+        }
+        // Add other style customizations here
 }
 
 struct JournalChatView: View {
@@ -363,16 +373,44 @@ struct MessageBubble: View {
     var body: some View {
         HStack {
             if isUser { Spacer() }
-
-            Text(text)
-                .font(.system(size: 15, weight: .regular, design: .rounded))
-                .foregroundColor(isUser ? .white : .primary)
-                .lineSpacing(3)
-                .padding(12)
-                .background(isUser ? (isFocused ? Color.accentColor : Color("UserMessageBubble")) : Color.gray.opacity(0.1))
-                .clipShape(RoundedRectangle(cornerRadius: 12))
-                .frame(maxWidth: 380, alignment: isUser ? .trailing : .leading)
-                .multilineTextAlignment(isUser ? .trailing : .leading)
+            
+            if !isUser {
+                Markdown(text)
+                    .markdownTheme(.custom)
+                    .markdownBlockStyle(\.blockquote) { configuration in
+                      configuration.label
+                        .padding()
+                        .markdownTextStyle {
+                          FontCapsVariant(.lowercaseSmallCaps)
+                          FontWeight(.semibold)
+                          BackgroundColor(nil)
+                        }
+                        .overlay(alignment: .leading) {
+                          Rectangle()
+                            .fill(Color.teal)
+                            .frame(width: 4)
+                        }
+                        .background(Color.teal.opacity(0.5))
+                    }
+                    .textSelection(.enabled)
+                    .padding(12)
+                    .foregroundColor(.primary)
+                    .background(Color.gray.opacity(0.1))
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .frame(maxWidth: 380, alignment: isUser ? .trailing : .leading)
+                    .multilineTextAlignment(isUser ? .trailing : .leading)
+            } else {
+                Text(text)
+                    .font(.system(size: 15, weight: .regular, design: .rounded))
+                    .textSelection(.enabled)
+                    .foregroundColor(isUser ? .white : .primary)
+                    .lineSpacing(3)
+                    .padding(12)
+                    .background(isFocused ? Color.accentColor : Color("UserMessageBubble"))
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .frame(maxWidth: 380, alignment: isUser ? .trailing : .leading)
+                    .multilineTextAlignment(isUser ? .trailing : .leading)
+            }
 
             if !isUser { Spacer() }
         }
