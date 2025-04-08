@@ -86,7 +86,7 @@ class JournalChatViewModel: ObservableObject {
                 gptMessages.append(GPTMessage(role: "system", content: systemPrompt))
             }
 
-            gptMessages.append(contentsOf: messages.map {
+            gptMessages.append(contentsOf: messages.filter { !$0.isSystem }.map {
                 GPTMessage(role: $0.isUser ? "user" : "assistant", content: $0.text)
             })
 
@@ -109,7 +109,7 @@ class JournalChatViewModel: ObservableObject {
         messages.append(ChatMessage(text: trimmed, isUser: true))
         
         Task {
-            let gptMessages: [GPTMessage] = messages.map {
+            let gptMessages: [GPTMessage] = messages.filter { !$0.isSystem }.map {
                 GPTMessage(role: $0.isUser ? "user" : "assistant", content: $0.text)
             }
             

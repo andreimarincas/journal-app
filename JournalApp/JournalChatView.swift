@@ -12,6 +12,7 @@ struct ChatMessage: Identifiable, Equatable {
     let id = UUID()
     let text: String
     let isUser: Bool
+    var isSystem: Bool = false
 }
 
 struct JournalChatView: View {
@@ -128,6 +129,7 @@ struct JournalChatView: View {
         }
         .onChange(of: entry.id) { _, newID in
             chatViewModel.startChat(title: entry.title, notes: entry.notes.map(\.text))
+            chatViewModel.messages.append(ChatMessage(text: "Switched to: \(entry.title)", isUser: false, isSystem: true))
         }
     }
 }
@@ -312,13 +314,16 @@ struct MessagesView: View {
                     let matchingMessages = messages.filter { $0.text == pendingText && $0.isUser }
                     let lastMatchingMessageID = matchingMessages.last?.id
                     ForEach(messages) { message in
-                        let isFocusedMessage = pinnedNoteID != nil && message.id == lastMatchingMessageID
-
-                        MessageBubble(
-                            text: message.text,
-                            isUser: message.isUser,
-                            isFocused: isFocusedMessage
-                        )
+                        if message.isSystem {
+                            SystemMessageView(text: message.text)
+                        } else {
+                            let isFocusedMessage = pinnedNoteID != nil && message.id == lastMatchingMessageID
+                            MessageBubble(
+                                text: message.text,
+                                isUser: message.isUser,
+                                isFocused: isFocusedMessage
+                            )
+                        }
                     }
                     if isTyping {
                         TypingIndicator()
@@ -334,6 +339,19 @@ struct MessagesView: View {
             }
         }
         .environmentObject(focusModel)
+    }
+}
+
+struct SystemMessageView: View {
+    let text: String
+
+    var body: some View {
+        Text(text)
+            .font(.system(size: 13))
+            .italic()
+            .foregroundColor(.gray)
+            .padding(.horizontal, 16)
+            .padding(.top, 8)
     }
 }
 
