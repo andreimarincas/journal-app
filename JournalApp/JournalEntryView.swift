@@ -631,7 +631,9 @@ struct JournalEntryView: View {
 extension JournalEntryView {
     private var noteHorizon: some View {
         guard !viewModel.isGeneratingAISuggestions else {
-            return AnyView(EmptyView())
+            return AnyView(
+                Color.clear.frame(height: 64)
+            )
         }
         return AnyView(
             VStack(alignment: .leading) {
@@ -647,11 +649,6 @@ extension JournalEntryView {
                     )
                     .onHover { hovering in
                         isHoveringNoteHorizon = hovering
-                        if hovering {
-                            withAnimation {
-                                focusModel.focusedNoteID = nil
-                            }
-                        }
                     }
                     .overlay(
                         HStack {
