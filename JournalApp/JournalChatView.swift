@@ -317,8 +317,10 @@ struct MessagesView: View {
                 messagesContentView
                     .padding(.vertical, 8)
                     .onChange(of: messages.count) {
-                        withAnimation {
-                            scrollProxy.scrollTo("bottom", anchor: .bottom)
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                            withAnimation(.interpolatingSpring(mass: 1.6, stiffness: 20, damping: 4, initialVelocity: 0)) {
+                                scrollProxy.scrollTo("bottom", anchor: .bottom)
+                            }
                         }
                     }
                     .onAppear {
@@ -327,6 +329,7 @@ struct MessagesView: View {
                         }
                     }
             }
+            .scrollIndicators(.hidden)
         }
         .environmentObject(focusModel)
     }
