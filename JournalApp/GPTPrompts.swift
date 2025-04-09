@@ -81,6 +81,8 @@ class GPTPrompts {
 
     The greeting should feel like a moment of presence, not a generic welcome. Avoid being overly cheerful or robotic. Instead, create a sense of space — for thoughts, memories, or feelings.
 
+    Avoid assuming a specific time of day, location, or literal scenario based on symbolic language. Focus instead on the tone or emotional resonance of the entry.
+
     Write a single short message as the assistant's first response.
     """
     
@@ -99,7 +101,11 @@ class GPTPrompts {
         Here are the notes they’ve written so far:
         \(notesList)
 
-        Write a warm, reflective greeting that shows you’ve read their entry. Be emotionally present, and gently invite them into deeper exploration. Avoid being generic. Keep it short and attuned.
+        Write a warm, reflective greeting that shows you’ve read their entry. Be emotionally present, and gently invite them into deeper exploration.
+
+        Do not assume specific time of day, place, or literal events based on symbolic language. Instead, respond to the emotional tone and imagery with openness and care — as if joining them in a moment of reflection, not narration.
+
+        Avoid being generic. Keep it short and attuned.
         """
     }
     
@@ -139,6 +145,8 @@ class GPTPrompts {
         Greet the user gently and respectfully, inviting reflection or openness. If the title carries emotion, metaphor, or mood, use it to shape the greeting subtly (but do not mention it directly unless relevant).
 
         The greeting should feel like a moment of presence, not a generic welcome. Avoid being overly cheerful or robotic. Instead, create a sense of space — for thoughts, memories, or feelings.
+
+        Avoid assuming a specific time of day, location, or literal scenario based on symbolic language. Focus instead on the tone or emotional resonance of the entry.
 
         Write a single short message as the assistant's first response.
         """
