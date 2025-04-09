@@ -367,8 +367,7 @@ struct MessagesView: View {
                         let isFocusedMessage = pinnedNoteID != nil && message.id == lastMatchingMessageID
                         let isMostRecentUserMessage = pinnedNoteID == nil &&
                             message.isUser &&
-                            message.id == messages.last(where: { $0.isUser })?.id &&
-                            messages.last?.isUser == true
+                            message.id == messages.last(where: { $0.isUser })?.id
                         
                         MessageBubble(
                             text: message.text,
