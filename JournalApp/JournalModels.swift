@@ -50,6 +50,7 @@ class ChatMessage {
     var isSystem: Bool
     var timestamp: Date
     var entryID: UUID?
+    var timeIntervalSincePrevious: TimeInterval? = nil
 
     init(id: UUID = UUID(), text: String, isUser: Bool, isSystem: Bool = false, timestamp: Date = Date(), entryID: UUID? = nil) {
         self.id = id

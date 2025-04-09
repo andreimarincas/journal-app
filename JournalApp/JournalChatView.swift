@@ -37,6 +37,8 @@ struct JournalChatView: View {
     @EnvironmentObject private var focusModel: JournalFocusModel
     @Environment(\.modelContext) private var modelContext
     
+    @State private var canTriggerLoad = true
+    
     init(chatViewModel: JournalChatViewModel, entry: JournalEntry, isInOwnWindow: Binding<Bool> = .constant(false), isChatVisible: Binding<Bool> = .constant(true), popOutWindow: (() -> Void)? = nil, isSummaryPanelVisible: Binding<Bool> = .constant(false)) {
         self.entry = entry
         self._isInOwnWindow = isInOwnWindow
@@ -45,20 +47,22 @@ struct JournalChatView: View {
         self._isSummaryPanelVisible = isSummaryPanelVisible
         self.chatViewModel = chatViewModel
     }
+    
+    var isLoadingOlderMessages: Bool { !canTriggerLoad }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            topRightButtons
+            topButtons
             
-            MessagesView(messages: chatViewModel.messages, isTyping: chatViewModel.isTyping)
+            MessagesView(chatViewModel: chatViewModel, canTriggerLoad: $canTriggerLoad)
                 .contentShape(Rectangle())
                 .onTapGesture {
                     isInputFocused = false
                     isSummaryPanelVisible = false
                 }
-
+            
             Spacer()
-
+            
             ChatInputView(
                 isInputFocused: _isInputFocused,
                 sendMessage: { message in
@@ -82,8 +86,19 @@ struct JournalChatView: View {
         }
     }
     
-    private var topRightButtons: some View {
+    private var topButtons: some View {
         HStack {
+            Spacer()
+            ProgressView()
+                .progressViewStyle(.circular)
+                .foregroundStyle(Color.red)
+                .frame(width: 44, height: 44)
+                .scaleEffect(0.7)
+                .padding(.top, 8)
+                .offset(x: 28)
+                .opacity(isLoadingOlderMessages ? 1 : 0)
+                .animation(.easeInOut(duration: 0.3), value: isLoadingOlderMessages)
+            .allowsHitTesting(false)
             Spacer()
             Button(action: {
                 isChatVisible = false
@@ -310,32 +325,114 @@ extension Notification.Name {
     static let textViewHeightDidChange = Notification.Name("textViewHeightDidChange")
 }
 
+private struct ScrollOffsetKey: PreferenceKey {
+    static var defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = nextValue()
+    }
+}
+
+struct ScrollOffsetPreferenceKey: PreferenceKey {
+    static var defaultValue: CGPoint = .zero
+    
+    static func reduce(value: inout CGPoint, nextValue: () -> CGPoint) {
+    }
+}
+
 struct MessagesView: View {
+    @ObservedObject var chatViewModel: JournalChatViewModel
     @EnvironmentObject private var focusModel: JournalFocusModel
-    let messages: [ChatMessage]
-    let isTyping: Bool
+    @Binding private var canTriggerLoad: Bool
+    
+    var messages: [ChatMessage] { chatViewModel.messages }
+    var isTyping: Bool { chatViewModel.isTyping }
+    
+    @State private var scrollOffset: CGPoint = .zero
+    @State private var contentHeight: CGFloat = 0
+    @State private var firstVisibleID: UUID?
+    @State private var showScrollIndicator: Bool = true
+    
+    init(chatViewModel: JournalChatViewModel, canTriggerLoad: Binding<Bool>) {
+        self.chatViewModel = chatViewModel
+        self._canTriggerLoad = canTriggerLoad
+    }
     
     var body: some View {
-        ScrollViewReader { scrollProxy in
-            ScrollView {
-                messagesContentView
-                    .padding(.vertical, 8)
-                    .onChange(of: messages.count) {
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
-                            withAnimation(.interpolatingSpring(mass: 1.6, stiffness: 20, damping: 4, initialVelocity: 0)) {
+        ZStack {
+            ScrollViewReader { scrollProxy in
+                ScrollView() {
+                    messagesContentView
+                        .padding(.vertical, 8)
+                        .background(
+                            GeometryReader { geometry in
+                                Color.clear
+                                    .preference(key: ScrollOffsetPreferenceKey.self, value: geometry.frame(in: .named("scroll")).origin)
+                            }
+                        )
+                        .onPreferenceChange(ScrollOffsetPreferenceKey.self) { value in
+                            print("📌 onPreferenceChange: scrollOffset = \(value)")
+                            self.scrollOffset = value
+                        }
+                    
+                        .onChange(of: messages.count) {
+                            guard canTriggerLoad else { return }
+                            showScrollIndicator = false
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                                withAnimation(.interpolatingSpring(mass: 1.6, stiffness: 20, damping: 4, initialVelocity: 0)) {
+                                    scrollProxy.scrollTo("bottom", anchor: .bottom)
+                                } completion: {
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                                        showScrollIndicator = true
+                                    }
+                                }
+                            }
+                        }
+                        .onAppear {
+                            DispatchQueue.main.async {
                                 scrollProxy.scrollTo("bottom", anchor: .bottom)
                             }
                         }
-                    }
-                    .onAppear {
-                        DispatchQueue.main.async {
-                            scrollProxy.scrollTo("bottom", anchor: .bottom)
+                }
+                .scrollIndicators(showScrollIndicator ? .visible : .hidden)
+                .coordinateSpace(name: "scroll")
+                .onChange(of: scrollOffset) {
+                    if scrollOffset.y > 10 && canTriggerLoad {
+                        print("Trigger load older messages... scrollOffset.y: \(scrollOffset.y)")
+                        canTriggerLoad = false
+                        firstVisibleID = messages.first?.id
+                        
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                            chatViewModel.loadOlderMessages()
+                            DispatchQueue.main.async {
+                                canTriggerLoad = true
+                            }
                         }
                     }
+                }
+                .onChange(of: messages) {
+                    if !canTriggerLoad {
+                        if let anchorID = self.firstVisibleID {
+                            scrollProxy.scrollTo(anchorID, anchor: .zero)
+                        }
+                        DispatchQueue.main.async {
+                            canTriggerLoad = true
+                        }
+                    }
+                }
             }
-            .scrollIndicators(.hidden)
+            .environmentObject(focusModel)
+            
+            // Overlay blocker
+            if !canTriggerLoad {
+                Color.clear
+                    .contentShape(Rectangle())
+                    .onTapGesture {} // absorb touches
+                    .gesture(DragGesture()) // block scroll gestures
+            }
         }
-        .environmentObject(focusModel)
+        .onChange(of: canTriggerLoad) { oldValue, newValue in
+            print("onchange canTriggerLoad oldValue: \(oldValue), newValue: \(newValue)")
+        }
     }
     
     var messagesContentView: some View {
@@ -345,15 +442,8 @@ struct MessagesView: View {
             let matchingMessages = messages.filter { $0.text == pendingText && $0.isUser }
             let lastMatchingMessageID = matchingMessages.last?.id
             
-            let processedMessages = messages.reduce(into: [(ChatMessage, Bool)]()) { result, message in
-                let ts = message.timestamp
-                let showDivider: Bool
-                if let last = result.last?.0.timestamp {
-                    showDivider = ts.timeIntervalSince(last) > 300
-                } else {
-                    showDivider = true
-                }
-                result.append((message, showDivider))
+            let processedMessages = messages.map { message in
+                (message, (message.timeIntervalSincePrevious ?? 999) > 5)
             }
             
             ForEach(processedMessages, id: \.0.id) { message, showDivider in
@@ -367,8 +457,8 @@ struct MessagesView: View {
                     } else {
                         let isFocusedMessage = pinnedNoteID != nil && message.id == lastMatchingMessageID
                         let isMostRecentUserMessage = pinnedNoteID == nil &&
-                            message.isUser &&
-                            message.id == messages.last(where: { $0.isUser })?.id
+                        message.isUser &&
+                        message.id == messages.last(where: { $0.isUser })?.id
                         
                         MessageBubble(
                             text: message.text,
@@ -379,11 +469,19 @@ struct MessagesView: View {
                     }
                 }
             }
+            
             if isTyping {
                 TypingIndicator()
             }
             Color.clear.frame(height: 1).id("bottom")
         }
+    }
+}
+
+struct ContentSizeKey: PreferenceKey {
+    static var defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = nextValue()
     }
 }
 

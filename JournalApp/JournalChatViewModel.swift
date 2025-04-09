@@ -20,12 +20,13 @@ class JournalChatViewModel: ObservableObject {
 
     private let gptClient = GPTClientProvider.shared
     private var dataSource: ChatMessageDataSource
+    private let paginator = ChatPaginator()
     
     init(dataSource: ChatMessageDataSource, isPreview: Bool = false) {
         self.dataSource = dataSource
         self.isUsingPreviewContext = isPreview
         self.isTyping = false
-        self.messages = dataSource.fetchMessages(before: Date())
+        self.messages = []
         self.isUsingPreviewContext = dataSource.modelContext.container.configurations.first?.isStoredInMemoryOnly ?? false
     }
     
@@ -33,6 +34,10 @@ class JournalChatViewModel: ObservableObject {
         self.dataSource = newDataSource
         self.isUsingPreviewContext = false
         self.messages = newDataSource.fetchMessages(before: Date())
+    }
+    
+    func loadOlderMessages() {
+        paginator.fetchNextPage(using: dataSource, into: &messages)
     }
     
     func showTypingIndicator() {
@@ -89,7 +94,7 @@ class JournalChatViewModel: ObservableObject {
                 hideTypingIndicator { [weak self] in
                     guard let self else { return }
                     let greetingMessage = ChatMessage(text: greeting, isUser: false, entryID: entryID)
-                    self.dataSource.insertMessage(greetingMessage)
+                    self.dataSource.insertMessage(greetingMessage, previousMessage: self.messages.last)
                     self.messages.append(greetingMessage)
                     
                     self.lastGreetedEntryID = entryID
@@ -113,7 +118,7 @@ class JournalChatViewModel: ObservableObject {
         guard !trimmed.isEmpty else { return }
         
         let userMessage = ChatMessage(text: trimmed, isUser: true)
-        dataSource.insertMessage(userMessage)
+        dataSource.insertMessage(userMessage, previousMessage: messages.last)
         messages.append(userMessage)
         
         Task {
@@ -154,7 +159,7 @@ class JournalChatViewModel: ObservableObject {
                 hideTypingIndicator { [weak self] in
                     guard let self else { return }
                     let assistantMessage = ChatMessage(text: response, isUser: false)
-                    self.dataSource.insertMessage(assistantMessage)
+                    self.dataSource.insertMessage(assistantMessage, previousMessage: userMessage)
                     self.messages.append(assistantMessage)
                 }
             } catch {
@@ -170,7 +175,7 @@ class JournalChatViewModel: ObservableObject {
         guard !trimmed.isEmpty else { return }
         
         let userMessage = ChatMessage(text: trimmed, isUser: true)
-        dataSource.insertMessage(userMessage)
+        dataSource.insertMessage(userMessage, previousMessage: messages.last)
         messages.append(userMessage)
         
         Task {
@@ -184,7 +189,7 @@ class JournalChatViewModel: ObservableObject {
                 hideTypingIndicator { [weak self] in
                     guard let self else { return }
                     let assistantMessage = ChatMessage(text: response, isUser: false)
-                    self.dataSource.insertMessage(assistantMessage)
+                    self.dataSource.insertMessage(assistantMessage, previousMessage: userMessage)
                     self.messages.append(assistantMessage)
                 }
             } catch {
@@ -203,7 +208,10 @@ final class ChatMessageDataSource {
         self.modelContext = modelContext
     }
     
-    func insertMessage(_ message: ChatMessage) {
+    func insertMessage(_ message: ChatMessage, previousMessage: ChatMessage? = nil) {
+        if let previous = previousMessage {
+            message.timeIntervalSincePrevious = message.timestamp.timeIntervalSince(previous.timestamp)
+        }
         modelContext.insert(message)
         do {
             try modelContext.save()
@@ -212,7 +220,7 @@ final class ChatMessageDataSource {
         }
     }
     
-    func fetchMessages(before date: Date?, limit: Int = 50) -> [ChatMessage] {
+    func fetchMessages(before date: Date?, limit: Int = 10) -> [ChatMessage] {
         var descriptor = FetchDescriptor<ChatMessage>(
             sortBy: [SortDescriptor(\.timestamp, order: .reverse)]
         )
@@ -225,5 +233,31 @@ final class ChatMessageDataSource {
     
     func removeMessage(_ message: ChatMessage) {
         modelContext.delete(message)
+    }
+}
+
+final class ChatPaginator {
+    private(set) var isFetching = false
+    private(set) var hasMore = true
+    private let pageSize: Int = 10
+
+    func fetchNextPage(using dataSource: ChatMessageDataSource, into messages: inout [ChatMessage]) {
+        guard !isFetching, hasMore else { return }
+
+        isFetching = true
+        let cutoff = messages.first?.timestamp ?? Date()
+        let olderMessages = dataSource.fetchMessages(before: cutoff, limit: pageSize)
+
+        if olderMessages.isEmpty || olderMessages.count < pageSize {
+            hasMore = false
+        }
+
+        messages.insert(contentsOf: olderMessages, at: 0)
+        isFetching = false
+    }
+
+    func reset() {
+        isFetching = false
+        hasMore = true
     }
 }

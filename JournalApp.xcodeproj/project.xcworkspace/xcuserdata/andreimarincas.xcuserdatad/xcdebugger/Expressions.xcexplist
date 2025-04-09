@@ -76,6 +76,14 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
+         contextName = "JournalChatViewModel.loadOlderMessages():JournalChatViewModel.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "self.messages">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
          contextName = "closure #3 in closure #1 in JournalEntryView.body.getter:JournalEntryView.swift">
          <PersistentStrings>
             <PersistentString
@@ -156,6 +164,14 @@
          <PersistentStrings>
             <PersistentString
                value = "entries">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "closure #1 in closure #1 in MessagesView.body.getter:JournalChatView.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "showScrollIndicator">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
