@@ -396,7 +396,7 @@ struct MessagesView: View {
                 .scrollIndicators(showScrollIndicator ? .visible : .hidden)
                 .coordinateSpace(name: "scroll")
                 .onChange(of: scrollOffset) {
-                    if scrollOffset.y > 10 && canTriggerLoad {
+                    if scrollOffset.y > 5 && canTriggerLoad {
                         print("Trigger load older messages... scrollOffset.y: \(scrollOffset.y)")
                         canTriggerLoad = false
                         firstVisibleID = messages.first?.id
