@@ -13,6 +13,7 @@ import SwiftUICore
 class JournalChatViewModel: ObservableObject {
     @Published var messages: [ChatMessage] = []
     @Published var isTyping = false
+    private var typingStartTime: Date?
     private(set) var isUsingPreviewContext: Bool = true
     @Published var lastGreetedEntryID: UUID?
     @Published var lastGreetingTimestamp: Date?
@@ -31,6 +32,23 @@ class JournalChatViewModel: ObservableObject {
         self.dataSource = newDataSource
         self.isUsingPreviewContext = newDataSource.modelContext.container.configurations.first?.isStoredInMemoryOnly ?? false
         self.messages = newDataSource.fetchMessages(before: Date())
+    }
+    
+    func showTypingIndicator() {
+        isTyping = true
+        typingStartTime = Date()
+    }
+    
+    func hideTypingIndicator(completion: (() -> Void)? = nil) {
+        let minimumTypingDuration: TimeInterval = 1.2
+        let elapsed = Date().timeIntervalSince(typingStartTime ?? Date())
+        let remainingTime = max(0, minimumTypingDuration - elapsed)
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + remainingTime) {
+            self.isTyping = false
+            self.typingStartTime = nil
+            completion?()
+        }
     }
     
     func shouldGreet(for entryID: UUID?) -> Bool {
@@ -56,7 +74,7 @@ class JournalChatViewModel: ObservableObject {
         guard shouldGreet(for: entryID) else { return }
 
         Task {
-            isTyping = true
+            showTypingIndicator()
             do {
                 let isDefaultTitle = title?.trimmingCharacters(in: .whitespacesAndNewlines) == "Journal Entry"
                 let contextualTitle = isDefaultTitle ? nil : title
@@ -67,16 +85,20 @@ class JournalChatViewModel: ObservableObject {
                 } else {
                     greeting = try await gptClient.generateContextualChatGreeting(title: contextualTitle, notes: notes)
                 }
-                let greetingMessage = ChatMessage(text: greeting, isUser: false, entryID: entryID)
-                dataSource.insertMessage(greetingMessage)
-                messages.append(greetingMessage)
-
-                lastGreetedEntryID = entryID
-                lastGreetingTimestamp = Date()
+                hideTypingIndicator { [weak self] in
+                    guard let self else { return }
+                    let greetingMessage = ChatMessage(text: greeting, isUser: false, entryID: entryID)
+                    self.dataSource.insertMessage(greetingMessage)
+                    self.messages.append(greetingMessage)
+                    
+                    self.lastGreetedEntryID = entryID
+                    self.lastGreetingTimestamp = Date()
+                }
             } catch {
-                messages.append(ChatMessage(text: "Error: \(error.localizedDescription)", isUser: false))
+                hideTypingIndicator { [weak self] in
+                    self?.messages.append(ChatMessage(text: "Error: \(error.localizedDescription)", isUser: false))
+                }
             }
-            isTyping = false
         }
     }
 
@@ -125,16 +147,19 @@ class JournalChatViewModel: ObservableObject {
                 GPTMessage(role: $0.isUser ? "user" : "assistant", content: $0.text)
             })
 
-            isTyping = true
+            showTypingIndicator()
             do {
                 let response = try await gptClient.send(messages: gptMessages)
-                isTyping = false
-                let assistantMessage = ChatMessage(text: response, isUser: false)
-                dataSource.insertMessage(assistantMessage)
-                messages.append(assistantMessage)
+                hideTypingIndicator { [weak self] in
+                    guard let self else { return }
+                    let assistantMessage = ChatMessage(text: response, isUser: false)
+                    self.dataSource.insertMessage(assistantMessage)
+                    self.messages.append(assistantMessage)
+                }
             } catch {
-                isTyping = false
-                messages.append(ChatMessage(text: "Error: \(error.localizedDescription)", isUser: false))
+                hideTypingIndicator { [weak self] in
+                    self?.messages.append(ChatMessage(text: "Error: \(error.localizedDescription)", isUser: false))
+                }
             }
         }
     }
@@ -152,16 +177,19 @@ class JournalChatViewModel: ObservableObject {
                 GPTMessage(role: $0.isUser ? "user" : "assistant", content: $0.text)
             }
             
-            isTyping = true
+            showTypingIndicator()
             do {
                 let response = try await gptClient.send(messages: gptMessages)
-                isTyping = false
-                let assistantMessage = ChatMessage(text: response, isUser: false)
-                dataSource.insertMessage(assistantMessage)
-                messages.append(assistantMessage)
+                hideTypingIndicator { [weak self] in
+                    guard let self else { return }
+                    let assistantMessage = ChatMessage(text: response, isUser: false)
+                    self.dataSource.insertMessage(assistantMessage)
+                    self.messages.append(assistantMessage)
+                }
             } catch {
-                isTyping = false
-                messages.append(ChatMessage(text: "Error: \(error.localizedDescription)", isUser: false))
+                hideTypingIndicator { [weak self] in
+                    self?.messages.append(ChatMessage(text: "Error: \(error.localizedDescription)", isUser: false))
+                }
             }
         }
     }
