@@ -252,7 +252,7 @@ struct JournalEntryView: View {
                             Text("\(note.number).")
                                 .font(.system(size: 15, weight: .light))
                                 .foregroundColor(.secondary)
-                                .padding(.top, 7)
+                                .padding(.top, 9)
                             Spacer()
                         }
                         noteTextView
@@ -738,7 +738,7 @@ struct TextViewWrapper: NSViewRepresentable {
         }
         textView.isEditable = true
         textView.isRichText = false
-        textView.font = NSFont.systemFont(ofSize: 16.5, weight: .regular)
+        textView.font = NSFont.systemFont(ofSize: 15, weight: .regular)
         textView.drawsBackground = false
         textView.textContainerInset = NSSize(width: 0, height: 2)
         textView.textContainer?.widthTracksTextView = true
