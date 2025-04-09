@@ -48,64 +48,7 @@ struct JournalChatView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            HStack {
-                Spacer()
-                Button(action: {
-                    isChatVisible = false
-                }) {
-                    Image(systemName: "eye.slash")
-                        .frame(width: 28, height: 28)
-                        .font(.system(size: 16, weight: .regular))
-                        .padding(6)
-                        .background(Color(NSColor.controlBackgroundColor))
-                        .clipShape(Circle())
-                        .opacity(isHoveringHide ? 1.0 : 0.5)
-                }
-                .buttonStyle(PlainButtonStyle())
-                .padding(.top, 6)
-                .padding(.trailing, 0)
-                .onHover { hovering in
-                    isHoveringHide = hovering
-                }
-                if !isInOwnWindow {
-                    Button(action: {
-                        popOutWindow?()
-                    }) {
-                        Image(systemName: "arrow.up.right.bottomleft.rectangle")
-                            .frame(width: 28, height: 28)
-                            .font(.system(size: 16, weight: .regular))
-                            .padding(6)
-                            .background(Color(NSColor.controlBackgroundColor))
-                            .clipShape(Circle())
-                            .opacity(isHoveringPopOut ? 1.0 : 0.5)
-                    }
-                    .buttonStyle(PlainButtonStyle())
-                    .padding(.top, 6)
-                    .padding(.trailing, 0)
-                    .onHover { hovering in
-                        isHoveringPopOut = hovering
-                    }
-                }
-                if isInOwnWindow {
-                    Button(action: {
-                        isInOwnWindow = false
-                    }) {
-                        Image(systemName: "arrow.down.left.topright.rectangle")
-                            .frame(width: 28, height: 28)
-                            .font(.system(size: 16, weight: .regular))
-                            .padding(6)
-                            .background(Color(NSColor.controlBackgroundColor))
-                            .clipShape(Circle())
-                            .opacity(isHoveringDock ? 1.0 : 0.5)
-                    }
-                    .buttonStyle(PlainButtonStyle())
-                    .padding(.top, 6)
-                    .padding(.trailing, 0)
-                    .onHover { hovering in
-                        isHoveringDock = hovering
-                    }
-                }
-            }
+            topRightButtons
             
             MessagesView(messages: chatViewModel.messages, isTyping: chatViewModel.isTyping)
                 .contentShape(Rectangle())
@@ -136,6 +79,67 @@ struct JournalChatView: View {
         .onChange(of: entry.id) { _, newID in
             chatViewModel.startChat(title: entry.title, notes: entry.notes.map(\.text), entryID: entry.id)
             chatViewModel.messages.append(ChatMessage(text: "Switched to: \(entry.title)", isUser: false, isSystem: true))
+        }
+    }
+    
+    private var topRightButtons: some View {
+        HStack {
+            Spacer()
+            Button(action: {
+                isChatVisible = false
+            }) {
+                Image(systemName: "eye.slash")
+                    .frame(width: 28, height: 28)
+                    .font(.system(size: 16, weight: .regular))
+                    .padding(6)
+                    .background(Color(NSColor.controlBackgroundColor))
+                    .clipShape(Circle())
+                    .opacity(isHoveringHide ? 1.0 : 0.5)
+            }
+            .buttonStyle(PlainButtonStyle())
+            .padding(.top, 6)
+            .padding(.trailing, 0)
+            .onHover { hovering in
+                isHoveringHide = hovering
+            }
+            if !isInOwnWindow {
+                Button(action: {
+                    popOutWindow?()
+                }) {
+                    Image(systemName: "arrow.up.right.bottomleft.rectangle")
+                        .frame(width: 28, height: 28)
+                        .font(.system(size: 16, weight: .regular))
+                        .padding(6)
+                        .background(Color(NSColor.controlBackgroundColor))
+                        .clipShape(Circle())
+                        .opacity(isHoveringPopOut ? 1.0 : 0.5)
+                }
+                .buttonStyle(PlainButtonStyle())
+                .padding(.top, 6)
+                .padding(.trailing, 0)
+                .onHover { hovering in
+                    isHoveringPopOut = hovering
+                }
+            }
+            if isInOwnWindow {
+                Button(action: {
+                    isInOwnWindow = false
+                }) {
+                    Image(systemName: "arrow.down.left.topright.rectangle")
+                        .frame(width: 28, height: 28)
+                        .font(.system(size: 16, weight: .regular))
+                        .padding(6)
+                        .background(Color(NSColor.controlBackgroundColor))
+                        .clipShape(Circle())
+                        .opacity(isHoveringDock ? 1.0 : 0.5)
+                }
+                .buttonStyle(PlainButtonStyle())
+                .padding(.top, 6)
+                .padding(.trailing, 0)
+                .onHover { hovering in
+                    isHoveringDock = hovering
+                }
+            }
         }
     }
 }
