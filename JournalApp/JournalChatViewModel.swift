@@ -14,6 +14,8 @@ class JournalChatViewModel: ObservableObject {
     @Published var messages: [ChatMessage] = []
     @Published var isTyping = false
     private(set) var isUsingPreviewContext: Bool = true
+    @Published var lastGreetedEntryID: UUID?
+    @Published var lastGreetingTimestamp: Date?
 
     private let gptClient = GPTClientProvider.shared
     private var dataSource: ChatMessageDataSource
@@ -31,22 +33,28 @@ class JournalChatViewModel: ObservableObject {
         self.messages = newDataSource.fetchMessages(before: Date())
     }
     
-    func startChat() {
-        Task {
-            isTyping = true
-            do {
-                let greeting = try await gptClient.generateGeneralChatGreeting(title: nil)
-                let greetingMessage = ChatMessage(text: greeting, isUser: false)
-                dataSource.insertMessage(greetingMessage)
-                messages.append(greetingMessage)
-            } catch {
-                messages.append(ChatMessage(text: "Error: \(error.localizedDescription)", isUser: false))
-            }
-            isTyping = false
+    func shouldGreet(for entryID: UUID?) -> Bool {
+        let now = Date()
+        guard let entryID = entryID else { return false }
+
+        let hasAssistantMessages = messages.contains(where: { !$0.isUser && $0.entryID == entryID })
+
+        if !hasAssistantMessages {
+            return true
         }
+
+        if lastGreetedEntryID == entryID,
+           let lastGreetingTimestamp,
+           now.timeIntervalSince(lastGreetingTimestamp) > 12 * 3600 {
+            return true
+        }
+
+        return false
     }
 
-    func startChat(title: String?, notes: [String]) {
+    func startChat(title: String?, notes: [String], entryID: UUID?) {
+        guard shouldGreet(for: entryID) else { return }
+
         Task {
             isTyping = true
             do {
@@ -59,16 +67,19 @@ class JournalChatViewModel: ObservableObject {
                 } else {
                     greeting = try await gptClient.generateContextualChatGreeting(title: contextualTitle, notes: notes)
                 }
-                let greetingMessage = ChatMessage(text: greeting, isUser: false)
+                let greetingMessage = ChatMessage(text: greeting, isUser: false, entryID: entryID)
                 dataSource.insertMessage(greetingMessage)
                 messages.append(greetingMessage)
+
+                lastGreetedEntryID = entryID
+                lastGreetingTimestamp = Date()
             } catch {
                 messages.append(ChatMessage(text: "Error: \(error.localizedDescription)", isUser: false))
             }
             isTyping = false
         }
     }
-    
+
     func clearExistingChat() {
         messages.forEach { dataSource.removeMessage($0) }
         messages.removeAll()

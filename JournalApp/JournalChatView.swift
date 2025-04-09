@@ -142,10 +142,10 @@ struct JournalChatView: View {
             if chatViewModel.isUsingPreviewContext {
                 chatViewModel.replaceDataSource(with: ChatMessageDataSource(modelContext: modelContext))
             }
-            chatViewModel.startChat(title: entry.title, notes: entry.notes.map(\.text))
+            chatViewModel.startChat(title: entry.title, notes: entry.notes.map(\.text), entryID: entry.id)
         }
         .onChange(of: entry.id) { _, newID in
-            chatViewModel.startChat(title: entry.title, notes: entry.notes.map(\.text))
+            chatViewModel.startChat(title: entry.title, notes: entry.notes.map(\.text), entryID: entry.id)
             chatViewModel.messages.append(ChatMessage(text: "Switched to: \(entry.title)", isUser: false, isSystem: true))
         }
     }

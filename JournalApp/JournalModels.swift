@@ -49,12 +49,14 @@ class ChatMessage {
     var isUser: Bool
     var isSystem: Bool
     var timestamp: Date
+    var entryID: UUID?
 
-    init(id: UUID = UUID(), text: String, isUser: Bool, isSystem: Bool = false, timestamp: Date = Date()) {
+    init(id: UUID = UUID(), text: String, isUser: Bool, isSystem: Bool = false, timestamp: Date = Date(), entryID: UUID? = nil) {
         self.id = id
         self.text = text
         self.isUser = isUser
         self.isSystem = isSystem
         self.timestamp = timestamp
+        self.entryID = entryID
     }
 }
