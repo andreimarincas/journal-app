@@ -406,14 +406,15 @@ struct TimestampDividerView: View {
         Text(Self.formatter.string(from: date))
             .font(.caption2)
             .foregroundColor(.gray)
-            .padding(.vertical, 8)
+            .padding(.vertical, 20)
             .frame(maxWidth: .infinity)
     }
 
     static var formatter: DateFormatter {
         let df = DateFormatter()
         df.timeStyle = .short
-        df.dateStyle = .none
+        df.dateStyle = .medium
+        df.locale = .current
         return df
     }
 }
@@ -447,7 +448,7 @@ struct MessageBubble: View {
                     .textSelection(.enabled)
                     .padding(12)
                     .foregroundColor(.primary)
-                    .background(Color.gray.opacity(0.1))
+                    .background(Color(hex: "#ECECEC"))
                     .clipShape(RoundedRectangle(cornerRadius: 12))
                     .frame(maxWidth: 380, alignment: isUser ? .trailing : .leading)
                     .multilineTextAlignment(isUser ? .trailing : .leading)
