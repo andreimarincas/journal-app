@@ -456,14 +456,14 @@ struct MessagesView: View {
                         SystemMessageView(text: message.text)
                     } else {
                         let isFocusedMessage = pinnedNoteID != nil && message.id == lastMatchingMessageID
-                        let isMostRecentUserMessage = pinnedNoteID == nil &&
-                        message.isUser &&
-                        message.id == messages.last(where: { $0.isUser })?.id
+//                        let isMostRecentUserMessage = pinnedNoteID == nil &&
+//                        message.isUser &&
+//                        message.id == messages.last(where: { $0.isUser })?.id
                         
                         MessageBubble(
                             text: message.text,
                             isUser: message.isUser,
-                            isFocused: isFocusedMessage || isMostRecentUserMessage,
+                            isFocused: isFocusedMessage, //|| isMostRecentUserMessage,
                             timestamp: message.timestamp
                         )
                     }
@@ -548,20 +548,22 @@ struct MessageBubble: View {
                             .background(Color.teal.opacity(0.5))
                     }
                     .textSelection(.enabled)
+                    .lineSpacing(6)
                     .padding(12)
                     .foregroundColor(colorScheme == .dark ? Color.primary : Color(hex: "#FAFAFA"))
-                    .background(
-                        LinearGradient(
-                            gradient: Gradient(colors: [
-                                colorScheme == .dark ? Color(hex: "#4C4C4C") : Color(hex: "#ECECEC"),
-                                colorScheme == .dark ? Color(hex: "#3A3A3A") : Color(hex: "#ECECEC")
-                            ]),
-                            startPoint: .top,
-                            endPoint: .bottom
-                        )
-                    )
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
-                    .frame(maxWidth: 380, alignment: isUser ? .trailing : .leading)
+//                    .background(
+//                        LinearGradient(
+//                            gradient: Gradient(colors: [
+//                                colorScheme == .dark ? Color(hex: "#4C4C4C") : Color(hex: "#ECECEC"),
+//                                colorScheme == .dark ? Color(hex: "#3A3A3A") : Color(hex: "#ECECEC")
+//                            ]),
+//                            startPoint: .top,
+//                            endPoint: .bottom
+//                        )
+//                    )
+//                    .clipShape(RoundedRectangle(cornerRadius: 12))
+//                    .frame(maxWidth: 380, alignment: isUser ? .trailing : .leading)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                     .multilineTextAlignment(isUser ? .trailing : .leading)
                 Spacer()
             } else {
@@ -570,18 +572,19 @@ struct MessageBubble: View {
                     .font(.system(size: 15, weight: .regular, design: .rounded))
                     .textSelection(.enabled)
                     .foregroundColor(.white)
-                    .lineSpacing(3)
+                    .lineSpacing(6)
                     .padding(12)
-                    .background(
-                        LinearGradient(
-                            gradient: Gradient(colors: [
-                                isFocused ? Color(hex: "#339CFF") : Color(hex: "#3B9DFB"),
-                                isFocused ? Color(hex: "#006FE0") : Color(hex: "#007AFF")
-                            ]),
-                            startPoint: .top,
-                            endPoint: .bottom
-                        )
-                    )
+//                    .background(
+//                        LinearGradient(
+//                            gradient: Gradient(colors: [
+//                                isFocused ? Color(hex: "#339CFF") : Color(hex: "#3B9DFB"),
+//                                isFocused ? Color(hex: "#006FE0") : Color(hex: "#007AFF")
+//                            ]),
+//                            startPoint: .top,
+//                            endPoint: .bottom
+//                        )
+//                    )
+                    .background(isFocused ? Color.accentColor : Color(hex: "#4C4C4C"))
                     .clipShape(RoundedRectangle(cornerRadius: 12))
                     .frame(maxWidth: 380, alignment: isUser ? .trailing : .leading)
                     .multilineTextAlignment(isUser ? .trailing : .leading)
