@@ -251,89 +251,92 @@ struct MainView: View {
                     .multilineTextAlignment(.center)
                 }
             } else if let entry = selectedEntry {
-                HStack(spacing: 0) {
-                    ZStack(alignment: .topTrailing) {
-                        JournalEntryView(entry: entry, viewModel: entryViewModel, isSummaryPanelVisible: $isSummaryPanelVisible, isChatVisible: $isChatVisible)
-                            .environmentObject(focusModel)
-                        
-                        if !isChatVisible {
-                            Button(action: {
-                                focusModel.clearNoteFocus()
-                                isChatVisible = true
-                            }) {
-                                Image(systemName: "bubble.left")
-                                    .frame(width: 28, height: 28)
-                                    .font(.system(size: 16, weight: .regular))
-                                    .padding(6)
-                                    .background(Color(NSColor.controlBackgroundColor))
-                                    .clipShape(Circle())
-                                    .opacity(isShowChatHovering ? 1.0 : 0.5)
-                            }
-                            .buttonStyle(PlainButtonStyle())
-                            .padding(.top, 6)
-                            .padding(.trailing, 12)
-                            .onHover { hovering in
-                                isShowChatHovering = hovering
-                            }
-                        }
-                    }
-                    
-                    if !isChatPoppedOut && isChatVisible {
-                        ZStack {
-                            // Drag area
-                            Color.clear
-                                .contentShape(Rectangle())
-                                .frame(width: 16)
-                                .gesture(
-                                    DragGesture(minimumDistance: 5)
-                                .onChanged { value in
-                                    chatPanelWidth = max(200, min(chatPanelWidth - value.translation.width, 600))
-                                    chatPanelWidthRaw = Double(chatPanelWidth)
+                GeometryReader { geometry in
+                    HStack(spacing: 0) {
+                        ZStack(alignment: .topTrailing) {
+                            JournalEntryView(entry: entry, viewModel: entryViewModel, isSummaryPanelVisible: $isSummaryPanelVisible, isChatVisible: $isChatVisible)
+                                .environmentObject(focusModel)
+                            
+                            if !isChatVisible {
+                                Button(action: {
+                                    focusModel.clearNoteFocus()
+                                    isChatVisible = true
+                                }) {
+                                    Image(systemName: "bubble.left")
+                                        .frame(width: 28, height: 28)
+                                        .font(.system(size: 16, weight: .regular))
+                                        .padding(6)
+                                        .background(Color(NSColor.controlBackgroundColor))
+                                        .clipShape(Circle())
+                                        .opacity(isShowChatHovering ? 1.0 : 0.5)
                                 }
-                                )
+                                .buttonStyle(PlainButtonStyle())
+                                .padding(.top, 6)
+                                .padding(.trailing, 12)
                                 .onHover { hovering in
-                                    if hovering {
-                                        NSCursor.resizeLeftRight.push()
-                                    } else {
-                                        NSCursor.pop()
-                                    }
+                                    isShowChatHovering = hovering
                                 }
- 
-                            // Visible divider
-                            Rectangle()
-                                .fill(Color("ChatNotesSeparator"))
-                                .frame(width: 1)
+                            }
                         }
                         
-                        JournalChatView(chatViewModel: chatViewModel, entry: entry, isInOwnWindow: $isChatPoppedOut, isChatVisible: $isChatVisible, popOutWindow: {
-                            self.isChatPoppedOut = true
-                        }, isSummaryPanelVisible: $isSummaryPanelVisible).environmentObject(focusModel)
-                            .frame(width: chatPanelWidth)
-                            .background(Color("ChatViewBackground"))
-                            .transition(.move(edge: .trailing))
-                    }
-                }
-                .animation(.easeInOut(duration: 0.2), value: isChatVisible)
-                .onChange(of: isChatPoppedOut) { _, poppedOut in
-                    if poppedOut {
-                        let window = NSWindow(
-                            contentRect: NSRect(x: 0, y: 0, width: 500, height: 600),
-                            styleMask: [.titled, .closable, .resizable],
-                            backing: .buffered,
-                            defer: false
-                        )
-                        window.title = "AI Companion"
-                        window.contentView = NSHostingView(rootView: JournalChatView(chatViewModel: chatViewModel, entry: entry, isInOwnWindow: $isChatPoppedOut))
-                        window.isReleasedWhenClosed = false
-                        window.makeKeyAndOrderFront(nil)
-                        poppedOutWindow = window
-
-                        NotificationCenter.default.addObserver(forName: NSWindow.willCloseNotification, object: window, queue: .main) { _ in
-                            isChatPoppedOut = false
+                        if !isChatPoppedOut && isChatVisible {
+                            ZStack {
+                                // Drag area
+                                Color.clear
+                                    .contentShape(Rectangle())
+                                    .frame(width: 16)
+                                    .gesture(
+                                        DragGesture(minimumDistance: 5)
+                                            .onChanged { value in
+                                                let maxAllowed = geometry.size.width / 2
+                                                chatPanelWidth = max(320, min(chatPanelWidth - value.translation.width, maxAllowed))
+                                                chatPanelWidthRaw = Double(chatPanelWidth)
+                                            }
+                                    )
+                                    .onHover { hovering in
+                                        if hovering {
+                                            NSCursor.resizeLeftRight.push()
+                                        } else {
+                                            NSCursor.pop()
+                                        }
+                                    }
+                                
+                                // Visible divider
+                                Rectangle()
+                                    .fill(Color("ChatNotesSeparator"))
+                                    .frame(width: 1)
+                            }
+                            
+                            JournalChatView(chatViewModel: chatViewModel, entry: entry, isInOwnWindow: $isChatPoppedOut, isChatVisible: $isChatVisible, popOutWindow: {
+                                self.isChatPoppedOut = true
+                            }, isSummaryPanelVisible: $isSummaryPanelVisible).environmentObject(focusModel)
+                                .frame(width: chatPanelWidth)
+                                .background(Color("ChatViewBackground"))
+                                .transition(.move(edge: .trailing))
                         }
-                    } else {
-                        poppedOutWindow?.close()
-                        poppedOutWindow = nil
+                    }
+                    .animation(.easeInOut(duration: 0.2), value: isChatVisible)
+                    .onChange(of: isChatPoppedOut) { _, poppedOut in
+                        if poppedOut {
+                            let window = NSWindow(
+                                contentRect: NSRect(x: 0, y: 0, width: 500, height: 600),
+                                styleMask: [.titled, .closable, .resizable],
+                                backing: .buffered,
+                                defer: false
+                            )
+                            window.title = "AI Companion"
+                            window.contentView = NSHostingView(rootView: JournalChatView(chatViewModel: chatViewModel, entry: entry, isInOwnWindow: $isChatPoppedOut))
+                            window.isReleasedWhenClosed = false
+                            window.makeKeyAndOrderFront(nil)
+                            poppedOutWindow = window
+                            
+                            NotificationCenter.default.addObserver(forName: NSWindow.willCloseNotification, object: window, queue: .main) { _ in
+                                isChatPoppedOut = false
+                            }
+                        } else {
+                            poppedOutWindow?.close()
+                            poppedOutWindow = nil
+                        }
                     }
                 }
             } else {
