@@ -453,10 +453,19 @@ struct MessageBubble: View {
                 Text(text)
                     .font(.system(size: 15, weight: .regular, design: .rounded))
                     .textSelection(.enabled)
-                    .foregroundColor(isUser ? .white : .primary)
+                    .foregroundColor(.white)
                     .lineSpacing(3)
                     .padding(12)
-                    .background(isFocused ? Color.accentColor : Color("UserMessageBubble"))
+                    .background(
+                        LinearGradient(
+                            gradient: Gradient(colors: [
+                                isFocused ? Color(hex: "#007AFF") : Color(hex: "#5CA8F7"),
+                                isFocused ? Color(hex: "#006FE0") : Color(hex: "#5EA4F4")
+                            ]),
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    )
                     .clipShape(RoundedRectangle(cornerRadius: 12))
                     .frame(maxWidth: 380, alignment: isUser ? .trailing : .leading)
                     .multilineTextAlignment(isUser ? .trailing : .leading)
