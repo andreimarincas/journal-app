@@ -3,13 +3,21 @@
    version = "1.0">
    <ContextStates>
       <ContextState
+         contextName = "JournalChatViewModel.loadMessages():JournalChatViewModel.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "messages">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
          contextName = "TextViewWrapper.makeNSView(context:):JournalEntryView.swift">
          <PersistentStrings>
             <PersistentString
-               value = "undoManager">
+               value = "textView.string">
             </PersistentString>
             <PersistentString
-               value = "textView.string">
+               value = "undoManager">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -37,18 +45,6 @@
          contextName = "FocusableTextView.performKeyEquivalent(with:):JournalEntryView.swift">
          <PersistentStrings>
             <PersistentString
-               value = "event.keyCode">
-            </PersistentString>
-            <PersistentString
-               value = "isHoveredNote">
-            </PersistentString>
-            <PersistentString
-               value = "undoManager">
-            </PersistentString>
-            <PersistentString
-               value = "isActiveAINote">
-            </PersistentString>
-            <PersistentString
                value = "customUndoManager">
             </PersistentString>
             <PersistentString
@@ -56,6 +52,18 @@
             </PersistentString>
             <PersistentString
                value = "isFirstResponder">
+            </PersistentString>
+            <PersistentString
+               value = "undoManager">
+            </PersistentString>
+            <PersistentString
+               value = "event.keyCode">
+            </PersistentString>
+            <PersistentString
+               value = "isHoveredNote">
+            </PersistentString>
+            <PersistentString
+               value = "isActiveAINote">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -84,16 +92,24 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
+         contextName = "JournalChatViewModel.replaceDataSource(with:):JournalChatViewModel.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "self.messages">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
          contextName = "closure #1 in TextViewWrapper.updateNSView(_:context:):JournalEntryView.swift">
          <PersistentStrings>
             <PersistentString
                value = "nsView.string">
             </PersistentString>
             <PersistentString
-               value = "usedRect.height">
+               value = "height">
             </PersistentString>
             <PersistentString
-               value = "height">
+               value = "usedRect.height">
             </PersistentString>
             <PersistentString
                value = "text">
@@ -124,6 +140,14 @@
          <PersistentStrings>
             <PersistentString
                value = "entry.id">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "ChatMessageDataSource.insertMessage(_:):JournalChatViewModel.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "message.text">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -166,7 +190,18 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
+         contextName = "JournalChatViewModel.init(messages:isTyping:):JournalChatViewModel.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "self.messages">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
          contextName = "closure #1 in closure #3 in closure #1 in closure #1 in JournalEntryView.notesFooter.getter:JournalEntryView.swift">
+      </ContextState>
+      <ContextState
+         contextName = "JournalChatViewModel.startChat(title:notes:):JournalChatViewModel.swift">
       </ContextState>
       <ContextState
          contextName = "TextViewWrapper.Coordinator.textDidChange(_:):JournalEntryView.swift">
@@ -175,17 +210,25 @@
                value = "textView.string">
             </PersistentString>
             <PersistentString
-               value = "textView.customUndoManager">
+               value = "NSApp.mainWindow?.undoManager">
             </PersistentString>
             <PersistentString
-               value = "parent">
+               value = "textView.undoManager">
             </PersistentString>
             <PersistentString
                value = "NSApp.mainWindow?.firstResponder">
             </PersistentString>
             <PersistentString
-               value = "NSApp.mainWindow?.undoManager">
+               value = "textView.customUndoManager">
             </PersistentString>
+            <PersistentString
+               value = "parent">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "TextViewWrapper.Coordinator.textView(_:shouldChangeTextIn:replacementString:):JournalEntryView.swift">
+         <PersistentStrings>
             <PersistentString
                value = "textView.undoManager">
             </PersistentString>
@@ -195,13 +238,13 @@
          contextName = "closure #1 in closure #1 in JournalEntryView.NoteRow.chatButton.getter:JournalEntryView.swift">
          <PersistentStrings>
             <PersistentString
-               value = "focusModel">
+               value = "focusModel.pendingChatMessage">
             </PersistentString>
             <PersistentString
                value = "focusModel.isChatVisible">
             </PersistentString>
             <PersistentString
-               value = "focusModel.pendingChatMessage">
+               value = "focusModel">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -210,14 +253,6 @@
          <PersistentStrings>
             <PersistentString
                value = "editedText">
-            </PersistentString>
-         </PersistentStrings>
-      </ContextState>
-      <ContextState
-         contextName = "TextViewWrapper.Coordinator.textView(_:shouldChangeTextIn:replacementString:):JournalEntryView.swift">
-         <PersistentStrings>
-            <PersistentString
-               value = "textView.undoManager">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -245,10 +280,10 @@
                value = "isDimmed">
             </PersistentString>
             <PersistentString
-               value = "text">
+               value = "isHovered">
             </PersistentString>
             <PersistentString
-               value = "isHovered">
+               value = "text">
             </PersistentString>
          </PersistentStrings>
       </ContextState>

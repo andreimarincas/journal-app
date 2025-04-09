@@ -12,7 +12,7 @@ import SwiftData
 struct JournalAppApp: App {
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
-            JournalNote.self, JournalEntry.self
+            JournalNote.self, JournalEntry.self, ChatMessage.self
         ])
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
 

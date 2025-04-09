@@ -6,20 +6,39 @@
 //
 
 import Foundation
+import SwiftData
+import SwiftUICore
 
 @MainActor
 class JournalChatViewModel: ObservableObject {
     @Published var messages: [ChatMessage] = []
     @Published var isTyping = false
+    private(set) var isUsingPreviewContext: Bool = true
 
     private let gptClient = GPTClientProvider.shared
-
+    private var dataSource: ChatMessageDataSource
+    
+    init(dataSource: ChatMessageDataSource, messages: [ChatMessage] = [], isTyping: Bool = false) {
+        self.dataSource = dataSource
+        self.messages = messages.isEmpty ? dataSource.fetchMessages(before: Date()) : messages
+        self.isTyping = isTyping
+        self.isUsingPreviewContext = dataSource.modelContext.container.configurations.first?.isStoredInMemoryOnly ?? false
+    }
+    
+    func replaceDataSource(with newDataSource: ChatMessageDataSource) {
+        self.dataSource = newDataSource
+        self.isUsingPreviewContext = newDataSource.modelContext.container.configurations.first?.isStoredInMemoryOnly ?? false
+        self.messages = newDataSource.fetchMessages(before: Date())
+    }
+    
     func startChat() {
         Task {
             isTyping = true
             do {
                 let greeting = try await gptClient.generateGeneralChatGreeting(title: nil)
-                messages.append(ChatMessage(text: greeting, isUser: false))
+                let greetingMessage = ChatMessage(text: greeting, isUser: false)
+                dataSource.insertMessage(greetingMessage)
+                messages.append(greetingMessage)
             } catch {
                 messages.append(ChatMessage(text: "Error: \(error.localizedDescription)", isUser: false))
             }
@@ -40,7 +59,9 @@ class JournalChatViewModel: ObservableObject {
                 } else {
                     greeting = try await gptClient.generateContextualChatGreeting(title: contextualTitle, notes: notes)
                 }
-                messages.append(ChatMessage(text: greeting, isUser: false))
+                let greetingMessage = ChatMessage(text: greeting, isUser: false)
+                dataSource.insertMessage(greetingMessage)
+                messages.append(greetingMessage)
             } catch {
                 messages.append(ChatMessage(text: "Error: \(error.localizedDescription)", isUser: false))
             }
@@ -49,6 +70,7 @@ class JournalChatViewModel: ObservableObject {
     }
     
     func clearExistingChat() {
+        messages.forEach { dataSource.removeMessage($0) }
         messages.removeAll()
     }
     
@@ -56,7 +78,9 @@ class JournalChatViewModel: ObservableObject {
         let trimmed = message.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
         
-        messages.append(ChatMessage(text: trimmed, isUser: true))
+        let userMessage = ChatMessage(text: trimmed, isUser: true)
+        dataSource.insertMessage(userMessage)
+        messages.append(userMessage)
         
         Task {
             var gptMessages: [GPTMessage] = []
@@ -94,7 +118,9 @@ class JournalChatViewModel: ObservableObject {
             do {
                 let response = try await gptClient.send(messages: gptMessages)
                 isTyping = false
-                messages.append(ChatMessage(text: response, isUser: false))
+                let assistantMessage = ChatMessage(text: response, isUser: false)
+                dataSource.insertMessage(assistantMessage)
+                messages.append(assistantMessage)
             } catch {
                 isTyping = false
                 messages.append(ChatMessage(text: "Error: \(error.localizedDescription)", isUser: false))
@@ -106,7 +132,9 @@ class JournalChatViewModel: ObservableObject {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
         
-        messages.append(ChatMessage(text: trimmed, isUser: true))
+        let userMessage = ChatMessage(text: trimmed, isUser: true)
+        dataSource.insertMessage(userMessage)
+        messages.append(userMessage)
         
         Task {
             let gptMessages: [GPTMessage] = messages.filter { !$0.isSystem }.map {
@@ -117,11 +145,45 @@ class JournalChatViewModel: ObservableObject {
             do {
                 let response = try await gptClient.send(messages: gptMessages)
                 isTyping = false
-                messages.append(ChatMessage(text: response, isUser: false))
+                let assistantMessage = ChatMessage(text: response, isUser: false)
+                dataSource.insertMessage(assistantMessage)
+                messages.append(assistantMessage)
             } catch {
                 isTyping = false
                 messages.append(ChatMessage(text: "Error: \(error.localizedDescription)", isUser: false))
             }
         }
+    }
+}
+
+final class ChatMessageDataSource {
+    let modelContext: ModelContext
+    
+    init(modelContext: ModelContext) {
+        self.modelContext = modelContext
+    }
+    
+    func insertMessage(_ message: ChatMessage) {
+        modelContext.insert(message)
+        do {
+            try modelContext.save()
+        } catch {
+            fatalError(error.localizedDescription)
+        }
+    }
+    
+    func fetchMessages(before date: Date?, limit: Int = 50) -> [ChatMessage] {
+        var descriptor = FetchDescriptor<ChatMessage>(
+            sortBy: [SortDescriptor(\.timestamp, order: .reverse)]
+        )
+        descriptor.fetchLimit = limit
+        if let date = date {
+            descriptor.predicate = #Predicate { $0.timestamp < date }
+        }
+        return Array((try? modelContext.fetch(descriptor))?.reversed() ?? [])
+    }
+    
+    func removeMessage(_ message: ChatMessage) {
+        modelContext.delete(message)
     }
 }

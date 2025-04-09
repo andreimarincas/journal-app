@@ -8,6 +8,7 @@
 import SwiftUI
 import AppKit
 import MarkdownUI
+import SwiftData
 
 extension Theme {
     static let custom = Theme()
@@ -32,8 +33,18 @@ struct JournalChatView: View {
     var popOutWindow: (() -> Void)?
     
     @Binding private var isSummaryPanelVisible: Bool
-    @StateObject private var chatViewModel = JournalChatViewModel()
+    
+    @StateObject private var chatViewModel: JournalChatViewModel = {
+        // Preview fallback with in-memory modelContext
+        let schema = Schema([ChatMessage.self])
+        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        let container = try! ModelContainer(for: schema, configurations: [config])
+        return JournalChatViewModel(dataSource: ChatMessageDataSource(modelContext: container.mainContext))
+    }()
+    
     @EnvironmentObject private var focusModel: JournalFocusModel
+    
+    @Environment(\.modelContext) private var modelContext
     
     init(entry: JournalEntry, isInOwnWindow: Binding<Bool> = .constant(false), isChatVisible: Binding<Bool> = .constant(true), popOutWindow: (() -> Void)? = nil, isSummaryPanelVisible: Binding<Bool> = .constant(false)) {
         self.entry = entry
@@ -128,6 +139,9 @@ struct JournalChatView: View {
             }
         }
         .onAppear {
+            if chatViewModel.isUsingPreviewContext {
+                chatViewModel.replaceDataSource(with: ChatMessageDataSource(modelContext: modelContext))
+            }
             chatViewModel.startChat(title: entry.title, notes: entry.notes.map(\.text))
         }
         .onChange(of: entry.id) { _, newID in
