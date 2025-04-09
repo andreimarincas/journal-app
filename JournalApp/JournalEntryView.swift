@@ -738,7 +738,7 @@ struct TextViewWrapper: NSViewRepresentable {
         }
         textView.isEditable = true
         textView.isRichText = false
-        textView.font = NSFont.systemFont(ofSize: 15, weight: .light)
+        textView.font = NSFont.systemFont(ofSize: 16.5, weight: .regular)
         textView.drawsBackground = false
         textView.textContainerInset = NSSize(width: 0, height: 2)
         textView.textContainer?.widthTracksTextView = true
@@ -801,9 +801,9 @@ struct TextViewWrapper: NSViewRepresentable {
     func setAttrText(_ text: String, to nsView: NSTextView) {
         let dimmed = isDimmed// && nsView.window?.firstResponder != nsView
         let textColor = dimmed ? NSColor.darkGray : NSColor.labelColor
-        let fontDescriptor = NSFont.systemFont(ofSize: 15, weight: .light).fontDescriptor
+        let fontDescriptor = NSFont.systemFont(ofSize: 16.5, weight: .regular).fontDescriptor
         let italicDescriptor = dimmed ? fontDescriptor.withSymbolicTraits(.italic) : fontDescriptor
-        let font = NSFont(descriptor: italicDescriptor, size: 15) ?? NSFont.systemFont(ofSize: 15, weight: .light)
+        let font = NSFont(descriptor: italicDescriptor, size: 16.5) ?? NSFont.systemFont(ofSize: 16.5, weight: .regular)
         let paragraphStyle = NSMutableParagraphStyle()
         paragraphStyle.lineHeightMultiple = 1.3
         paragraphStyle.paragraphSpacing = 6
