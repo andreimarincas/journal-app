@@ -365,10 +365,15 @@ struct MessagesView: View {
                         SystemMessageView(text: message.text)
                     } else {
                         let isFocusedMessage = pinnedNoteID != nil && message.id == lastMatchingMessageID
+                        let isMostRecentUserMessage = pinnedNoteID == nil &&
+                            message.isUser &&
+                            message.id == messages.last(where: { $0.isUser })?.id &&
+                            messages.last?.isUser == true
+                        
                         MessageBubble(
                             text: message.text,
                             isUser: message.isUser,
-                            isFocused: isFocusedMessage,
+                            isFocused: isFocusedMessage || isMostRecentUserMessage,
                             timestamp: message.timestamp
                         )
                     }
