@@ -12,25 +12,26 @@ import SwiftUICore
 @MainActor
 class JournalChatViewModel: ObservableObject {
     @Published var messages: [ChatMessage] = []
-    @Published var isTyping = false
+    @Published var isTyping: Bool
     private var typingStartTime: Date?
-    private(set) var isUsingPreviewContext: Bool = true
+    private(set) var isUsingPreviewContext: Bool
     @Published var lastGreetedEntryID: UUID?
     @Published var lastGreetingTimestamp: Date?
 
     private let gptClient = GPTClientProvider.shared
     private var dataSource: ChatMessageDataSource
     
-    init(dataSource: ChatMessageDataSource, messages: [ChatMessage] = [], isTyping: Bool = false) {
+    init(dataSource: ChatMessageDataSource, isPreview: Bool = false) {
         self.dataSource = dataSource
-        self.messages = messages.isEmpty ? dataSource.fetchMessages(before: Date()) : messages
-        self.isTyping = isTyping
+        self.isUsingPreviewContext = isPreview
+        self.isTyping = false
+        self.messages = dataSource.fetchMessages(before: Date())
         self.isUsingPreviewContext = dataSource.modelContext.container.configurations.first?.isStoredInMemoryOnly ?? false
     }
     
     func replaceDataSource(with newDataSource: ChatMessageDataSource) {
         self.dataSource = newDataSource
-        self.isUsingPreviewContext = newDataSource.modelContext.container.configurations.first?.isStoredInMemoryOnly ?? false
+        self.isUsingPreviewContext = false
         self.messages = newDataSource.fetchMessages(before: Date())
     }
     

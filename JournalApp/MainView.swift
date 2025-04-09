@@ -36,11 +36,26 @@ struct MainView: View {
     @StateObject private var entryViewModel = JournalEntryViewModel(entry: JournalEntry(date: Date(), title: "", notes: []))
     @StateObject private var summaryViewModel = SummaryPanelViewModel(entry: JournalEntry(date: Date(), title: "", notes: []))
     
+    @StateObject private var chatViewModel: JournalChatViewModel = {
+        // Preview fallback with in-memory modelContext
+        let schema = Schema([ChatMessage.self])
+        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        let container = try! ModelContainer(for: schema, configurations: [config])
+        return JournalChatViewModel(dataSource: ChatMessageDataSource(modelContext: container.mainContext), isPreview: true)
+    }()
+    
     @AppStorage("chatPanelWidth") private var chatPanelWidthRaw: Double = 300
     @AppStorage("isChatVisible") private var isChatVisible: Bool = true
     
     var body: some View {
         navigationSplitView
+            .onAppear {
+                DispatchQueue.main.async {
+                    if chatViewModel.isUsingPreviewContext {
+                        chatViewModel.replaceDataSource(with: ChatMessageDataSource(modelContext: modelContext))
+                    }
+                }
+            }
     }
     
     private var navigationSplitView: some View {
@@ -290,7 +305,7 @@ struct MainView: View {
                                 .frame(width: 1)
                         }
                         
-                        JournalChatView(entry: entry, isInOwnWindow: $isChatPoppedOut, isChatVisible: $isChatVisible, popOutWindow: {
+                        JournalChatView(chatViewModel: chatViewModel, entry: entry, isInOwnWindow: $isChatPoppedOut, isChatVisible: $isChatVisible, popOutWindow: {
                             self.isChatPoppedOut = true
                         }, isSummaryPanelVisible: $isSummaryPanelVisible).environmentObject(focusModel)
                             .frame(width: chatPanelWidth)
@@ -308,7 +323,7 @@ struct MainView: View {
                             defer: false
                         )
                         window.title = "AI Companion"
-                        window.contentView = NSHostingView(rootView: JournalChatView(entry: entry, isInOwnWindow: $isChatPoppedOut))
+                        window.contentView = NSHostingView(rootView: JournalChatView(chatViewModel: chatViewModel, entry: entry, isInOwnWindow: $isChatPoppedOut))
                         window.isReleasedWhenClosed = false
                         window.makeKeyAndOrderFront(nil)
                         poppedOutWindow = window
