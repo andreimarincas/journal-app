@@ -321,6 +321,11 @@ struct MessagesView: View {
                             scrollProxy.scrollTo("bottom", anchor: .bottom)
                         }
                     }
+                    .onAppear {
+                        DispatchQueue.main.async {
+                            scrollProxy.scrollTo("bottom", anchor: .bottom)
+                        }
+                    }
             }
         }
         .environmentObject(focusModel)
