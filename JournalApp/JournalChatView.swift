@@ -500,12 +500,13 @@ struct SystemMessageView: View {
 
 struct TimestampDividerView: View {
     let date: Date
+    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         Text(Self.formatter.string(from: date))
             .font(.caption2)
-            .foregroundColor(.gray)
-            .padding(.vertical, 20)
+            .foregroundColor(colorScheme == .dark ? .gray.opacity(0.6) : .gray)
+            .padding(.vertical, 8)
             .frame(maxWidth: .infinity)
     }
 
@@ -523,6 +524,8 @@ struct MessageBubble: View {
     let isUser: Bool
     var isFocused: Bool = false
     let timestamp: Date?
+    
+    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         HStack {
@@ -546,8 +549,17 @@ struct MessageBubble: View {
                     }
                     .textSelection(.enabled)
                     .padding(12)
-                    .foregroundColor(.primary)
-                    .background(Color(hex: "#ECECEC"))
+                    .foregroundColor(colorScheme == .dark ? Color.primary : Color(hex: "#FAFAFA"))
+                    .background(
+                        LinearGradient(
+                            gradient: Gradient(colors: [
+                                colorScheme == .dark ? Color(hex: "#4C4C4C") : Color(hex: "#ECECEC"),
+                                colorScheme == .dark ? Color(hex: "#3A3A3A") : Color(hex: "#ECECEC")
+                            ]),
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    )
                     .clipShape(RoundedRectangle(cornerRadius: 12))
                     .frame(maxWidth: 380, alignment: isUser ? .trailing : .leading)
                     .multilineTextAlignment(isUser ? .trailing : .leading)
@@ -563,8 +575,8 @@ struct MessageBubble: View {
                     .background(
                         LinearGradient(
                             gradient: Gradient(colors: [
-                                isFocused ? Color(hex: "#007AFF") : Color(hex: "#5CA8F7"),
-                                isFocused ? Color(hex: "#006FE0") : Color(hex: "#5EA4F4")
+                                isFocused ? Color(hex: "#339CFF") : Color(hex: "#3B9DFB"),
+                                isFocused ? Color(hex: "#006FE0") : Color(hex: "#007AFF")
                             ]),
                             startPoint: .top,
                             endPoint: .bottom
