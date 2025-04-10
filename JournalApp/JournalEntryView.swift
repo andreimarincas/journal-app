@@ -270,7 +270,7 @@ struct JournalEntryView: View {
                     Spacer().frame(height: 16)
                     
                     Rectangle()
-                        .fill(Color("DividerColor"))
+                        .fill(Color("NotesDividerColor"))
                         .frame(height: 1)
                         .padding(.vertical, 4)
                         .padding(.leading, 24)

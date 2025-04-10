@@ -340,7 +340,7 @@ struct TypingIndicator: View {
     var body: some View {
         Text("●")
             .font(.system(size: 15))
-            .foregroundColor(Color.black)
+            .foregroundColor(Color("TypingIndicator"))
             .scaleEffect(isVisible ? 1.1 : 0.8)
             .animation(.easeInOut(duration: 0.4), value: isVisible)
             .padding(12)
