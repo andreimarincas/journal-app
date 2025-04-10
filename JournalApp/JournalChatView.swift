@@ -302,10 +302,11 @@ struct TypingIndicator: View {
     var body: some View {
         Text("●")
             .font(.system(size: 15))
-            .foregroundColor(.secondary)
-            .opacity(isVisible ? 1 : 0.3)
+            .foregroundColor(Color.black)
+            .scaleEffect(isVisible ? 1.1 : 0.8)
+            .animation(.easeInOut(duration: 0.4), value: isVisible)
             .padding(12)
-            .padding(.leading, 12)
+            .padding(.leading, 14)
             .onReceive(timer) { _ in
                 withAnimation(.easeInOut(duration: 0.4)) {
                     isVisible.toggle()
@@ -449,7 +450,7 @@ struct MessagesView: View {
                         SystemMessageView(text: message.text)
                     } else {
                         let isFocusedMessage = pinnedNoteID != nil && message.id == lastMatchingMessageID
-                        let isLatestAIMessage = message.id == messages.last?.id && !message.isUser && !message.isSystem
+                        let isLatestAIMessage = message.id == chatViewModel.lastAnimatedMessageID
                         
                         MessageBubble(
                             text: message.text,
@@ -487,6 +488,7 @@ struct SystemMessageView: View {
             .foregroundColor(.gray)
             .padding(.horizontal, 16)
             .padding(.top, 8)
+            .padding(.leading, 12)
     }
 }
 
@@ -523,46 +525,49 @@ struct MessageBubble: View {
 
     var body: some View {
         HStack {
-        if !isUser {
-            ZStack(alignment: .topLeading) {
-                markdownTextView(text)
-                    .opacity(0)
-                    .allowsHitTesting(false)
+            if !isUser {
+                ZStack(alignment: .topLeading) {
+                    markdownTextView(text)
+                        .opacity(0)
+                        .allowsHitTesting(false)
 
-                markdownTextView(visibleText)
-                    .onAppear {
-                        if animateTypewriter && visibleText.isEmpty {
-                            for (index, character) in text.enumerated() {
-                                DispatchQueue.main.asyncAfter(deadline: .now() + Double(index) * 0.015) {
-                                    if index < text.count - 1 {
-                                        if index > 0 && visibleText.last == "●" {
-                                            visibleText.removeLast()
-                                            visibleText.append(character)
+                    markdownTextView(visibleText)
+                        .onAppear {
+                            if animateTypewriter && visibleText.isEmpty {
+                                for (index, character) in text.enumerated() {
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + Double(index) * 0.01) {
+                                        if index < text.count - 1 {
+                                            if index > 0 && visibleText.last == "●" {
+                                                visibleText.removeLast()
+                                                visibleText.append(character)
+                                            } else {
+                                                visibleText.append(character)
+                                                visibleText.append("●")
+                                            }
                                         } else {
+                                            // Remove lingering bullet if present, then finish cleanly
+                                            if visibleText.last == "●" {
+                                                visibleText.removeLast()
+                                            }
                                             visibleText.append(character)
-                                            visibleText.append("●")
                                         }
-                                    } else {
-                                        // Remove lingering bullet if present, then finish cleanly
-                                        if visibleText.last == "●" {
-                                            visibleText.removeLast()
-                                        }
-                                        visibleText.append(character)
                                     }
                                 }
+                            } else if !animateTypewriter {
+                                visibleText = text
                             }
-                        } else if !animateTypewriter {
-                            visibleText = text
                         }
-                    }
+                }
+                Spacer()
+            } else {
+                Spacer()
+                plainTextView(text)
             }
-            Spacer()
-        } else {
-            Spacer()
-            plainTextView(text)
-        }
         }
         .padding(.horizontal, 16)
+        .onAppear {
+            print("👀 Rendering AI bubble with visibleText: \(visibleText)")
+        }
     }
     
     private func plainTextView(_ text: String) -> some View {

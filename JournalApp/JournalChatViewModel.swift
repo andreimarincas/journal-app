@@ -22,6 +22,8 @@ class JournalChatViewModel: ObservableObject {
     private var dataSource: ChatMessageDataSource
     private let paginator = ChatPaginator()
     
+    private(set) var lastAnimatedMessageID: UUID?
+    
     init(dataSource: ChatMessageDataSource, isPreview: Bool = false) {
         self.dataSource = dataSource
         self.isUsingPreviewContext = isPreview
@@ -96,6 +98,7 @@ class JournalChatViewModel: ObservableObject {
                     let greetingMessage = ChatMessage(text: greeting, isUser: false, entryID: entryID)
                     self.dataSource.insertMessage(greetingMessage, previousMessage: self.messages.last)
                     self.messages.append(greetingMessage)
+                    self.lastAnimatedMessageID = greetingMessage.id
                     
                     self.lastGreetedEntryID = entryID
                     self.lastGreetingTimestamp = Date()
@@ -161,6 +164,7 @@ class JournalChatViewModel: ObservableObject {
                     let assistantMessage = ChatMessage(text: response, isUser: false)
                     self.dataSource.insertMessage(assistantMessage, previousMessage: userMessage)
                     self.messages.append(assistantMessage)
+                    self.lastAnimatedMessageID = assistantMessage.id
                 }
             } catch {
                 hideTypingIndicator { [weak self] in
@@ -191,6 +195,7 @@ class JournalChatViewModel: ObservableObject {
                     let assistantMessage = ChatMessage(text: response, isUser: false)
                     self.dataSource.insertMessage(assistantMessage, previousMessage: userMessage)
                     self.messages.append(assistantMessage)
+                    self.lastAnimatedMessageID = assistantMessage.id
                 }
             } catch {
                 hideTypingIndicator { [weak self] in
