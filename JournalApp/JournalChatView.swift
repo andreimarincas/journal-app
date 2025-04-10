@@ -19,6 +19,10 @@ extension Theme {
         // Add other style customizations here
 }
 
+extension Notification.Name {
+    static let stopTypewriterAnimation = Notification.Name("stopTypewriterAnimation")
+}
+
 struct JournalChatView: View {
     let entry: JournalEntry
     @Binding var isChatVisible: Bool
@@ -232,6 +236,7 @@ struct ResizingTextView: NSViewRepresentable {
                 if NSEvent.modifierFlags.contains(.shift) {
                     return false // allow new line
                 } else {
+                    NotificationCenter.default.post(name: .stopTypewriterAnimation, object: nil)
                     onCommit?()
                     return true // prevent default enter behavior
                 }
@@ -248,6 +253,7 @@ struct ChatInputView: View {
     let sendMessage: (String) -> Void
     let isSummaryPanelVisible: Binding<Bool>
     let isDisabled: Bool
+    @State private var isPulsating = false
 
     var body: some View {
         ZStack(alignment: .bottomLeading) {
@@ -268,23 +274,52 @@ struct ChatInputView: View {
                         .stroke(Color.gray.opacity(0.4), lineWidth: 1)
                 )
 
-                Button {
-                    let trimmed = inputText.trimmingCharacters(in: .whitespacesAndNewlines)
-                    if !trimmed.isEmpty {
-                        sendMessage(trimmed)
-                        inputText = ""
+                if isDisabled {
+                    Button(action: {
+                        // Placeholder for stop action logic
+                        NotificationCenter.default.post(name: .stopTypewriterAnimation, object: nil)
+                    }) {
+                        ZStack {
+                            Circle()
+                                .fill(Color.accentColor)
+                                .frame(width: 28, height: 28)
+
+                            RoundedRectangle(cornerRadius: 3, style: .continuous)
+                                .fill(Color.white)
+                                .frame(width: 12, height: 12)
+//                                .scaleEffect(isPulsating ? 1.05 : 0.95)
+//                                .animation(.easeInOut(duration: 0.6).repeatForever(autoreverses: true), value: isPulsating)
+                                .onAppear {
+                                    isPulsating = true
+                                }
+                                .onDisappear {
+                                    isPulsating = false
+                                }
+                        }
                     }
-                } label: {
-                    Image(systemName: "arrow.up.circle.fill")
-                        .resizable()
-                        .frame(width: 28, height: 28)
-                        .foregroundStyle(.white, Color.accentColor)
+                    .buttonStyle(.plain)
+                    .padding(.bottom, 4)
+                    .padding(.leading, 2)
+                    .offset(x: 8)
+                } else {
+                    Button {
+                        let trimmed = inputText.trimmingCharacters(in: .whitespacesAndNewlines)
+                        if !trimmed.isEmpty {
+                            sendMessage(trimmed)
+                            inputText = ""
+                        }
+                    } label: {
+                        Image(systemName: "arrow.up.circle.fill")
+                            .resizable()
+                            .frame(width: 28, height: 28)
+                            .foregroundStyle(.white, Color.accentColor)
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.bottom, 4)
+                    .padding(.leading, 2)
+                    .offset(x: 8)
+                    .disabled(inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                 }
-                .buttonStyle(.plain)
-                .padding(.bottom, 4)
-                .padding(.leading, 2)
-                .offset(x: 8)
-                .disabled(isDisabled || inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
             }
         }
         .padding(.horizontal, 16)
@@ -527,6 +562,7 @@ struct MessageBubble: View {
     let timestamp: Date?
     var animateTypewriter: Bool = false
     @State private var visibleText: String = ""
+    @State private var didCancelTypewriter = false
     var onTypewriterStart: (() -> Void)? = nil
     var onTypewriterEnd: (() -> Void)? = nil
     
@@ -546,21 +582,22 @@ struct MessageBubble: View {
                                 onTypewriterStart?()
                                 for (index, character) in text.enumerated() {
                                     DispatchQueue.main.asyncAfter(deadline: .now() + Double(index) * 0.01) {
-                                        if index < text.count - 1 {
-                                            if index > 0 && visibleText.last == "●" {
-                                                visibleText.removeLast()
-                                                visibleText.append(character)
+                                        if !didCancelTypewriter {
+                                            if index < text.count - 1 {
+                                                if index > 0 && visibleText.last == "●" {
+                                                    visibleText.removeLast()
+                                                    visibleText.append(character)
+                                                } else {
+                                                    visibleText.append(character)
+                                                    visibleText.append("●")
+                                                }
                                             } else {
+                                                if visibleText.last == "●" {
+                                                    visibleText.removeLast()
+                                                }
                                                 visibleText.append(character)
-                                                visibleText.append("●")
+                                                onTypewriterEnd?()
                                             }
-                                        } else {
-                                            // Remove lingering bullet if present, then finish cleanly
-                                            if visibleText.last == "●" {
-                                                visibleText.removeLast()
-                                            }
-                                            visibleText.append(character)
-                                            onTypewriterEnd?()
                                         }
                                     }
                                 }
@@ -576,6 +613,11 @@ struct MessageBubble: View {
             }
         }
         .padding(.horizontal, 16)
+        .onReceive(NotificationCenter.default.publisher(for: .stopTypewriterAnimation)) { _ in
+            didCancelTypewriter = true
+            visibleText = text
+            onTypewriterEnd?()
+        }
         .onAppear {
             print("👀 Rendering AI bubble with visibleText: \(visibleText)")
         }
