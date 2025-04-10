@@ -81,16 +81,24 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
+         contextName = "closure #2 in closure #1 in MessageBubble.body.getter:JournalChatView.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
          contextName = "closure #1 in closure #1 in JournalEntryView.NoteRow.chatButton.getter:JournalEntryView.swift">
          <PersistentStrings>
             <PersistentString
-               value = "focusModel.pendingChatMessage">
+               value = "focusModel">
             </PersistentString>
             <PersistentString
                value = "focusModel.isChatVisible">
             </PersistentString>
             <PersistentString
-               value = "focusModel">
+               value = "focusModel.pendingChatMessage">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -117,10 +125,10 @@
          contextName = "TextViewWrapper.makeNSView(context:):JournalEntryView.swift">
          <PersistentStrings>
             <PersistentString
-               value = "textView.string">
+               value = "undoManager">
             </PersistentString>
             <PersistentString
-               value = "undoManager">
+               value = "textView.string">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -162,19 +170,19 @@
                value = "textView.string">
             </PersistentString>
             <PersistentString
-               value = "NSApp.mainWindow?.undoManager">
+               value = "textView.customUndoManager">
             </PersistentString>
             <PersistentString
-               value = "textView.undoManager">
+               value = "parent">
             </PersistentString>
             <PersistentString
                value = "NSApp.mainWindow?.firstResponder">
             </PersistentString>
             <PersistentString
-               value = "textView.customUndoManager">
+               value = "NSApp.mainWindow?.undoManager">
             </PersistentString>
             <PersistentString
-               value = "parent">
+               value = "textView.undoManager">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -196,10 +204,10 @@
                value = "isDimmed">
             </PersistentString>
             <PersistentString
-               value = "isHovered">
+               value = "text">
             </PersistentString>
             <PersistentString
-               value = "text">
+               value = "isHovered">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -215,6 +223,14 @@
          contextName = "closure #1 in closure #3 in closure #1 in closure #1 in JournalEntryView.notesFooter.getter:JournalEntryView.swift">
       </ContextState>
       <ContextState
+         contextName = "closure #3 in JournalChatView.body.getter:JournalChatView.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "entry.title">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
          contextName = "MainView.deleteEntry(_:):MainView.swift">
          <PersistentStrings>
             <PersistentString
@@ -222,14 +238,6 @@
             </PersistentString>
             <PersistentString
                value = "selectedEntry">
-            </PersistentString>
-         </PersistentStrings>
-      </ContextState>
-      <ContextState
-         contextName = "closure #3 in JournalChatView.body.getter:JournalChatView.swift">
-         <PersistentStrings>
-            <PersistentString
-               value = "entry.title">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -269,18 +277,6 @@
          contextName = "FocusableTextView.performKeyEquivalent(with:):JournalEntryView.swift">
          <PersistentStrings>
             <PersistentString
-               value = "customUndoManager">
-            </PersistentString>
-            <PersistentString
-               value = "self.window?.firstResponder">
-            </PersistentString>
-            <PersistentString
-               value = "isFirstResponder">
-            </PersistentString>
-            <PersistentString
-               value = "undoManager">
-            </PersistentString>
-            <PersistentString
                value = "event.keyCode">
             </PersistentString>
             <PersistentString
@@ -288,6 +284,18 @@
             </PersistentString>
             <PersistentString
                value = "isActiveAINote">
+            </PersistentString>
+            <PersistentString
+               value = "undoManager">
+            </PersistentString>
+            <PersistentString
+               value = "customUndoManager">
+            </PersistentString>
+            <PersistentString
+               value = "self.window?.firstResponder">
+            </PersistentString>
+            <PersistentString
+               value = "isFirstResponder">
             </PersistentString>
          </PersistentStrings>
       </ContextState>

@@ -113,27 +113,38 @@ struct JournalEntryView: View {
                 }
             }
         } else {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 0) {
-                    ForEach(entry.notes.sorted(by: { $0.number < $1.number })) { note in
-                        ZStack {
-                            noteView(for: note).environmentObject(viewModel)
-                        }
-                        .padding(.horizontal, 4)
-                        .padding(.vertical, 2)
-                    }
-                    noteHorizon
-                }
-                .padding(.trailing, 12)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background(
-                    GeometryReader { proxy in
-                        Color.clear
-                            .onChange(of: proxy.size.width) { _, newWidth in
-                                containerWidth = newWidth
+            ScrollViewReader { scrollProxy in
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 0) {
+                        ForEach(entry.notes.sorted(by: { $0.number < $1.number })) { note in
+                            ZStack {
+                                noteView(for: note)
+                                    .id(note.id)
+                                    .environmentObject(viewModel)
                             }
+                            .padding(.horizontal, 4)
+                            .padding(.vertical, 2)
+                        }
+                        noteHorizon
                     }
-                )
+                    .padding(.trailing, 12)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(
+                        GeometryReader { proxy in
+                            Color.clear
+                                .onChange(of: proxy.size.width) { _, newWidth in
+                                    containerWidth = newWidth
+                                }
+                        }
+                    )
+                }
+                .onReceive(NotificationCenter.default.publisher(for: .scrollToNote)) { notification in
+                    if let noteID = notification.object as? UUID {
+                        withAnimation(.easeInOut) {
+                            scrollProxy.scrollTo(noteID, anchor: .top)
+                        }
+                    }
+                }
             }
 //            .padding()
 //            .background(

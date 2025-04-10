@@ -19,10 +19,6 @@ extension Theme {
         // Add other style customizations here
 }
 
-extension Notification.Name {
-    static let stopTypewriterAnimation = Notification.Name("stopTypewriterAnimation")
-}
-
 struct JournalChatView: View {
     let entry: JournalEntry
     @Binding var isChatVisible: Bool
@@ -353,10 +349,6 @@ struct TypingIndicator: View {
     }
 }
 
-extension Notification.Name {
-    static let textViewHeightDidChange = Notification.Name("textViewHeightDidChange")
-}
-
 private struct ScrollOffsetKey: PreferenceKey {
     static var defaultValue: CGFloat = 0
     static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
@@ -505,13 +497,24 @@ struct MessagesView: View {
                         .environmentObject(focusModel)
                     }
                 }
+                .id(message.id)
             }
             
             if isTyping {
                 TypingIndicator()
             }
             Color.clear.frame(height: 1).id("bottom")
+            .onReceive(NotificationCenter.default.publisher(for: .noteCreatedFromChat)) { _ in
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    if let noteID = focusModel.focusedNoteID {
+                        scrollToNote(noteID)
+                    }
+                }
+            }
         }
+    }
+    private func scrollToNote(_ id: UUID) {
+        NotificationCenter.default.post(name: .scrollToNote, object: id)
     }
 }
 
@@ -624,20 +627,22 @@ struct MessageBubble: View {
                     let newNote = JournalNote(number: newNumber, text: text)
                     self.focusModel.entry?.notes.append(newNote)
                     self.focusModel.focusedNoteID = newNote.id
+                    NotificationCenter.default.post(name: .noteCreatedFromChat, object: newNote)
                 }) {
-                    Image(systemName: "plus.circle")
+                    Image(systemName: "note.text.badge.plus")
                         .font(.system(size: 14))
                         .foregroundColor(.secondary)
                         .padding(6)
                 }
                 .buttonStyle(.plain)
                 .frame(width: 44, height: 44)
+                .padding(.bottom, -34)
+                .padding(.trailing, -12)
                 .help("Add this message as a note")
-                .offset(x: 14, y: 34)
             }
         }
         .padding(.horizontal, 16)
-        .padding(.bottom, isUser ? 14 : 0)
+        .padding(.bottom, isUser ? 24 : 0)
         .onHover { hovering in
             isHovering = hovering
         }
