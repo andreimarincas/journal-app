@@ -530,27 +530,61 @@ struct MessageBubble: View {
     var body: some View {
         HStack {
             if !isUser {
-                Markdown(text)
-                    .markdownTheme(.custom)
-                    .markdownBlockStyle(\.blockquote) { configuration in
-                        configuration.label
-                            .padding()
-                            .markdownTextStyle {
-                                FontCapsVariant(.lowercaseSmallCaps)
-                                FontWeight(.semibold)
-                                BackgroundColor(nil)
-                            }
-                            .overlay(alignment: .leading) {
-                                Rectangle()
-                                    .fill(Color.teal)
-                                    .frame(width: 4)
-                            }
-                            .background(Color.teal.opacity(0.5))
+                markdownTextView(text)
+                Spacer()
+            } else {
+                Spacer()
+                plainTextView(text)
+            }
+        }
+        .padding(.horizontal, 16)
+    }
+    
+    private func plainTextView(_ text: String) -> some View {
+        Text(text)
+            .font(.system(size: 15, weight: .regular, design: .rounded))
+            .textSelection(.enabled)
+            .foregroundColor(colorScheme == .dark ? .white : .black)
+            .lineSpacing(6)
+            .padding(12)
+//                    .background(
+//                        LinearGradient(
+//                            gradient: Gradient(colors: [
+//                                isFocused ? Color(hex: "#339CFF") : Color(hex: "#3B9DFB"),
+//                                isFocused ? Color(hex: "#006FE0") : Color(hex: "#007AFF")
+//                            ]),
+//                            startPoint: .top,
+//                            endPoint: .bottom
+//                        )
+//                    )
+            .background(isFocused ? Color.accentColor : Color("BubbleUser"))
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+            .frame(maxWidth: 380, alignment: isUser ? .trailing : .leading)
+            .multilineTextAlignment(isUser ? .trailing : .leading)
+    }
+    
+    private func markdownTextView(_ text: String) -> some View {
+        Markdown(text)
+            .markdownTheme(.custom)
+            .markdownBlockStyle(\.blockquote) { configuration in
+                configuration.label
+                    .padding()
+                    .markdownTextStyle {
+                        FontCapsVariant(.lowercaseSmallCaps)
+                        FontWeight(.semibold)
+                        BackgroundColor(nil)
                     }
-                    .textSelection(.enabled)
-                    .lineSpacing(6)
-                    .padding(12)
-                    .foregroundColor(colorScheme == .dark ? Color.primary : Color(hex: "#FAFAFA"))
+                    .overlay(alignment: .leading) {
+                        Rectangle()
+                            .fill(Color.teal)
+                            .frame(width: 4)
+                    }
+                    .background(Color.teal.opacity(0.5))
+            }
+            .textSelection(.enabled)
+            .lineSpacing(6)
+            .padding(12)
+            .foregroundColor(colorScheme == .dark ? Color.primary : Color(hex: "#FAFAFA"))
 //                    .background(
 //                        LinearGradient(
 //                            gradient: Gradient(colors: [
@@ -563,34 +597,8 @@ struct MessageBubble: View {
 //                    )
 //                    .clipShape(RoundedRectangle(cornerRadius: 12))
 //                    .frame(maxWidth: 380, alignment: isUser ? .trailing : .leading)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .multilineTextAlignment(isUser ? .trailing : .leading)
-                Spacer()
-            } else {
-                Spacer()
-                Text(text)
-                    .font(.system(size: 15, weight: .regular, design: .rounded))
-                    .textSelection(.enabled)
-                    .foregroundColor(.white)
-                    .lineSpacing(6)
-                    .padding(12)
-//                    .background(
-//                        LinearGradient(
-//                            gradient: Gradient(colors: [
-//                                isFocused ? Color(hex: "#339CFF") : Color(hex: "#3B9DFB"),
-//                                isFocused ? Color(hex: "#006FE0") : Color(hex: "#007AFF")
-//                            ]),
-//                            startPoint: .top,
-//                            endPoint: .bottom
-//                        )
-//                    )
-                    .background(isFocused ? Color.accentColor : Color("BubbleUser"))
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
-                    .frame(maxWidth: 380, alignment: isUser ? .trailing : .leading)
-                    .multilineTextAlignment(isUser ? .trailing : .leading)
-            }
-        }
-        .padding(.horizontal, 16)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .multilineTextAlignment(isUser ? .trailing : .leading)
     }
     
     static var timeFormatter: DateFormatter {
