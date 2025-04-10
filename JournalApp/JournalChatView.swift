@@ -295,29 +295,22 @@ struct ChatInputView: View {
 }
 
 struct TypingIndicator: View {
-    @State private var currentDot: Int = -1
+    @State private var isVisible: Bool = true
 
-    let timer = Timer.publish(every: 0.25, on: .main, in: .common).autoconnect()
+    let timer = Timer.publish(every: 0.5, on: .main, in: .common).autoconnect()
 
     var body: some View {
-        HStack(spacing: 5) {
-            ForEach(0..<3) { index in
-                Circle()
-                    .frame(width: 5, height: 5)
-                    .offset(y: currentDot == index ? -5 : 0)
-                    .animation(.easeInOut(duration: 0.35), value: currentDot)
+        Text("●")
+            .font(.system(size: 15))
+            .foregroundColor(.secondary)
+            .opacity(isVisible ? 1 : 0.3)
+            .padding(12)
+            .padding(.leading, 12)
+            .onReceive(timer) { _ in
+                withAnimation(.easeInOut(duration: 0.4)) {
+                    isVisible.toggle()
+                }
             }
-        }
-        .foregroundColor(.gray)
-        .padding(12)
-        .background(Color.gray.opacity(0.1))
-        .clipShape(RoundedRectangle(cornerRadius: 12))
-        .padding(.horizontal, 16)
-        .onReceive(timer) { _ in
-            withAnimation {
-                currentDot = (currentDot + 1) % 5
-            }
-        }
     }
 }
 
@@ -456,15 +449,14 @@ struct MessagesView: View {
                         SystemMessageView(text: message.text)
                     } else {
                         let isFocusedMessage = pinnedNoteID != nil && message.id == lastMatchingMessageID
-//                        let isMostRecentUserMessage = pinnedNoteID == nil &&
-//                        message.isUser &&
-//                        message.id == messages.last(where: { $0.isUser })?.id
+                        let isLatestAIMessage = message.id == messages.last?.id && !message.isUser && !message.isSystem
                         
                         MessageBubble(
                             text: message.text,
                             isUser: message.isUser,
                             isFocused: isFocusedMessage, //|| isMostRecentUserMessage,
-                            timestamp: message.timestamp
+                            timestamp: message.timestamp,
+                            animateTypewriter: isLatestAIMessage
                         )
                     }
                 }
@@ -524,18 +516,51 @@ struct MessageBubble: View {
     let isUser: Bool
     var isFocused: Bool = false
     let timestamp: Date?
+    var animateTypewriter: Bool = false
+    @State private var visibleText: String = ""
     
     @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         HStack {
-            if !isUser {
+        if !isUser {
+            ZStack(alignment: .topLeading) {
                 markdownTextView(text)
-                Spacer()
-            } else {
-                Spacer()
-                plainTextView(text)
+                    .opacity(0)
+                    .allowsHitTesting(false)
+
+                markdownTextView(visibleText)
+                    .onAppear {
+                        if animateTypewriter && visibleText.isEmpty {
+                            for (index, character) in text.enumerated() {
+                                DispatchQueue.main.asyncAfter(deadline: .now() + Double(index) * 0.015) {
+                                    if index < text.count - 1 {
+                                        if index > 0 && visibleText.last == "●" {
+                                            visibleText.removeLast()
+                                            visibleText.append(character)
+                                        } else {
+                                            visibleText.append(character)
+                                            visibleText.append("●")
+                                        }
+                                    } else {
+                                        // Remove lingering bullet if present, then finish cleanly
+                                        if visibleText.last == "●" {
+                                            visibleText.removeLast()
+                                        }
+                                        visibleText.append(character)
+                                    }
+                                }
+                            }
+                        } else if !animateTypewriter {
+                            visibleText = text
+                        }
+                    }
             }
+            Spacer()
+        } else {
+            Spacer()
+            plainTextView(text)
+        }
         }
         .padding(.horizontal, 16)
     }
