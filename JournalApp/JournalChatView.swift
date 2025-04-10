@@ -38,6 +38,7 @@ struct JournalChatView: View {
     @Environment(\.modelContext) private var modelContext
     
     @State private var canTriggerLoad = true
+    @State private var isAnimatingTypewriter: Bool = false
     
     init(chatViewModel: JournalChatViewModel, entry: JournalEntry, isInOwnWindow: Binding<Bool> = .constant(false), isChatVisible: Binding<Bool> = .constant(true), popOutWindow: (() -> Void)? = nil, isSummaryPanelVisible: Binding<Bool> = .constant(false)) {
         self.entry = entry
@@ -54,7 +55,7 @@ struct JournalChatView: View {
         VStack(alignment: .leading, spacing: 0) {
             topButtons
             
-            MessagesView(chatViewModel: chatViewModel, canTriggerLoad: $canTriggerLoad)
+            MessagesView(chatViewModel: chatViewModel, canTriggerLoad: $canTriggerLoad, isAnimatingTypewriter: $isAnimatingTypewriter)
                 .contentShape(Rectangle())
                 .onTapGesture {
                     isInputFocused = false
@@ -68,7 +69,8 @@ struct JournalChatView: View {
                 sendMessage: { message in
                     chatViewModel.sendInputUserMessage(text: message)
                 },
-                isSummaryPanelVisible: $isSummaryPanelVisible
+                isSummaryPanelVisible: $isSummaryPanelVisible,
+                isDisabled: isAnimatingTypewriter
             )
         }
         .background(Color("ChatViewBackground"))
@@ -81,8 +83,8 @@ struct JournalChatView: View {
             chatViewModel.startChat(title: entry.title, notes: entry.notes.map(\.text), entryID: entry.id)
         }
         .onChange(of: entry.id) { _, newID in
+            chatViewModel.insertSystemMessage("Switched to: \(entry.title)")
             chatViewModel.startChat(title: entry.title, notes: entry.notes.map(\.text), entryID: entry.id)
-            chatViewModel.messages.append(ChatMessage(text: "Switched to: \(entry.title)", isUser: false, isSystem: true))
         }
     }
     
@@ -245,6 +247,7 @@ struct ChatInputView: View {
     @FocusState var isInputFocused: Bool
     let sendMessage: (String) -> Void
     let isSummaryPanelVisible: Binding<Bool>
+    let isDisabled: Bool
 
     var body: some View {
         ZStack(alignment: .bottomLeading) {
@@ -281,7 +284,7 @@ struct ChatInputView: View {
                 .padding(.bottom, 4)
                 .padding(.leading, 2)
                 .offset(x: 8)
-                .disabled(inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                .disabled(isDisabled || inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
             }
         }
         .padding(.horizontal, 16)
@@ -345,10 +348,12 @@ struct MessagesView: View {
     @State private var contentHeight: CGFloat = 0
     @State private var firstVisibleID: UUID?
     @State private var showScrollIndicator: Bool = true
+    @Binding private var isAnimatingTypewriter: Bool
     
-    init(chatViewModel: JournalChatViewModel, canTriggerLoad: Binding<Bool>) {
+    init(chatViewModel: JournalChatViewModel, canTriggerLoad: Binding<Bool>, isAnimatingTypewriter: Binding<Bool>) {
         self.chatViewModel = chatViewModel
         self._canTriggerLoad = canTriggerLoad
+        self._isAnimatingTypewriter = isAnimatingTypewriter
     }
     
     var body: some View {
@@ -457,7 +462,9 @@ struct MessagesView: View {
                             isUser: message.isUser,
                             isFocused: isFocusedMessage, //|| isMostRecentUserMessage,
                             timestamp: message.timestamp,
-                            animateTypewriter: isLatestAIMessage
+                            animateTypewriter: isLatestAIMessage,
+                            onTypewriterStart: { isAnimatingTypewriter = true },
+                            onTypewriterEnd: { isAnimatingTypewriter = false }
                         )
                     }
                 }
@@ -520,6 +527,8 @@ struct MessageBubble: View {
     let timestamp: Date?
     var animateTypewriter: Bool = false
     @State private var visibleText: String = ""
+    var onTypewriterStart: (() -> Void)? = nil
+    var onTypewriterEnd: (() -> Void)? = nil
     
     @Environment(\.colorScheme) private var colorScheme
 
@@ -534,6 +543,7 @@ struct MessageBubble: View {
                     markdownTextView(visibleText)
                         .onAppear {
                             if animateTypewriter && visibleText.isEmpty {
+                                onTypewriterStart?()
                                 for (index, character) in text.enumerated() {
                                     DispatchQueue.main.asyncAfter(deadline: .now() + Double(index) * 0.01) {
                                         if index < text.count - 1 {
@@ -550,6 +560,7 @@ struct MessageBubble: View {
                                                 visibleText.removeLast()
                                             }
                                             visibleText.append(character)
+                                            onTypewriterEnd?()
                                         }
                                     }
                                 }

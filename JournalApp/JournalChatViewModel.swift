@@ -11,7 +11,7 @@ import SwiftUICore
 
 @MainActor
 class JournalChatViewModel: ObservableObject {
-    @Published var messages: [ChatMessage] = []
+    @Published private(set) var messages: [ChatMessage] = []
     @Published var isTyping: Bool
     private var typingStartTime: Date?
     private(set) var isUsingPreviewContext: Bool
@@ -114,6 +114,12 @@ class JournalChatViewModel: ObservableObject {
     func clearExistingChat() {
         messages.forEach { dataSource.removeMessage($0) }
         messages.removeAll()
+    }
+    
+    func insertSystemMessage(_ text: String) {
+        let systemMessage = ChatMessage(text: text, isUser: false, isSystem: true)
+        dataSource.insertMessage(systemMessage)
+        messages.append(systemMessage)
     }
     
     func sendFocusedNoteToGPT(message: String, context: ChatNoteContext?, pinnedNoteID: UUID?) {
