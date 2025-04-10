@@ -544,7 +544,7 @@ struct MessageBubble: View {
         Text(text)
             .font(.system(size: 15, weight: .regular, design: .rounded))
             .textSelection(.enabled)
-            .foregroundColor(colorScheme == .dark ? .white : .black)
+            .foregroundColor(colorScheme == .dark || isFocused ? .white : .black)
             .lineSpacing(6)
             .padding(12)
 //                    .background(
