@@ -119,6 +119,8 @@ struct JournalEntryView: View {
                         ZStack {
                             noteView(for: note).environmentObject(viewModel)
                         }
+                        .padding(.horizontal, 4)
+                        .padding(.vertical, 2)
                     }
                     noteHorizon
                 }
@@ -133,6 +135,11 @@ struct JournalEntryView: View {
                     }
                 )
             }
+//            .padding()
+//            .background(
+//                RoundedRectangle(cornerRadius: 12)
+//                    .stroke(Color.secondary.opacity(0.25), lineWidth: 1)
+//            )
         }
     }
     
@@ -262,9 +269,9 @@ struct JournalEntryView: View {
                     
                     Spacer().frame(height: 16)
                     
-                    Divider()
-                        .frame(height: 0.5)
-                        .foregroundStyle(.secondary)
+                    Rectangle()
+                        .fill(Color("DividerColor"))
+                        .frame(height: 1)
                         .padding(.vertical, 4)
                         .padding(.leading, 24)
                 }
@@ -281,6 +288,14 @@ struct JournalEntryView: View {
             }
             .padding(.horizontal, 2)
             .contentShape(Rectangle())
+//            .background(
+//                RoundedRectangle(cornerRadius: 8, style: .continuous)
+//                    .fill(Color(NSColor.windowBackgroundColor))
+//                    .fill(focusModel.focusedNoteID == note.id ? Color(hex: "#F7F7F7") : Color.clear)
+//                    .fill(focusModel.focusedNoteID == note.id ? Color.accentColor : Color("BubbleUser"))
+//                    .background(isFocusfocusModel.focusedNoteID = note.ided ? Color.accentColor : Color("BubbleUser"))
+//                    .shadow(color: Color.black.opacity(0.05), radius: 1, x: 0, y: 1)
+//            )
             .onTapGesture {
                 focusModel.focusedNoteID = note.id
                 if focusModel.pinnedNoteID != note.id {
