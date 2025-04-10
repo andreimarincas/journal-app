@@ -491,13 +491,14 @@ struct MessagesView: View {
                     } else {
                         let isFocusedMessage = pinnedNoteID != nil && message.id == lastMatchingMessageID
                         let isLatestAIMessage = message.id == chatViewModel.lastAnimatedMessageID
+                        let shouldAnimateTypewriter = isLatestAIMessage && chatViewModel.messages.last?.id == message.id
                         
                         MessageBubble(
                             text: message.text,
                             isUser: message.isUser,
                             isFocused: isFocusedMessage, //|| isMostRecentUserMessage,
                             timestamp: message.timestamp,
-                            animateTypewriter: isLatestAIMessage,
+                            animateTypewriter: shouldAnimateTypewriter,
                             onTypewriterStart: { isAnimatingTypewriter = true },
                             onTypewriterEnd: { isAnimatingTypewriter = false }
                         )
@@ -617,6 +618,13 @@ struct MessageBubble: View {
             didCancelTypewriter = true
             visibleText = text
             onTypewriterEnd?()
+        }
+        .onChange(of: animateTypewriter) { _, newValue in
+            if !newValue {
+                didCancelTypewriter = true
+                visibleText = text
+                onTypewriterEnd?()
+            }
         }
         .onAppear {
             print("👀 Rendering AI bubble with visibleText: \(visibleText)")
