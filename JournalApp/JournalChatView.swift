@@ -502,6 +502,7 @@ struct MessagesView: View {
                             onTypewriterStart: { isAnimatingTypewriter = true },
                             onTypewriterEnd: { isAnimatingTypewriter = false }
                         )
+                        .environmentObject(focusModel)
                     }
                 }
             }
@@ -538,6 +539,7 @@ struct SystemMessageView: View {
 struct TimestampDividerView: View {
     let date: Date
     @Environment(\.colorScheme) private var colorScheme
+    @EnvironmentObject private var focusModel: JournalFocusModel
 
     var body: some View {
         Text(Self.formatter.string(from: date))
@@ -566,54 +568,79 @@ struct MessageBubble: View {
     @State private var didCancelTypewriter = false
     var onTypewriterStart: (() -> Void)? = nil
     var onTypewriterEnd: (() -> Void)? = nil
+    @State private var isHovering = false
     
     @Environment(\.colorScheme) private var colorScheme
+    @EnvironmentObject private var focusModel: JournalFocusModel
 
     var body: some View {
-        HStack {
-            if !isUser {
-                ZStack(alignment: .topLeading) {
-                    markdownTextView(text)
-                        .opacity(0)
-                        .allowsHitTesting(false)
+        ZStack(alignment: .bottomTrailing) {
+            HStack {
+                if !isUser {
+                    ZStack(alignment: .topLeading) {
+                        markdownTextView(text)
+                            .opacity(0)
+                            .allowsHitTesting(false)
 
-                    markdownTextView(visibleText)
-                        .onAppear {
-                            if animateTypewriter && visibleText.isEmpty {
-                                onTypewriterStart?()
-                                for (index, character) in text.enumerated() {
-                                    DispatchQueue.main.asyncAfter(deadline: .now() + Double(index) * 0.01) {
-                                        if !didCancelTypewriter {
-                                            if index < text.count - 1 {
-                                                if index > 0 && visibleText.last == "●" {
-                                                    visibleText.removeLast()
-                                                    visibleText.append(character)
+                        markdownTextView(visibleText)
+                            .onAppear {
+                                if animateTypewriter && visibleText.isEmpty {
+                                    onTypewriterStart?()
+                                    for (index, character) in text.enumerated() {
+                                        DispatchQueue.main.asyncAfter(deadline: .now() + Double(index) * 0.01) {
+                                            if !didCancelTypewriter {
+                                                if index < text.count - 1 {
+                                                    if index > 0 && visibleText.last == "●" {
+                                                        visibleText.removeLast()
+                                                        visibleText.append(character)
+                                                    } else {
+                                                        visibleText.append(character)
+                                                        visibleText.append("●")
+                                                    }
                                                 } else {
+                                                    if visibleText.last == "●" {
+                                                        visibleText.removeLast()
+                                                    }
                                                     visibleText.append(character)
-                                                    visibleText.append("●")
+                                                    onTypewriterEnd?()
                                                 }
-                                            } else {
-                                                if visibleText.last == "●" {
-                                                    visibleText.removeLast()
-                                                }
-                                                visibleText.append(character)
-                                                onTypewriterEnd?()
                                             }
                                         }
                                     }
+                                } else if !animateTypewriter {
+                                    visibleText = text
                                 }
-                            } else if !animateTypewriter {
-                                visibleText = text
                             }
-                        }
+                    }
+                    Spacer()
+                } else {
+                    Spacer()
+                    plainTextView(text)
                 }
-                Spacer()
-            } else {
-                Spacer()
-                plainTextView(text)
+            }
+            if isUser && isHovering {
+                Button(action: {
+                    let newNumber = (self.focusModel.entry?.notes.map(\.number).max() ?? 0) + 1
+                    let newNote = JournalNote(number: newNumber, text: text)
+                    self.focusModel.entry?.notes.append(newNote)
+                    self.focusModel.focusedNoteID = newNote.id
+                }) {
+                    Image(systemName: "plus.circle")
+                        .font(.system(size: 14))
+                        .foregroundColor(.secondary)
+                        .padding(6)
+                }
+                .buttonStyle(.plain)
+                .frame(width: 44, height: 44)
+                .help("Add this message as a note")
+                .offset(x: 14, y: 34)
             }
         }
         .padding(.horizontal, 16)
+        .padding(.bottom, isUser ? 14 : 0)
+        .onHover { hovering in
+            isHovering = hovering
+        }
         .onReceive(NotificationCenter.default.publisher(for: .stopTypewriterAnimation)) { _ in
             didCancelTypewriter = true
             visibleText = text
