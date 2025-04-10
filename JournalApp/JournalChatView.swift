@@ -584,7 +584,7 @@ struct MessageBubble: View {
 //                            endPoint: .bottom
 //                        )
 //                    )
-                    .background(isFocused ? Color.accentColor : Color(hex: "#4C4C4C"))
+                    .background(isFocused ? Color.accentColor : Color("BubbleUser"))
                     .clipShape(RoundedRectangle(cornerRadius: 12))
                     .frame(maxWidth: 380, alignment: isUser ? .trailing : .leading)
                     .multilineTextAlignment(isUser ? .trailing : .leading)
