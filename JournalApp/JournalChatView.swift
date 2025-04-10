@@ -79,7 +79,7 @@ struct JournalChatView: View {
         }
         .background(Color("ChatViewBackground"))
         .onChange(of: focusModel.pinnedNoteID) { _, newValue in
-            if let message = focusModel.pendingChatMessage {
+            if let _ = newValue, let message = focusModel.pendingChatMessage {
                 chatViewModel.sendFocusedNoteToGPT(message: message, context: focusModel.pendingChatMessageContext, pinnedNoteID: focusModel.pinnedNoteID)
             }
         }
@@ -286,7 +286,7 @@ struct ChatInputView: View {
 
                             RoundedRectangle(cornerRadius: 3, style: .continuous)
                                 .fill(Color.white)
-                                .frame(width: 12, height: 12)
+                                .frame(width: 11, height: 11)
 //                                .scaleEffect(isPulsating ? 1.05 : 0.95)
 //                                .animation(.easeInOut(duration: 0.6).repeatForever(autoreverses: true), value: isPulsating)
                                 .onAppear {
