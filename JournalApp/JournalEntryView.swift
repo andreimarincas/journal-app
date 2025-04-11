@@ -97,6 +97,11 @@ struct JournalEntryView: View {
                 viewModel.loadNotes()
                 draftCanvasText = viewModel.canvasBody
             }
+            .onChange(of: viewMode) { _, _ in
+                if let window = NSApplication.shared.keyWindow {
+                    window.makeFirstResponder(nil)
+                }
+            }
         }
         .onChange(of: editedTexts) { oldValue, newValue in
             print(newValue)
