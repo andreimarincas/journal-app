@@ -49,12 +49,21 @@ struct JournalEntryView: View {
     @State private var isShowChatHovering = false
     @State private var draftCanvasText: String = ""
     private let canvasFontSize: CGFloat = 15.5
+    @State private var selectedViewMode: ViewMode = .notes
     
-    private enum ViewMode {
+    private enum ViewMode: String {
         case notes, canvas
     }
 
-    @State private var viewMode: ViewMode = .notes
+    @AppStorage("viewMode") private var viewModeRawValue: String = "notes"
+    
+    private var viewMode: ViewMode {
+        ViewMode(rawValue: viewModeRawValue) ?? .notes
+    }
+    
+    private func setViewMode(_ newValue: ViewMode) {
+        viewModeRawValue = newValue.rawValue
+    }
     
     init(entry: JournalEntry, viewModel: JournalEntryViewModel, isSummaryPanelVisible: Binding<Bool>, isChatVisible: Binding<Bool>) {
         self.entry = entry
@@ -93,11 +102,13 @@ struct JournalEntryView: View {
                 isSummaryPanelVisible = false
             }
             .onAppear {
+                selectedViewMode = viewMode
                 focusModel.entry = entry
                 viewModel.loadNotes()
                 draftCanvasText = viewModel.canvasBody
             }
-            .onChange(of: viewMode) { _, _ in
+            .onChange(of: selectedViewMode) { _, newValue in
+                setViewMode(newValue)
                 if let window = NSApplication.shared.keyWindow {
                     window.makeFirstResponder(nil)
                 }
@@ -117,7 +128,7 @@ struct JournalEntryView: View {
 
             Spacer()
 
-            Picker("", selection: $viewMode) {
+            Picker("", selection: $selectedViewMode) {
                 Image(systemName: "list.number")
                     .help("Notes")
                     .tag(ViewMode.notes)
