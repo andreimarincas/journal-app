@@ -439,6 +439,9 @@ struct MessagesView: View {
                     if !canTriggerLoad {
                         if let anchorID = self.firstVisibleID {
                             scrollProxy.scrollTo(anchorID, anchor: .zero)
+                            DispatchQueue.main.async {
+                                scrollProxy.scrollTo(anchorID, anchor: .zero)
+                            }
                         }
                         DispatchQueue.main.async {
                             canTriggerLoad = true
