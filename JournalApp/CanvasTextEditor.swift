@@ -94,3 +94,25 @@ struct CanvasTextEditor: NSViewRepresentable {
         }
     }
 }
+
+//private class CustomTextView: NSTextView {
+//    var placeHolderTitleString: NSAttributedString = NSAttributedString(string: "Place Holder Value", attributes: [.foregroundColor : Color.gray])
+//    
+//    override func becomeFirstResponder() -> Bool {
+//        self.needsDisplay = true
+//        return super.becomeFirstResponder()
+//    }
+//    
+//    override func resignFirstResponder() -> Bool {
+//        self.needsDisplay = true
+//        return super.resignFirstResponder()
+//    }
+//    
+//    override func draw(_ rect: NSRect) {
+//        super.draw(rect)
+//        
+//        if self.string == "" {
+//            placeHolderTitleString.draw(at: .zero)
+//        }
+//    }
+//}

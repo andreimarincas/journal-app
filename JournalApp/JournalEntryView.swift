@@ -247,7 +247,7 @@ struct JournalEntryView: View {
         .padding()
         .background(
             RoundedRectangle(cornerRadius: 12)
-                .fill(Color("NotesBackgroundColor"))
+                .fill(Color("EntryBackground"))
         )
         .foregroundStyle(.primary)
     }
