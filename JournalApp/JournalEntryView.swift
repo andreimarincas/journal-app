@@ -248,8 +248,9 @@ struct JournalEntryView: View {
         .padding()
         .background(
             RoundedRectangle(cornerRadius: 12)
-                .fill(Color(NSColor.textBackgroundColor))
+                .fill(Color("NotesBackgroundColor"))
         )
+        .foregroundStyle(.primary)
     }
     
     private var emptyNotesView: some View {
@@ -459,6 +460,7 @@ struct JournalEntryView: View {
                         editedText = newText
                     }
                 },
+                viewModel: viewModel,
                 undoManager: undoManager
             )
             .frame(maxWidth: .infinity, minHeight: height, maxHeight: height)
@@ -814,6 +816,7 @@ struct TextViewWrapper: NSViewRepresentable {
     let isHovered: Bool
     let toneCycleLeft: (() -> Void)?
     let toneCycleRight: (() -> Void)?
+    let viewModel: JournalEntryViewModel
     @EnvironmentObject private var focusModel: JournalFocusModel
     let undoManager: CustomUndoManager
     private let paragraphSpacing: CGFloat = 6
@@ -949,18 +952,9 @@ struct TextViewWrapper: NSViewRepresentable {
             guard let textView = notification.object as? NSTextView else { return }
             let trimmedText = textView.string.trimmingCharacters(in: .whitespacesAndNewlines)
             if trimmedText.isEmpty {
-                if let entryView = parent.focusModel.entry {
-                    let notes = entryView.notes
-                    if let index = notes.firstIndex(where: { $0.id == parent.id }) {
-                        var notes = entryView.notes
-                        notes.remove(at: index)
-                        notes = notes.enumerated().map { (i, note) in
-                            note.number = i + 1
-                            return note
-                        }
-                        entryView.notes = notes
-                        parent.focusModel.focusedNoteID = nil
-                    }
+                if let note = parent.viewModel.notes.first(where: { $0.id == parent.id }) {
+                    parent.viewModel.deleteNote(note)
+                    parent.focusModel.focusedNoteID = nil
                 }
             } else {
                 parent.text = trimmedText

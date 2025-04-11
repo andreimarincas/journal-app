@@ -21,6 +21,7 @@ struct CanvasTextEditor: NSViewRepresentable {
         paragraphStyle.paragraphSpacingBefore = 0
         return [
             .font: font,
+            .foregroundColor: NSColor.labelColor,
             .paragraphStyle: paragraphStyle
         ]
     }
