@@ -37,7 +37,6 @@ enum JournalTone: CaseIterable {
 }
 
 struct JournalEntryView: View {
-    private(set) var entry: JournalEntry
     @State private var viewModel: JournalEntryViewModel
     @Binding var isSummaryPanelVisible: Bool
     @EnvironmentObject private var focusModel: JournalFocusModel
@@ -65,8 +64,7 @@ struct JournalEntryView: View {
         viewModeRawValue = newValue.rawValue
     }
     
-    init(entry: JournalEntry, viewModel: JournalEntryViewModel, isSummaryPanelVisible: Binding<Bool>, isChatVisible: Binding<Bool>) {
-        self.entry = entry
+    init(viewModel: JournalEntryViewModel, isSummaryPanelVisible: Binding<Bool>, isChatVisible: Binding<Bool>) {
         self.viewModel = viewModel
         self._isSummaryPanelVisible = isSummaryPanelVisible
         self._isChatVisible = isChatVisible
@@ -91,9 +89,9 @@ struct JournalEntryView: View {
             .onTapGesture {
                 if let oldID = focusModel.focusedNoteID,
                    let newText = editedTexts[oldID],
-                   let index = entry.notes.firstIndex(where: { $0.id == oldID }) {
-                    if newText != entry.notes[index].text {
-                        entry.notes[index].text = newText
+                   let note = viewModel.notes.first(where: { $0.id == oldID }) {
+                    if newText != note.text {
+                        viewModel.updateNote(note, text: newText)
                     }
                 }
                 if let window = NSApplication.shared.keyWindow {
@@ -103,7 +101,7 @@ struct JournalEntryView: View {
             }
             .onAppear {
                 selectedViewMode = viewMode
-                focusModel.entry = entry
+                focusModel.entry = viewModel.entry
                 viewModel.loadNotes()
                 draftCanvasText = viewModel.canvasBody
             }
@@ -112,10 +110,16 @@ struct JournalEntryView: View {
                 if let window = NSApplication.shared.keyWindow {
                     window.makeFirstResponder(nil)
                 }
+                if newValue == .canvas {
+                    draftCanvasText = viewModel.canvasBody
+                }
             }
         }
         .onChange(of: editedTexts) { oldValue, newValue in
-            print(newValue)
+//            print(newValue)
+        }
+        .onChange(of: viewModel.notes) {
+            draftCanvasText = viewModel.canvasBody
         }
     }
 
@@ -186,7 +190,7 @@ struct JournalEntryView: View {
 
     @ViewBuilder
     private var notesList: some View {
-        if entry.notes.isEmpty {
+        if viewModel.notes.isEmpty {
             ZStack {
                 emptyNotesView
                 VStack {
@@ -198,7 +202,7 @@ struct JournalEntryView: View {
             ScrollViewReader { scrollProxy in
                 ScrollView {
                     VStack(alignment: .leading, spacing: 0) {
-                        ForEach(entry.notes.sorted(by: { $0.number < $1.number })) { note in
+                        ForEach(viewModel.notes.sorted(by: { $0.number < $1.number })) { note in
                             ZStack {
                                 noteView(for: note)
                                     .id(note.id)
@@ -271,7 +275,7 @@ struct JournalEntryView: View {
         let shouldFocusInChat = focusModel.pinnedNoteID == note.id
         return NoteRow(
             note: note,
-            entry: entry,
+            entry: viewModel.entry,
             shouldFocus: shouldFocus,
             shouldFocusInChat: shouldFocusInChat,
             editedText: Binding(
@@ -502,7 +506,7 @@ struct JournalEntryView: View {
                         if let responder = NSApp.keyWindow?.firstResponder as? NSTextView {
                             responder.window?.makeFirstResponder(nil)
                         }
-                        let sortedNotes = entry.notes.sorted(by: { $0.number < $1.number })
+                        let sortedNotes = viewModel.notes.sorted(by: { $0.number < $1.number })
                         guard let index = sortedNotes.firstIndex(where: { $0.id == note.id }) else { return }
                         let allNoteTexts = sortedNotes.map { $0.text }
                         
@@ -676,15 +680,8 @@ struct JournalEntryView: View {
             .opacity(isHovering || shouldFocusInChat ? 1 : 0)
             .alert("Delete this note?", isPresented: $showDeleteAlert) {
                 Button("Delete", role: .destructive) {
-                    guard let index = entry.notes.firstIndex(where: { $0.id == note.id }) else { return }
-                    entry.notes.remove(at: index)
-                    entry.notes = entry.notes.map { note in
-                        let newNote = note
-                        if note.number > self.note.number {
-                            newNote.number -= 1
-                        }
-                        return newNote
-                    }
+                    guard let _ = viewModel.notes.firstIndex(where: { $0.id == note.id }) else { return }
+                    viewModel.deleteNote(note)
                     if focusModel.pinnedNoteID == note.id {
                         focusModel.clearChatFocus()
                     }
@@ -699,9 +696,7 @@ struct JournalEntryView: View {
             HStack {
                 Spacer()
                 Button(action: {
-                    let nextNumber = (entry.notes.map(\.number).max() ?? 0) + 1
-                    let newNote = JournalNote(number: nextNumber, text: "", entry: entry)
-                    entry.notes.append(newNote)
+                    let newNote = viewModel.addNote(text: "")
                     focusModel.focusedNoteID = newNote.id
                 }) {
                     Image(systemName: "plus")
@@ -721,13 +716,10 @@ struct JournalEntryView: View {
                         window.makeFirstResponder(nil)
                     }
                     focusModel.focusedNoteID = nil
-                    viewModel.generateAISuggestions(for: entry) { aiSuggestions in
+                    viewModel.generateAISuggestions { aiSuggestions in
                         guard let aiSuggestions, !aiSuggestions.isEmpty,
                                 aiSuggestions.count == JournalTone.allCases.count else { return }
-                        let nextNumber = (entry.notes.map(\.number).max() ?? 0) + 1
-                        let aiText = viewModel.currentAISuggestion?.text ?? ""
-                        let newNote = JournalNote(number: nextNumber, text: aiText, entry: entry)
-                        entry.notes.append(newNote)
+                        viewModel.addNote(text: viewModel.currentAISuggestion?.text ?? "")
                     }
                 }) {
                     Image(systemName: "sparkles")
@@ -745,7 +737,7 @@ struct JournalEntryView: View {
             }
             HStack {
                 Spacer()
-                Text("\(entry.notes.count) note\(entry.notes.count == 1 ? "" : "s")")
+                Text("\(viewModel.notes.count) note\(viewModel.notes.count == 1 ? "" : "s")")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .padding(.top, 12)
@@ -796,9 +788,7 @@ extension JournalEntryView {
                         .allowsHitTesting(false)
                     )
                     .onTapGesture {
-                        let newNumber = (entry.notes.map(\.number).max() ?? 0) + 1
-                        let newNote = JournalNote(number: newNumber, text: "", entry: entry)
-                        entry.notes.append(newNote)
+                        let newNote = viewModel.addNote(text: "")
                         focusModel.focusedNoteID = newNote.id
                     }
                 Divider()

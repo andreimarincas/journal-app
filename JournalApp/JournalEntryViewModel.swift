@@ -29,7 +29,9 @@ class JournalEntryViewModel: ObservableObject {
     }
     
     func loadNotes() {
-        self.notes = dataSource.fetchNotes(for: entry)
+        let fetched = dataSource.fetchNotes(for: entry)
+        self.notes = fetched
+        self.entry.notes = fetched
     }
     
     func replaceDataSource(with newDataSource: NotesDataSource) {
@@ -59,9 +61,7 @@ class JournalEntryViewModel: ObservableObject {
 
         // Replace the notes in SwiftData
         dataSource.replaceNotes(for: entry, with: updatedNotes)
-        
-        // Update in-memory
-        notes = updatedNotes
+        loadNotes()
     }
     
     var currentAISuggestion: AISuggestion? {
@@ -84,6 +84,7 @@ class JournalEntryViewModel: ObservableObject {
         enhanceNoteTasks.values.forEach { $0.cancel() }
         enhanceNoteTasks.removeAll()
         self.entry = newEntry
+        loadNotes()
     }
 
     func generateTitle() {
@@ -138,7 +139,7 @@ class JournalEntryViewModel: ObservableObject {
         enhanceNoteTasks[noteID] = task
     }
     
-    func generateAISuggestions(for entry: JournalEntry, completion: @escaping ([AISuggestion]?) -> Void) {
+    func generateAISuggestions(completion: @escaping ([AISuggestion]?) -> Void) {
         isGeneratingAISuggestions = true
         Task { [weak self] in
             try? await Task.sleep(nanoseconds: 1_000_000_000) // 1 second debounce
@@ -166,6 +167,35 @@ class JournalEntryViewModel: ObservableObject {
                 }
             }
         }
+    }
+    
+    @discardableResult
+    func addNote(text: String = "") -> JournalNote {
+        let newNumber = (entry.notes.map(\.number).max() ?? 0) + 1
+        let newNote = JournalNote(number: newNumber, text: text, entry: entry)
+        dataSource.insert(newNote, into: entry)
+        loadNotes()
+        return newNote
+    }
+    
+    func updateNote(_ note: JournalNote, text: String) {
+        dataSource.update(note, with: text)
+        loadNotes()
+    }
+    
+    func updateNote(_ note: JournalNote, number: Int) {
+        dataSource.update(note, with: number)
+        loadNotes()
+    }
+
+    func deleteNote(_ noteToDelete: JournalNote) {
+        dataSource.remove(noteToDelete, from: entry)
+        for note in notes {
+            if note.number > noteToDelete.number {
+                dataSource.update(note, with: note.number - 1)
+            }
+        }
+        loadNotes()
     }
 }
 
@@ -204,11 +234,24 @@ final class NotesDataSource {
         entry.notes.removeAll(where: { $0.id == note.id })
         modelContext.delete(note)
         save()
+        //                    viewModel.notes = viewModel.notes.map { note in
+        //                        let newNote = note
+        //                        if note.number > self.note.number {
+        //                            newNote.number -= 1
+        //                        }
+        //                        return newNote
+
     }
 
     // Update the text of a given note
     func update(_ note: JournalNote, with text: String) {
         note.text = text
+        save()
+    }
+    
+    // Update the number of a given note
+    func update(_ note: JournalNote, with number: Int) {
+        note.number = number
         save()
     }
 

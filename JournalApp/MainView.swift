@@ -267,7 +267,7 @@ struct MainView: View {
                 GeometryReader { geometry in
                     HStack(spacing: 0) {
                         ZStack(alignment: .topTrailing) {
-                            JournalEntryView(entry: entry, viewModel: entryViewModel, isSummaryPanelVisible: $isSummaryPanelVisible, isChatVisible: $isChatVisible)
+                            JournalEntryView(viewModel: entryViewModel, isSummaryPanelVisible: $isSummaryPanelVisible, isChatVisible: $isChatVisible)
                                 .environmentObject(focusModel)
                         }
                         
