@@ -28,13 +28,23 @@ struct MainView: View {
     @State private var entryToDelete: JournalEntry?
     @State private var summaryPanelWidth: CGFloat = 350
     @State private var chatPanelWidth: CGFloat = 400
-    @State private var isShowChatHovering = false
     @State private var isChatPoppedOut: Bool = false
     @State private var poppedOutWindow: NSWindow?
     @State private var isSummaryPanelVisible: Bool = false
     
-    @StateObject private var entryViewModel = JournalEntryViewModel(entry: JournalEntry(date: Date(), title: "", notes: []))
     @StateObject private var summaryViewModel = SummaryPanelViewModel(entry: JournalEntry(date: Date(), title: "", notes: []))
+    
+    @StateObject private var entryViewModel: JournalEntryViewModel = {
+        // Preview fallback with in-memory modelContext
+        let schema = Schema([ChatMessage.self])
+        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        let container = try! ModelContainer(for: schema, configurations: [config])
+        return JournalEntryViewModel(
+            entry: JournalEntry(date: Date(), title: "", notes: []),
+            dataSource: NotesDataSource(modelContext: container.mainContext),
+            isPreview: true
+        )
+    }()
     
     @StateObject private var chatViewModel: JournalChatViewModel = {
         // Preview fallback with in-memory modelContext
@@ -51,6 +61,9 @@ struct MainView: View {
         navigationSplitView
             .onAppear {
                 DispatchQueue.main.async {
+                    if entryViewModel.isUsingPreviewContext {
+                        entryViewModel.replaceDataSource(with: NotesDataSource(modelContext: modelContext))
+                    }
                     if chatViewModel.isUsingPreviewContext {
                         chatViewModel.replaceDataSource(with: ChatMessageDataSource(modelContext: modelContext))
                     }
@@ -256,27 +269,6 @@ struct MainView: View {
                         ZStack(alignment: .topTrailing) {
                             JournalEntryView(entry: entry, viewModel: entryViewModel, isSummaryPanelVisible: $isSummaryPanelVisible, isChatVisible: $isChatVisible)
                                 .environmentObject(focusModel)
-                            
-                            if !isChatVisible {
-                                Button(action: {
-                                    focusModel.clearNoteFocus()
-                                    isChatVisible = true
-                                }) {
-                                    Image(systemName: "bubble.left")
-                                        .frame(width: 28, height: 28)
-                                        .font(.system(size: 16, weight: .regular))
-                                        .padding(6)
-                                        .background(Color(NSColor.controlBackgroundColor))
-                                        .clipShape(Circle())
-                                        .opacity(isShowChatHovering ? 1.0 : 0.5)
-                                }
-                                .buttonStyle(PlainButtonStyle())
-                                .padding(.top, 6)
-                                .padding(.trailing, 12)
-                                .onHover { hovering in
-                                    isShowChatHovering = hovering
-                                }
-                            }
                         }
                         
                         if !isChatPoppedOut && isChatVisible {
@@ -412,8 +404,10 @@ struct MainView: View {
     }
     
     private func addEntry() {
-        let note = JournalNote(number: 1, text: "")
-        let newEntry = JournalEntry(date: Date(), title: "Journal Entry", notes: [note])
+        let newEntryID = UUID()
+        let newEntry = JournalEntry(id: newEntryID, date: Date(), title: "Journal Entry", notes: [])
+        let note = JournalNote(number: 1, text: "", entry: newEntry)
+        newEntry.notes = [note]
         modelContext.insert(newEntry)
         DispatchQueue.main.async {
             selectedEntry = newEntry

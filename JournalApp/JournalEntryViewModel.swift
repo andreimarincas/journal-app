@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import SwiftData
 
 class JournalEntryViewModel: ObservableObject {
     @Published private(set) var entry: JournalEntry
@@ -16,7 +17,53 @@ class JournalEntryViewModel: ObservableObject {
     
     @Published var latestAISuggestions: [AISuggestion] = []
     @Published var currentAISuggestionIndex: Int = 0
+    
+    private var dataSource: NotesDataSource
+    private(set) var isUsingPreviewContext: Bool
+    @Published private(set) var notes: [JournalNote] = []
+    
+    init(entry: JournalEntry, dataSource: NotesDataSource, isPreview: Bool = false) {
+        self.entry = entry
+        self.dataSource = dataSource
+        self.isUsingPreviewContext = isPreview
+    }
+    
+    func loadNotes() {
+        self.notes = dataSource.fetchNotes(for: entry)
+    }
+    
+    func replaceDataSource(with newDataSource: NotesDataSource) {
+        self.dataSource = newDataSource
+        self.isUsingPreviewContext = false
+        loadNotes()
+    }
+    
+    var canvasBody: String {
+        notes.map { $0.text }.joined(separator: "\n")
+    }
+    
+    func persistCanvasText(_ canvasText: String) {
+        let paragraphs = canvasText
+            .components(separatedBy: .newlines)
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
 
+        // Build new notes
+        let updatedNotes = paragraphs.enumerated().map { index, text in
+            JournalNote(
+                number: index + 1,
+                text: text,
+                entry: entry
+            )
+        }
+
+        // Replace the notes in SwiftData
+        dataSource.replaceNotes(for: entry, with: updatedNotes)
+        
+        // Update in-memory
+        notes = updatedNotes
+    }
+    
     var currentAISuggestion: AISuggestion? {
         latestAISuggestions.indices.contains(currentAISuggestionIndex)
             ? latestAISuggestions[currentAISuggestionIndex]
@@ -30,10 +77,6 @@ class JournalEntryViewModel: ObservableObject {
         } else {
             currentAISuggestionIndex = (currentAISuggestionIndex + 1) % latestAISuggestions.count
         }
-    }
-    
-    init(entry: JournalEntry) {
-        self.entry = entry
     }
     
     func updateEntry(_ newEntry: JournalEntry) {
@@ -122,6 +165,94 @@ class JournalEntryViewModel: ObservableObject {
                     completion(nil)
                 }
             }
+        }
+    }
+}
+
+final class NotesDataSource {
+    let modelContext: ModelContext
+
+    init(modelContext: ModelContext) {
+        self.modelContext = modelContext
+    }
+
+    // Fetch all notes for a given entry, sorted by note number
+    func fetchNotes(for entry: JournalEntry) -> [JournalNote] {
+        let entryID = entry.id
+        let descriptor = FetchDescriptor<JournalNote>(
+            predicate: #Predicate { note in
+                note.entry.id == entryID
+            },
+            sortBy: [SortDescriptor(\.number)]
+        )
+        do {
+            return try modelContext.fetch(descriptor)
+        } catch {
+            print("Failed to fetch notes from SwiftData: \(error)")
+            return []
+        }
+    }
+
+    // Insert a new note into an entry
+    func insert(_ note: JournalNote, into entry: JournalEntry) {
+        entry.notes.append(note)
+        save()
+    }
+
+    // Remove a note from an entry and delete it from the context
+    func remove(_ note: JournalNote, from entry: JournalEntry) {
+        entry.notes.removeAll(where: { $0.id == note.id })
+        modelContext.delete(note)
+        save()
+    }
+
+    // Update the text of a given note
+    func update(_ note: JournalNote, with text: String) {
+        note.text = text
+        save()
+    }
+
+    // Replace all notes in an entry with a new list of paragraph-based notes
+    func replaceAllNotes(in entry: JournalEntry, with paragraphs: [String]) {
+        entry.notes.removeAll()
+        for (index, paragraph) in paragraphs.enumerated() {
+            let newNote = JournalNote(number: index + 1, text: paragraph, entry: entry)
+            entry.notes.append(newNote)
+        }
+        save()
+    }
+    
+    func replaceNotes(for entry: JournalEntry, with newNotes: [JournalNote]) {
+        do {
+            let entryID = entry.id
+            try modelContext.transaction {
+                // Delete old notes
+                let request = FetchDescriptor<JournalNote>(
+                    predicate: #Predicate { $0.entry.id == entryID }
+                )
+                let existingNotes = try modelContext.fetch(request)
+                for note in existingNotes {
+                    modelContext.delete(note)
+                }
+
+                // Add new ones
+                for note in newNotes {
+                    note.entry = entry
+                    modelContext.insert(note)
+                    entry.notes.append(note)
+                }
+            }
+        } catch {
+            print("Failed to replace notes: \(error)")
+        }
+    }
+
+    // Save helper
+    private func save() {
+        do {
+            try modelContext.save()
+        } catch {
+            fatalError("Failed to save notes: \(error.localizedDescription)")
         }
     }
 }

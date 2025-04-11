@@ -11,12 +11,34 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
+         contextName = "CanvasTextEditor.updateNSView(_:context:):CanvasTextEditor.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "self.text">
+            </PersistentString>
+            <PersistentString
+               value = "textView.string">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "JournalEntryViewModel.persistCanvasText():JournalEntryViewModel.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "canvasBody">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
          contextName = "closure #1 in JournalChatViewModel.sendToGPT(context:pinnedNoteID:):JournalChatViewModel.swift">
          <PersistentStrings>
             <PersistentString
                value = "pinnedNoteID">
             </PersistentString>
          </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "NotesDataSource.replaceNotes(for:with:):JournalEntryViewModel.swift">
       </ContextState>
       <ContextState
          contextName = "closure #2 in MainView.deleteEntry(_:):MainView.swift">
@@ -122,6 +144,14 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
+         contextName = "JournalEntryViewModel.replaceDataSource(with:):JournalEntryViewModel.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "self.notes">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
          contextName = "TextViewWrapper.makeNSView(context:):JournalEntryView.swift">
          <PersistentStrings>
             <PersistentString
@@ -129,6 +159,14 @@
             </PersistentString>
             <PersistentString
                value = "textView.string">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "CanvasTextEditor.makeAttributedText(_:):CanvasTextEditor.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -191,6 +229,14 @@
          <PersistentStrings>
             <PersistentString
                value = "editedText">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "JournalEntryViewModel.init(entry:):JournalEntryViewModel.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "entry.notes">
             </PersistentString>
          </PersistentStrings>
       </ContextState>

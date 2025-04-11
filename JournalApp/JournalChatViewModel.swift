@@ -29,7 +29,6 @@ class JournalChatViewModel: ObservableObject {
         self.isUsingPreviewContext = isPreview
         self.isTyping = false
         self.messages = []
-        self.isUsingPreviewContext = dataSource.modelContext.container.configurations.first?.isStoredInMemoryOnly ?? false
     }
     
     func replaceDataSource(with newDataSource: ChatMessageDataSource) {

@@ -28,11 +28,13 @@ class JournalNote {
     var id: UUID
     var number: Int
     var text: String
+    var entry: JournalEntry
 
-    init(id: UUID = UUID(), number: Int, text: String) {
+    init(id: UUID = UUID(), number: Int, text: String, entry: JournalEntry) {
         self.id = id
         self.number = number
         self.text = text
+        self.entry = entry
     }
 }
 

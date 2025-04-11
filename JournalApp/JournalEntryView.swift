@@ -46,6 +46,15 @@ struct JournalEntryView: View {
     @State private var containerWidth: CGFloat = 0
     @Binding var isChatVisible: Bool
     @State private var isHoveringNoteHorizon : Bool = false
+    @State private var isShowChatHovering = false
+    @State private var draftCanvasText: String = ""
+    private let canvasFontSize: CGFloat = 15.5
+    
+    private enum ViewMode {
+        case notes, canvas
+    }
+
+    @State private var viewMode: ViewMode = .notes
     
     init(entry: JournalEntry, viewModel: JournalEntryViewModel, isSummaryPanelVisible: Binding<Bool>, isChatVisible: Binding<Bool>) {
         self.entry = entry
@@ -61,7 +70,11 @@ struct JournalEntryView: View {
 
             VStack(alignment: .leading, spacing: 12) {
                 notesHeader
-                notesList
+                if viewMode == .notes {
+                    notesList
+                } else {
+                    canvasView
+                }
                 notesFooter
             }
             .padding()
@@ -81,6 +94,8 @@ struct JournalEntryView: View {
             }
             .onAppear {
                 focusModel.entry = entry
+                viewModel.loadNotes()
+                draftCanvasText = viewModel.canvasBody
             }
         }
         .onChange(of: editedTexts) { oldValue, newValue in
@@ -90,16 +105,67 @@ struct JournalEntryView: View {
 
     private var notesHeader: some View {
         HStack(alignment: .firstTextBaseline, spacing: 8) {
-            Text("Notes")
+            Text(viewMode == .notes ? "Notes" : "Canvas")
                 .font(.title)
                 .bold()
                 .foregroundStyle(.primary)
+
             Spacer()
-//            Text("Created: " + entry.date.formatted(date: .long, time: .shortened))
-//                .font(.subheadline)
-//                .foregroundStyle(.secondary)
+
+            Picker("", selection: $viewMode) {
+                Image(systemName: "list.number")
+                    .help("Notes")
+                    .tag(ViewMode.notes)
+                Image(systemName: "doc.plaintext")
+                    .help("Canvas")
+                    .tag(ViewMode.canvas)
+            }
+            .pickerStyle(.segmented)
+            .frame(width: 80)
+            
+            chatToggleButton
         }
+        .padding(.trailing, -28)
         .padding(.bottom, 4)
+    }
+    
+    private var chatToggleButton: some View {
+        Button(action: {
+            if !isChatVisible {
+                focusModel.clearNoteFocus()
+            }
+            isChatVisible.toggle()
+        }) {
+            ZStack {
+                Image(systemName: "bubble.left")
+                    .font(.system(size: 16, weight: .regular))
+                
+                if isChatVisible {
+                    Rectangle()
+                        .fill(Color.primary)
+                        .frame(width: 22, height: 1)
+                        .rotationEffect(.degrees(45))
+                        .offset(x: -1, y: -1)
+                }
+            }
+            .frame(width: 28, height: 28)
+            .padding(6)
+            .background(
+                Circle()
+                    .fill(isShowChatHovering
+                          ? Color.secondary.opacity(0.15)
+                          : Color(NSColor.controlBackgroundColor))
+                    .scaleEffect(0.85)
+            )
+            .clipShape(Circle())
+            .opacity(isShowChatHovering ? 1.0 : 0.5)
+        }
+        .buttonStyle(.borderless)
+        .padding(.top, 6)
+        .padding(.trailing, 12)
+        .onHover { hovering in
+            isShowChatHovering = hovering
+        }
     }
 
     @ViewBuilder
@@ -152,6 +218,18 @@ struct JournalEntryView: View {
 //                    .stroke(Color.secondary.opacity(0.25), lineWidth: 1)
 //            )
         }
+    }
+    
+    private var canvasView: some View {
+        CanvasTextEditor(text: $draftCanvasText, onEditingEnded: {
+            viewModel.persistCanvasText(self.draftCanvasText)
+        })
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color(NSColor.textBackgroundColor))
+        )
     }
     
     private var emptyNotesView: some View {
@@ -606,7 +684,7 @@ struct JournalEntryView: View {
                 Spacer()
                 Button(action: {
                     let nextNumber = (entry.notes.map(\.number).max() ?? 0) + 1
-                    let newNote = JournalNote(number: nextNumber, text: "")
+                    let newNote = JournalNote(number: nextNumber, text: "", entry: entry)
                     entry.notes.append(newNote)
                     focusModel.focusedNoteID = newNote.id
                 }) {
@@ -632,7 +710,7 @@ struct JournalEntryView: View {
                                 aiSuggestions.count == JournalTone.allCases.count else { return }
                         let nextNumber = (entry.notes.map(\.number).max() ?? 0) + 1
                         let aiText = viewModel.currentAISuggestion?.text ?? ""
-                        let newNote = JournalNote(number: nextNumber, text: aiText)
+                        let newNote = JournalNote(number: nextNumber, text: aiText, entry: entry)
                         entry.notes.append(newNote)
                     }
                 }) {
@@ -703,7 +781,7 @@ extension JournalEntryView {
                     )
                     .onTapGesture {
                         let newNumber = (entry.notes.map(\.number).max() ?? 0) + 1
-                        let newNote = JournalNote(number: newNumber, text: "")
+                        let newNote = JournalNote(number: newNumber, text: "", entry: entry)
                         entry.notes.append(newNote)
                         focusModel.focusedNoteID = newNote.id
                     }
@@ -734,6 +812,7 @@ struct TextViewWrapper: NSViewRepresentable {
     let undoManager: CustomUndoManager
     private let paragraphSpacing: CGFloat = 6
     private let fixedHeight: CGFloat = 56
+    private let notesFontSize: CGFloat = 15.5
     
     func makeNSView(context: Context) -> NSTextView {
         let textView = FocusableTextView()
@@ -827,9 +906,9 @@ struct TextViewWrapper: NSViewRepresentable {
     func setAttrText(_ text: String, to nsView: NSTextView) {
         let dimmed = isDimmed// && nsView.window?.firstResponder != nsView
         let textColor = dimmed ? NSColor.darkGray : NSColor.labelColor
-        let fontDescriptor = NSFont.systemFont(ofSize: 16.5, weight: .regular).fontDescriptor
+        let fontDescriptor = NSFont.systemFont(ofSize: notesFontSize, weight: .regular).fontDescriptor
         let italicDescriptor = dimmed ? fontDescriptor.withSymbolicTraits(.italic) : fontDescriptor
-        let font = NSFont(descriptor: italicDescriptor, size: 16.5) ?? NSFont.systemFont(ofSize: 16.5, weight: .regular)
+        let font = NSFont(descriptor: italicDescriptor, size: notesFontSize) ?? NSFont.systemFont(ofSize: notesFontSize, weight: .regular)
         let paragraphStyle = NSMutableParagraphStyle()
         paragraphStyle.lineHeightMultiple = 1.3
         paragraphStyle.paragraphSpacing = 6

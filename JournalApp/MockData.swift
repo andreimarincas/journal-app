@@ -59,10 +59,11 @@ enum MockData {
 
         for (_, entryData) in entries.enumerated() {
             let entryDate = Calendar.current.date(byAdding: .day, value: dayOffset, to: baseDate)!
+            let entry = JournalEntry(date: entryDate, title: entryData.title, notes: [])
             let notes = entryData.notes.enumerated().map { idx, text in
-                JournalNote(number: idx + 1, text: text)
+                JournalNote(number: idx + 1, text: text, entry: entry)
             }
-            let entry = JournalEntry(date: entryDate, title: entryData.title, notes: notes)
+            entry.notes.append(contentsOf: notes)
             context.insert(entry)
             dayOffset += Int.random(in: 3...7)
         }

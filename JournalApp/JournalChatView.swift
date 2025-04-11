@@ -623,8 +623,11 @@ struct MessageBubble: View {
             }
             if isUser && isHovering {
                 Button(action: {
-                    let newNumber = (self.focusModel.entry?.notes.map(\.number).max() ?? 0) + 1
-                    let newNote = JournalNote(number: newNumber, text: text)
+                    guard let entry = self.focusModel.entry else { return }
+                    let newNumber = (entry.notes.map(\.number).max() ?? 0) + 1
+                    let newNote = JournalNote(number: newNumber, text: text, entry: entry)
+                    entry.notes.append(newNote)
+                    
                     self.focusModel.entry?.notes.append(newNote)
                     self.focusModel.focusedNoteID = newNote.id
                     NotificationCenter.default.post(name: .noteCreatedFromChat, object: newNote)
