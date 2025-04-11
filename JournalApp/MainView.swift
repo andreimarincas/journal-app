@@ -407,13 +407,11 @@ struct MainView: View {
     private func addEntry() {
         let newEntryID = UUID()
         let newEntry = JournalEntry(id: newEntryID, date: Date(), title: "Journal Entry", notes: [])
-        let note = JournalNote(number: 1, text: "", entry: newEntry)
-        newEntry.notes = [note]
         modelContext.insert(newEntry)
         DispatchQueue.main.async {
             selectedEntry = newEntry
             justAddedEntryID = newEntry.id
-            focusModel.focusedNoteID = note.id
+            focusModel.focusedNoteID = nil
         }
     }
     

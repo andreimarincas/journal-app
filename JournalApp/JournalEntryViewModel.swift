@@ -234,12 +234,6 @@ final class NotesDataSource {
         entry.notes.removeAll(where: { $0.id == note.id })
         modelContext.delete(note)
         save()
-        //                    viewModel.notes = viewModel.notes.map { note in
-        //                        let newNote = note
-        //                        if note.number > self.note.number {
-        //                            newNote.number -= 1
-        //                        }
-        //                        return newNote
 
     }
 
