@@ -775,7 +775,7 @@ extension JournalEntryView {
                             Divider()
                                 .frame(height: 1)
                                 .background(Color.secondary.opacity(0.06))
-                            Text("Start writing...")
+                            Text("Start writing your thoughts here...")
                                 .font(.system(size: 14, weight: .thin))
                                 .italic()
                                 .foregroundColor(.primary.opacity(0.8))

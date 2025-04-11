@@ -31,7 +31,7 @@ struct CanvasTextEditor: NSViewRepresentable {
     }
 
     func makeNSView(context: Context) -> NSScrollView {
-        let textView = NSTextView()
+        let textView = PlaceholderTextView()
         textView.delegate = context.coordinator
         textView.isEditable = true
         textView.isSelectable = true
@@ -95,24 +95,28 @@ struct CanvasTextEditor: NSViewRepresentable {
     }
 }
 
-//private class CustomTextView: NSTextView {
-//    var placeHolderTitleString: NSAttributedString = NSAttributedString(string: "Place Holder Value", attributes: [.foregroundColor : Color.gray])
-//    
-//    override func becomeFirstResponder() -> Bool {
-//        self.needsDisplay = true
-//        return super.becomeFirstResponder()
-//    }
-//    
-//    override func resignFirstResponder() -> Bool {
-//        self.needsDisplay = true
-//        return super.resignFirstResponder()
-//    }
-//    
-//    override func draw(_ rect: NSRect) {
-//        super.draw(rect)
-//        
-//        if self.string == "" {
-//            placeHolderTitleString.draw(at: .zero)
-//        }
-//    }
-//}
+final class PlaceholderTextView: NSTextView {
+    var placeholder: String = "Start writing your thoughts here..."
+
+    override func draw(_ dirtyRect: NSRect) {
+        super.draw(dirtyRect)
+
+        if string.isEmpty, let font = self.font {
+            let paragraphStyle = NSMutableParagraphStyle()
+            paragraphStyle.firstLineHeadIndent = 18
+
+            let attributes: [NSAttributedString.Key: Any] = [
+                .foregroundColor: NSColor.tertiaryLabelColor,
+                .font: NSFontManager.shared.convert(font, toHaveTrait: .italicFontMask),
+                .paragraphStyle: paragraphStyle
+            ]
+
+            let inset = self.textContainerInset
+            let rect = NSRect(x: inset.width + 4,
+                              y: inset.height,
+                              width: bounds.width - 2 * inset.width,
+                              height: bounds.height - 2 * inset.height)
+            (placeholder as NSString).draw(in: rect, withAttributes: attributes)
+        }
+    }
+}
