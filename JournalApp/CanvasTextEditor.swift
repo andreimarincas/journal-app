@@ -12,22 +12,19 @@ struct CanvasTextEditor: NSViewRepresentable {
     @Binding var text: String
     var onEditingEnded: (() -> Void)? = nil
     let font: NSFont = .systemFont(ofSize: 15.5, weight: .regular)
-
-    private func makeAttributedText(_ text: String) -> NSAttributedString {
+    
+    private var textAttributes: [NSAttributedString.Key : Any] {
         let paragraphStyle = NSMutableParagraphStyle()
         paragraphStyle.lineSpacing = 7
         paragraphStyle.paragraphSpacing = 9
         paragraphStyle.firstLineHeadIndent = 18
         paragraphStyle.paragraphSpacingBefore = 0
-        return NSAttributedString(
-            string: text,
-            attributes: [
-                .font: font,
-                .paragraphStyle: paragraphStyle
-            ]
-        )
+        return [
+            .font: font,
+            .paragraphStyle: paragraphStyle
+        ]
     }
-
+    
     func makeCoordinator() -> Coordinator {
         Coordinator(self)
     }
@@ -49,11 +46,8 @@ struct CanvasTextEditor: NSViewRepresentable {
         textView.isHorizontallyResizable = false
         textView.autoresizingMask = [.width]
 
-        textView.defaultParagraphStyle = NSMutableParagraphStyle()
-        textView.typingAttributes = [
-            .font: font,
-            .paragraphStyle: NSMutableParagraphStyle()
-        ]
+        textView.defaultParagraphStyle = textAttributes[.paragraphStyle] as? NSParagraphStyle
+        textView.typingAttributes = textAttributes
 
         let scrollView = NSScrollView()
         scrollView.hasVerticalScroller = true
@@ -64,7 +58,8 @@ struct CanvasTextEditor: NSViewRepresentable {
         scrollView.autoresizingMask = [.width, .height]
 
         context.coordinator.textView = textView
-        textView.textStorage?.setAttributedString(makeAttributedText(text))
+        let attrText = NSAttributedString(string: text, attributes: textAttributes)
+        textView.textStorage?.setAttributedString(attrText)
 
         return scrollView
     }
@@ -72,7 +67,8 @@ struct CanvasTextEditor: NSViewRepresentable {
     func updateNSView(_ nsView: NSScrollView, context: Context) {
         if let textView = nsView.documentView as? NSTextView {
             if textView.string != text {
-                textView.textStorage?.setAttributedString(makeAttributedText(text))
+                let attrText = NSAttributedString(string: text, attributes: textAttributes)
+                textView.textStorage?.setAttributedString(attrText)
                 textView.selectedRange = NSMakeRange(0, 0)
             }
             textView.layoutManager?.ensureLayout(for: textView.textContainer!)
