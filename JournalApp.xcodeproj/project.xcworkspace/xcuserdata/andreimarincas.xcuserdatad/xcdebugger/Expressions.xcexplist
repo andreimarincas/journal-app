@@ -41,6 +41,14 @@
          contextName = "NotesDataSource.replaceNotes(for:with:):JournalEntryViewModel.swift">
       </ContextState>
       <ContextState
+         contextName = "closure #4 in closure #1 in MessagesView.messagesContentView.getter:JournalChatView.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "note.number">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
          contextName = "closure #2 in MainView.deleteEntry(_:):MainView.swift">
          <PersistentStrings>
             <PersistentString
@@ -81,6 +89,17 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
+         contextName = "JournalEntryViewModel.addNote(_:):JournalEntryViewModel.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "entry.notes">
+            </PersistentString>
+            <PersistentString
+               value = "notes">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
          contextName = "closure #1 in MessagesView.updateLastMessagesInfo():JournalChatView.swift">
          <PersistentStrings>
             <PersistentString
@@ -106,7 +125,7 @@
          contextName = "closure #2 in closure #1 in MessageBubble.body.getter:JournalChatView.swift">
          <PersistentStrings>
             <PersistentString
-               value = "">
+               value = "entry.notes">
             </PersistentString>
          </PersistentStrings>
       </ContextState>

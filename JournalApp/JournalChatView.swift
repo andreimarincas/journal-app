@@ -504,17 +504,17 @@ struct MessagesView: View {
                 TypingIndicator()
             }
             Color.clear.frame(height: 1).id("bottom")
-            .onReceive(NotificationCenter.default.publisher(for: .noteCreatedFromChat)) { _ in
+            .onReceive(NotificationCenter.default.publisher(for: .noteCreatedFromChat)) { notification in
+                guard let note = notification.object as? JournalNote else { return }
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                    if let noteID = focusModel.focusedNoteID {
-                        scrollToNote(noteID)
-                    }
+                    scrollToNote(note)
                 }
             }
         }
     }
-    private func scrollToNote(_ id: UUID) {
-        NotificationCenter.default.post(name: .scrollToNote, object: id)
+    
+    private func scrollToNote(_ note: JournalNote) {
+        NotificationCenter.default.post(name: .scrollToNote, object: note)
     }
 }
 
@@ -623,12 +623,8 @@ struct MessageBubble: View {
             }
             if isUser && isHovering {
                 Button(action: {
-                    guard let entry = self.focusModel.entry else { return }
-                    let newNumber = (entry.notes.map(\.number).max() ?? 0) + 1
-                    let newNote = JournalNote(number: newNumber, text: text, entry: entry)
-                    entry.notes.append(newNote)
-                    
-                    self.focusModel.entry?.notes.append(newNote)
+                    guard let viewModel = self.focusModel.entryViewModel else { return }
+                    let newNote = viewModel.addNote(text: text)
                     self.focusModel.focusedNoteID = newNote.id
                     NotificationCenter.default.post(name: .noteCreatedFromChat, object: newNote)
                 }) {

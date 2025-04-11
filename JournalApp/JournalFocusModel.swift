@@ -13,6 +13,7 @@ class JournalFocusModel: ObservableObject {
     @Published var focusedNoteID: UUID?
     @Published var pinnedNoteID: UUID?
     weak var entry: JournalEntry?
+    weak var entryViewModel: JournalEntryViewModel?
     
     @ObservationIgnored var pendingChatMessage: String? = nil
     @ObservationIgnored var pendingChatMessageContext: ChatNoteContext?

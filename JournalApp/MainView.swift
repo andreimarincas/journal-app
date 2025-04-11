@@ -63,6 +63,7 @@ struct MainView: View {
                 DispatchQueue.main.async {
                     if entryViewModel.isUsingPreviewContext {
                         entryViewModel.replaceDataSource(with: NotesDataSource(modelContext: modelContext))
+                        focusModel.entryViewModel = entryViewModel
                     }
                     if chatViewModel.isUsingPreviewContext {
                         chatViewModel.replaceDataSource(with: ChatMessageDataSource(modelContext: modelContext))

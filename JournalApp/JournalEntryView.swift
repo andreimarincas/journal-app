@@ -225,10 +225,9 @@ struct JournalEntryView: View {
                     )
                 }
                 .onReceive(NotificationCenter.default.publisher(for: .scrollToNote)) { notification in
-                    if let noteID = notification.object as? UUID {
-                        withAnimation(.easeInOut) {
-                            scrollProxy.scrollTo(noteID, anchor: .top)
-                        }
+                    guard let note = notification.object as? JournalNote else { return }
+                    withAnimation(.easeInOut) {
+                        scrollProxy.scrollTo(note.id, anchor: .top)
                     }
                 }
             }
