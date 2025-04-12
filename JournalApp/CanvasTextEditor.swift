@@ -70,7 +70,7 @@ struct CanvasTextEditor: NSViewRepresentable {
         textView.usesRuler = false
         textView.drawsBackground = false
         textView.allowsUndo = true
-        textView.textContainerInset = NSSize(width: 40, height: 6)
+        textView.textContainerInset = NSSize(width: 20, height: 6)
 
         textView.font = font
         
