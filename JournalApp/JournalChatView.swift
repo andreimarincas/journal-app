@@ -531,15 +531,15 @@ struct ContentSizeKey: PreferenceKey {
 
 struct SystemMessageView: View {
     let text: String
+    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         Text(text)
-            .font(.system(size: 13))
+            .font(.system(size: 12))
             .italic()
-            .foregroundColor(.gray)
-            .padding(.horizontal, 16)
-            .padding(.top, 8)
-            .padding(.leading, 12)
+            .foregroundColor(colorScheme == .dark ? .gray.opacity(0.6) : .gray)
+            .padding(.horizontal, 12)
+            .padding(.leading, 14)
     }
 }
 
