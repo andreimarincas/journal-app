@@ -20,13 +20,13 @@ struct CanvasView: View {
                     persistText?()
                 }
             )
+            .padding()
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(Color("EntryBackground"))
+            )
+            .foregroundStyle(.primary)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .padding()
-        .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(Color("EntryBackground"))
-        )
-        .foregroundStyle(.primary)
     }
 }
