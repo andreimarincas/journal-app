@@ -772,7 +772,6 @@ struct JournalEntryView: View {
                                 .scaleEffect(0.4)
                                 .background(Color("AIButtonColor"))
                                 .clipShape(Circle())
-                                .shadow(radius: 3)
                                 .foregroundStyle(Color("SparklesYellow"), Color("SparklesOrange"))
                         } else {
                             Image(systemName: "sparkles")
