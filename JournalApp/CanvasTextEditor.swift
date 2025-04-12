@@ -99,6 +99,8 @@ struct CanvasTextEditor: NSViewRepresentable {
         NotificationCenter.default.addObserver(forName: .scrollToNote, object: nil, queue: .main) { notification in
             if let newNote = notification.object as? JournalNote {
                 scrollToEnd(textView)
+                // Only auto-focus the text view if the new note is empty.
+                // This avoids stealing focus when the note comes from chat-based text generation.
                 if newNote.text == "" {
                     DispatchQueue.main.async {
                         textView.window?.makeFirstResponder(textView)
