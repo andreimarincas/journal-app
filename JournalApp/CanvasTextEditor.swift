@@ -46,6 +46,17 @@ struct CanvasTextEditor: NSViewRepresentable {
         return attributedText
     }
     
+    private func scrollToEnd(_ textView: NSTextView) {
+        if let scrollView = textView.enclosingScrollView {
+            let contentHeight = textView.bounds.height
+            let visibleHeight = scrollView.contentView.bounds.height
+            let maxY = max(0, contentHeight - visibleHeight)
+            let newOrigin = NSPoint(x: 0, y: maxY)
+            scrollView.contentView.animator().setBoundsOrigin(newOrigin)
+            scrollView.reflectScrolledClipView(scrollView.contentView)
+        }
+    }
+    
     func makeCoordinator() -> Coordinator {
         Coordinator(self)
     }
@@ -81,7 +92,11 @@ struct CanvasTextEditor: NSViewRepresentable {
         context.coordinator.textView = textView
         
         textView.textStorage?.setAttributedString(makeAttributedText(text))
-
+        
+        NotificationCenter.default.addObserver(forName: .scrollToNote, object: nil, queue: .main) { _ in
+            scrollToEnd(textView)
+        }
+        
         return scrollView
     }
 
