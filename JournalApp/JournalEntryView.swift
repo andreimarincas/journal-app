@@ -272,16 +272,22 @@ struct JournalEntryView: View {
     }
     
     private var canvasView: some View {
-        CanvasTextEditor(text: $draftCanvasText, onEditingEnded: {
-            viewModel.persistCanvasText(self.draftCanvasText)
-        })
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .padding()
-        .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(Color("EntryBackground"))
+    GeometryReader { geometry in
+        CanvasTextEditor(
+            text: $draftCanvasText,
+            containerWidth: geometry.size.width,
+            onEditingEnded: {
+                viewModel.persistCanvasText(self.draftCanvasText)
+            }
         )
-        .foregroundStyle(.primary)
+    }
+    .frame(maxWidth: .infinity, maxHeight: .infinity)
+    .padding()
+    .background(
+        RoundedRectangle(cornerRadius: 12)
+            .fill(Color("EntryBackground"))
+    )
+    .foregroundStyle(.primary)
     }
     
     private var emptyNotesView: some View {
