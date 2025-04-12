@@ -579,6 +579,7 @@ struct MessageBubble: View {
     @State private var isHovering = false
     @State private var isHoveringAddAsNoteButton: Bool = false
     @State private var isHoveringCopyButton: Bool = false
+    @State private var didCopy: Bool = false
     
     @Environment(\.colorScheme) private var colorScheme
     @EnvironmentObject private var focusModel: JournalFocusModel
@@ -676,8 +677,12 @@ struct MessageBubble: View {
         Button(action: {
             NSPasteboard.general.clearContents()
             NSPasteboard.general.setString(text, forType: .string)
+            didCopy = true
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                didCopy = false
+            }
         }) {
-            Image(systemName: "square.on.square")
+            Image(systemName: didCopy ? "checkmark" : "square.on.square")
                 .font(.system(size: 14))
                 .foregroundColor(.primary)
                 .padding(6)
