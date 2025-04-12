@@ -12,7 +12,7 @@ struct CanvasTextEditor: NSViewRepresentable {
     @Binding var text: String
     var containerWidth: CGFloat? = nil
     var onEditingEnded: (() -> Void)? = nil
-    let font: NSFont = .systemFont(ofSize: 15.5, weight: .regular)
+    let font: NSFont = .systemFont(ofSize: JournalLayoutConstants.canvasFontSize, weight: .regular)
     
     private var textAttributes: [NSAttributedString.Key : Any] {
         let paragraphStyle = NSMutableParagraphStyle()
@@ -115,11 +115,9 @@ struct CanvasTextEditor: NSViewRepresentable {
         guard let textView = nsView.documentView as? NSTextView else { return }
         
         if let viewWidth = containerWidth {
-            DispatchQueue.main.async {
-                let maxTextWidth: CGFloat = 720
-                let horizontalInset = max((viewWidth - maxTextWidth) / 2, 20)
-                textView.textContainerInset = NSSize(width: horizontalInset, height: 26)
-            }
+            let maxTextWidth: CGFloat = JournalLayoutConstants.maxCanvasTextWidth
+            let horizontalInset = max((viewWidth - maxTextWidth) / 2, 20)
+            textView.textContainerInset = NSSize(width: horizontalInset, height: 26)
         }
 
         if textView.string != text {
