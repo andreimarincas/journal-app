@@ -733,6 +733,9 @@ struct JournalEntryView: View {
                 Button(action: {
                     let newNote = viewModel.addNote(text: "")
                     focusModel.focusedNoteID = newNote.id
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                        NotificationCenter.default.post(name: .scrollToNote, object: newNote)
+                    }
                 }) {
                     Image(systemName: "plus")
                         .font(.system(size: 18, weight: .bold))
