@@ -182,6 +182,7 @@ class JournalEntryViewModel: ObservableObject {
         if isAINote(text: newNote.text) && latestAISuggestions.contains(where: { $0.text == newNote.text }) {
             if let lastNote = notes.last, isAINote(text: lastNote.text) && latestAISuggestions.first(where: { $0.text == lastNote.text }) == nil {
                 dataSource.remove(lastNote, from: entry)
+                newNote.number -= 1
             }
         }
         
