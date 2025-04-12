@@ -40,6 +40,7 @@ struct CanvasTextEditor: NSViewRepresentable {
             if trimmed.hasPrefix("✨") {
                 let italicFont = NSFontManager.shared.convert(font, toHaveTrait: .italicFontMask)
                 attributedText.addAttribute(.font, value: italicFont, range: range)
+                attributedText.addAttribute(.foregroundColor, value: NSColor.secondaryLabelColor, range: range)
             }
             position += length + 1
         }
