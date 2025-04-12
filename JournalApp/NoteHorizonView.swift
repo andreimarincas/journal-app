@@ -18,7 +18,7 @@ struct NoteHorizonView: View {
                 Color.clear.frame(height: 64)
             } else {
                 Color.clear
-                    .frame(height: 56)
+                    .frame(height: JournalLayoutConstants.noteRowMinHeight)
                     .contentShape(Rectangle())
                     .padding(.top, 8)
                     .background(

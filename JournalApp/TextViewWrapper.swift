@@ -20,7 +20,7 @@ struct TextViewWrapper: NSViewRepresentable {
     @EnvironmentObject private var focusModel: JournalFocusModel
     let undoManager: CustomUndoManager
     private let paragraphSpacing: CGFloat = 6
-    private let fixedHeight: CGFloat = 56
+    private let fixedHeight: CGFloat = JournalLayoutConstants.noteRowMinHeight
     private let notesFontSize: CGFloat = JournalLayoutConstants.notesFontSize
     
     func makeNSView(context: Context) -> NSTextView {

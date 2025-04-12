@@ -25,7 +25,7 @@ struct NoteRow: View {
     
     @EnvironmentObject private var focusModel: JournalFocusModel
     @State private var isHovering = false
-    @State private var height: CGFloat = 22
+    @State private var height: CGFloat = JournalLayoutConstants.noteRowMinHeight
     @State private var showDeleteAlert = false
     
     let containerWidth: CGFloat
