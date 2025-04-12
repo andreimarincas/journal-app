@@ -188,4 +188,16 @@ final class PlaceholderTextView: NSTextView {
             (placeholder as NSString).draw(in: rect, withAttributes: attributes)
         }
     }
+    
+    override func performKeyEquivalent(with event: NSEvent) -> Bool {
+        if event.modifierFlags.contains(.command) {
+            if self == self.window?.firstResponder {
+                if event.charactersIgnoringModifiers == "s" {
+                    self.window?.makeFirstResponder(nil)
+                    return true
+                }
+            }
+        }
+        return super.performKeyEquivalent(with: event)
+    }
 }

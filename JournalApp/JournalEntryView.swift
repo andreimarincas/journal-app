@@ -1064,7 +1064,10 @@ class FocusableTextView: NSTextView {
                 } else if event.charactersIgnoringModifiers == "Z" {
                     redoAction?()
                     return true
-                } else if event.charactersIgnoringModifiers == "\r" || event.charactersIgnoringModifiers == "s" {
+                } else if event.charactersIgnoringModifiers == "s" {
+                    self.window?.makeFirstResponder(nil)
+                    return true
+                } else if event.charactersIgnoringModifiers == "\r" {
                     self.window?.makeFirstResponder(nil)
                     return true
                 }
