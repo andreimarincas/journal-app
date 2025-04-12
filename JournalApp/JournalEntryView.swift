@@ -109,6 +109,7 @@ struct JournalEntryView: View {
                     canvasView
                         .padding(.leading, -18)
                         .padding(.trailing, -38)
+                        .padding(.top, -18)
                 }
                 notesFooter
             }
