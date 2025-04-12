@@ -136,7 +136,12 @@ struct CanvasTextEditor: NSViewRepresentable {
 
         func textDidChange(_ notification: Notification) {
             guard let textView = textView else { return }
+            let selectedRange = textView.selectedRange()
             parent.text = textView.string
+            DispatchQueue.main.async {
+                textView.textStorage?.setAttributedString(self.parent.makeAttributedText(textView.string))
+                textView.setSelectedRange(selectedRange)
+            }
         }
         
         func textDidEndEditing(_ notification: Notification) {
