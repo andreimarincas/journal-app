@@ -463,7 +463,7 @@ struct JournalEntryView: View {
                             Text(viewModel.currentAISuggestion?.tone.label ?? "")
                                 .font(.callout)
                                 .italic()
-                                .foregroundStyle((viewModel.currentAISuggestion?.tone.color ?? .secondary).opacity(0.8))
+                                .foregroundStyle(viewModel.currentAISuggestion?.tone.color ?? Color.secondary)
                                 .padding(.leading, 40)
                                 .padding(.top, 12)
                                 .padding(.bottom, 8)
@@ -966,20 +966,16 @@ struct TextViewWrapper: NSViewRepresentable {
             } else if shouldFocus {
                 nsView.window?.makeFirstResponder(nsView)
             }
-            if isDimmed {
-                let fullRange = NSRange(location: 0, length: nsView.string.utf16.count)
-                let textColor = nsView.window?.firstResponder !== nsView && !isHovered ? NSColor.systemGray : NSColor.labelColor
-                nsView.textStorage?.addAttribute(.foregroundColor, value: textColor, range: fullRange)
-            }
         }
     }
     
     func setAttrText(_ text: String, to nsView: NSTextView) {
         let dimmed = isDimmed// && nsView.window?.firstResponder != nsView
-        let textColor = dimmed ? NSColor.darkGray : NSColor.labelColor
-        let fontDescriptor = NSFont.systemFont(ofSize: notesFontSize, weight: .regular).fontDescriptor
-        let italicDescriptor = dimmed ? fontDescriptor.withSymbolicTraits(.italic) : fontDescriptor
-        let font = NSFont(descriptor: italicDescriptor, size: notesFontSize) ?? NSFont.systemFont(ofSize: notesFontSize, weight: .regular)
+        let textColor = dimmed ? NSColor.secondaryLabelColor : NSColor.labelColor
+        let baseFont = NSFont.systemFont(ofSize: notesFontSize, weight: .regular)
+        let font = dimmed
+            ? NSFontManager.shared.convert(baseFont, toHaveTrait: .italicFontMask)
+            : baseFont
         let paragraphStyle = NSMutableParagraphStyle()
         paragraphStyle.lineHeightMultiple = 1.3
         paragraphStyle.paragraphSpacing = 6
