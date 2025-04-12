@@ -590,32 +590,7 @@ struct MessageBubble: View {
 
                         markdownTextView(visibleText)
                             .onAppear {
-                                if animateTypewriter && visibleText.isEmpty {
-                                    onTypewriterStart?()
-                                    for (index, character) in text.enumerated() {
-                                        DispatchQueue.main.asyncAfter(deadline: .now() + Double(index) * 0.01) {
-                                            if !didCancelTypewriter {
-                                                if index < text.count - 1 {
-                                                    if index > 0 && visibleText.last == "●" {
-                                                        visibleText.removeLast()
-                                                        visibleText.append(character)
-                                                    } else {
-                                                        visibleText.append(character)
-                                                        visibleText.append("●")
-                                                    }
-                                                } else {
-                                                    if visibleText.last == "●" {
-                                                        visibleText.removeLast()
-                                                    }
-                                                    visibleText.append(character)
-                                                    onTypewriterEnd?()
-                                                }
-                                            }
-                                        }
-                                    }
-                                } else if !animateTypewriter {
-                                    visibleText = text
-                                }
+                                handleMarkdownTextOnAppear()
                             }
                     }
                     Spacer()
@@ -662,6 +637,35 @@ struct MessageBubble: View {
         }
         .onAppear {
             print("👀 Rendering AI bubble with visibleText: \(visibleText)")
+        }
+    }
+    
+    private func handleMarkdownTextOnAppear() {
+        if animateTypewriter && visibleText.isEmpty {
+            onTypewriterStart?()
+            for (index, character) in text.enumerated() {
+                DispatchQueue.main.asyncAfter(deadline: .now() + Double(index) * 0.01) {
+                    if !didCancelTypewriter {
+                        if index < text.count - 1 {
+                            if index > 0 && visibleText.last == "●" {
+                                visibleText.removeLast()
+                                visibleText.append(character)
+                            } else {
+                                visibleText.append(character)
+                                visibleText.append("●")
+                            }
+                        } else {
+                            if visibleText.last == "●" {
+                                visibleText.removeLast()
+                            }
+                            visibleText.append(character)
+                            onTypewriterEnd?()
+                        }
+                    }
+                }
+            }
+        } else if !animateTypewriter {
+            visibleText = text
         }
     }
     
