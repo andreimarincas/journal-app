@@ -754,7 +754,10 @@ struct JournalEntryView: View {
                     viewModel.generateAISuggestions { aiSuggestions in
                         guard let aiSuggestions, !aiSuggestions.isEmpty,
                                 aiSuggestions.count == JournalTone.allCases.count else { return }
-                        viewModel.addNote(text: viewModel.currentAISuggestion?.text ?? "")
+                        let newNote = viewModel.addNote(text: viewModel.currentAISuggestion?.text ?? "")
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                            NotificationCenter.default.post(name: .scrollToNote, object: newNote)
+                        }
                     }
                 }) {
                     Image(systemName: "sparkles")
