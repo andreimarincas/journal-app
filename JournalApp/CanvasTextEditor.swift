@@ -71,7 +71,7 @@ struct CanvasTextEditor: NSViewRepresentable {
         textView.usesRuler = false
         textView.drawsBackground = false
         textView.allowsUndo = true
-        textView.textContainerInset = NSSize(width: 20, height: 26)
+        // textView.textContainerInset = NSSize(width: 20, height: 26)
 
         textView.font = font
         
@@ -103,6 +103,11 @@ struct CanvasTextEditor: NSViewRepresentable {
 
     func updateNSView(_ nsView: NSScrollView, context: Context) {
         guard let textView = nsView.documentView as? NSTextView else { return }
+        
+        let viewWidth = nsView.bounds.width
+        let maxTextWidth: CGFloat = 720
+        let horizontalInset = max((viewWidth - maxTextWidth) / 2, 20)
+        textView.textContainerInset = NSSize(width: horizontalInset, height: 26)
 
         if textView.string != text {
             textView.textStorage?.setAttributedString(makeAttributedText(text))
