@@ -104,8 +104,10 @@ struct JournalEntryView: View {
                 notesHeader
                 if viewMode == .notes {
                     notesList
+                        .padding(.trailing, -22)
                 } else {
                     canvasView
+                        .padding(.trailing, -38)
                 }
                 notesFooter
             }
@@ -409,7 +411,7 @@ struct JournalEntryView: View {
                         .fill(Color("NotesDividerColor"))
                         .frame(height: 1)
                         .padding(.vertical, 4)
-                        .padding(.leading, 24)
+                        .padding(.horizontal, 22)
                 }
 
                 HStack(spacing: 0) {
@@ -423,6 +425,7 @@ struct JournalEntryView: View {
                     chatButton
                     trashButton
                 }
+                .padding(.trailing, 22)
             }
             .padding(.horizontal, 2)
             .contentShape(Rectangle())
@@ -882,7 +885,7 @@ struct TextViewWrapper: NSViewRepresentable {
         textView.isRichText = false
         textView.font = NSFont.systemFont(ofSize: 15, weight: .regular)
         textView.drawsBackground = false
-        textView.textContainerInset = NSSize(width: 0, height: 2)
+        textView.textContainerInset = NSSize(width: 22, height: 2)
         textView.textContainer?.widthTracksTextView = true
         textView.isVerticallyResizable = true
         textView.isHorizontallyResizable = false
