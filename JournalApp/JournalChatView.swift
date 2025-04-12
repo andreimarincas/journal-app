@@ -578,6 +578,7 @@ struct MessageBubble: View {
     var onTypewriterEnd: (() -> Void)? = nil
     @State private var isHovering = false
     @State private var isHoveringAddAsNoteButton: Bool = false
+    @State private var isHoveringCopyButton: Bool = false
     
     @Environment(\.colorScheme) private var colorScheme
     @EnvironmentObject private var focusModel: JournalFocusModel
@@ -629,11 +630,12 @@ struct MessageBubble: View {
     }
     
     private var bottomButtons: some View {
-        HStack {
+        HStack(spacing: 0) {
             if isUser {
                 Spacer()
             }
             if isHovering {
+                copyButton
                 addAsNoteButton
             }
             if isAI {
@@ -641,7 +643,7 @@ struct MessageBubble: View {
             }
         }
         .frame(height: 32)
-        .padding(.top, isUser ? -4 : -8)
+        .padding(.top, isUser ? -4 : -12)
         .padding(.leading, isAI ? 4 : 0)
         .padding(.trailing, isUser ? -8 : 0)
     }
@@ -656,7 +658,7 @@ struct MessageBubble: View {
         }) {
             Image(systemName: "document.badge.plus")
                 .font(.system(size: 14))
-                .foregroundColor(.secondary)
+                .foregroundColor(.primary)
                 .padding(6)
         }
         .buttonStyle(.plain)
@@ -667,6 +669,25 @@ struct MessageBubble: View {
         .opacity(isHoveringAddAsNoteButton ? 1 : 0.5)
         .onHover { hovering in
             isHoveringAddAsNoteButton = hovering
+        }
+    }
+    
+    private var copyButton: some View {
+        Button(action: {
+            NSPasteboard.general.clearContents()
+            NSPasteboard.general.setString(text, forType: .string)
+        }) {
+            Image(systemName: "square.on.square")
+                .font(.system(size: 14))
+                .foregroundColor(.primary)
+                .padding(6)
+        }
+        .buttonStyle(.plain)
+        .frame(width: 32, height: 32)
+        .help("Copy this message")
+        .opacity(isHoveringCopyButton ? 1 : 0.5)
+        .onHover { hovering in
+            isHoveringCopyButton = hovering
         }
     }
     
