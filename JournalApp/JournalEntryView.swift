@@ -110,6 +110,7 @@ struct JournalEntryView: View {
                         .padding(.leading, -18)
                         .padding(.trailing, -38)
                         .padding(.top, -18)
+                        .padding(.bottom, -18)
                 }
                 notesFooter
             }
