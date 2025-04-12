@@ -13,13 +13,10 @@ struct NoteHorizonView: View {
     @Binding var isHoveringNoteHorizon: Bool
     
     var body: some View {
-        guard !viewModel.isGeneratingAISuggestions else {
-            return AnyView(
+        VStack(alignment: .leading) {
+            if viewModel.isGeneratingAISuggestions {
                 Color.clear.frame(height: 64)
-            )
-        }
-        return AnyView(
-            VStack(alignment: .leading) {
+            } else {
                 Color.clear
                     .frame(height: 56)
                     .contentShape(Rectangle())
@@ -63,8 +60,8 @@ struct NoteHorizonView: View {
                     .offset(y: -8)
                     .opacity(isHoveringNoteHorizon ? 1 : 0)
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding([.leading])
-        )
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding([.leading])
     }
 }
