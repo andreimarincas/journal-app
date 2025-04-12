@@ -95,8 +95,16 @@ struct CanvasTextEditor: NSViewRepresentable {
         
         textView.textStorage?.setAttributedString(makeAttributedText(text))
         
-        NotificationCenter.default.addObserver(forName: .scrollToNote, object: nil, queue: .main) { _ in
-            scrollToEnd(textView)
+        NotificationCenter.default.addObserver(forName: .scrollToNote, object: nil, queue: .main) { notification in
+            if let newNote = notification.object as? JournalNote {
+                scrollToEnd(textView)
+                if newNote.text == "" {
+                    DispatchQueue.main.async {
+                        textView.window?.makeFirstResponder(textView)
+                        textView.setSelectedRange(NSRange(location: textView.string.count, length: 0))
+                    }
+                }
+            }
         }
         
         return scrollView
