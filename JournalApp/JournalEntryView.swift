@@ -888,6 +888,7 @@ struct TextViewWrapper: NSViewRepresentable {
         }
         textView.isEditable = true
         textView.isRichText = false
+        setAttrText(text, to: textView)
         textView.font = NSFont.systemFont(ofSize: 15, weight: .regular)
         textView.drawsBackground = false
         textView.textContainerInset = NSSize(width: 22, height: 2)
@@ -895,10 +896,19 @@ struct TextViewWrapper: NSViewRepresentable {
         textView.isVerticallyResizable = true
         textView.isHorizontallyResizable = false
         textView.delegate = context.coordinator
+        textView.pasteAsPlainText = true
         textView.toneCycleLeft = toneCycleLeft
         textView.toneCycleRight = toneCycleRight
         textView.isHoveredNote = isHovered
         textView.isActiveAINote = isDimmed
+        textView.importsGraphics = false
+        textView.allowsImageEditing = false
+        textView.isRichText = false
+        textView.smartInsertDeleteEnabled = false
+        textView.usesRuler = false
+        textView.isAutomaticTextReplacementEnabled = false
+        textView.isAutomaticQuoteSubstitutionEnabled = false
+        textView.isAutomaticDashSubstitutionEnabled = false
         
         if shouldFocus {
             DispatchQueue.main.async {
@@ -1006,12 +1016,16 @@ struct TextViewWrapper: NSViewRepresentable {
             if oldText != newText {
                 parent.undoManager.registerChange(previous: oldText, current: newText)
                 parent.text = newText
+                
+                // This forces the newly updated or pasted text to be immediately styled with your standard note font, spacing, and color, overriding any residual rich text attributes that might have been pasted or triggered during editing.
+                parent.setAttrText(newText, to: textView)
             }
         }
     }
 }
 
 class FocusableTextView: NSTextView {
+    var pasteAsPlainText: Bool = false
     var onFocusGained: (() -> Void)?
     var onFocusLost: (() -> Void)?
     var undoAction: (() -> Void)?
@@ -1061,5 +1075,13 @@ class FocusableTextView: NSTextView {
             }
         }
         return super.performKeyEquivalent(with: event)
+    }
+    
+    override func paste(_ sender: Any?) {
+        if pasteAsPlainText, let string = NSPasteboard.general.string(forType: .string) {
+            self.insertText(string, replacementRange: self.selectedRange())
+        } else {
+            super.paste(sender)
+        }
     }
 }
