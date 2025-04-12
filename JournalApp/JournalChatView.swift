@@ -491,6 +491,7 @@ struct MessagesView: View {
                         MessageBubble(
                             text: message.text,
                             isUser: message.isUser,
+                            isAI: !message.isUser && !message.isSystem,
                             isFocused: isFocusedMessage, //|| isMostRecentUserMessage,
                             timestamp: message.timestamp,
                             animateTypewriter: shouldAnimateTypewriter,
@@ -567,6 +568,7 @@ struct TimestampDividerView: View {
 struct MessageBubble: View {
     let text: String
     let isUser: Bool
+    let isAI: Bool
     var isFocused: Bool = false
     let timestamp: Date?
     var animateTypewriter: Bool = false
@@ -575,51 +577,37 @@ struct MessageBubble: View {
     var onTypewriterStart: (() -> Void)? = nil
     var onTypewriterEnd: (() -> Void)? = nil
     @State private var isHovering = false
+    @State private var isHoveringAddAsNoteButton: Bool = false
     
     @Environment(\.colorScheme) private var colorScheme
     @EnvironmentObject private var focusModel: JournalFocusModel
 
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
-            HStack {
-                if !isUser {
-                    ZStack(alignment: .topLeading) {
-                        markdownTextView(text)
-                            .opacity(0)
-                            .allowsHitTesting(false)
-
-                        markdownTextView(visibleText)
-                            .onAppear {
-                                handleMarkdownTextOnAppear()
-                            }
+            VStack(spacing: 0) {
+                HStack {
+                    if !isUser {
+                        ZStack(alignment: .topLeading) {
+                            markdownTextView(text)
+                                .opacity(0)
+                                .allowsHitTesting(false)
+                            
+                            markdownTextView(visibleText)
+                                .onAppear {
+                                    handleMarkdownTextOnAppear()
+                                }
+                        }
+                        Spacer()
+                    } else {
+                        Spacer()
+                        plainTextView(text)
                     }
-                    Spacer()
-                } else {
-                    Spacer()
-                    plainTextView(text)
                 }
-            }
-            if isUser && isHovering {
-                Button(action: {
-                    guard let viewModel = self.focusModel.entryViewModel else { return }
-                    let newNote = viewModel.addNote(text: text)
-                    self.focusModel.focusedNoteID = newNote.id
-                    NotificationCenter.default.post(name: .noteCreatedFromChat, object: newNote)
-                }) {
-                    Image(systemName: "note.text.badge.plus")
-                        .font(.system(size: 14))
-                        .foregroundColor(.secondary)
-                        .padding(6)
-                }
-                .buttonStyle(.plain)
-                .frame(width: 44, height: 44)
-                .padding(.bottom, -34)
-                .padding(.trailing, -12)
-                .help("Add this message as a note")
+                bottomButtons
             }
         }
         .padding(.horizontal, 16)
-        .padding(.bottom, isUser ? 24 : 0)
+//        .padding(.bottom, isUser ? 24 : 0)
         .onHover { hovering in
             isHovering = hovering
         }
@@ -637,6 +625,47 @@ struct MessageBubble: View {
         }
         .onAppear {
             print("👀 Rendering AI bubble with visibleText: \(visibleText)")
+        }
+    }
+    
+    private var bottomButtons: some View {
+        HStack {
+            if isUser {
+                Spacer()
+            }
+            if isHovering {
+                addAsNoteButton
+            }
+            if isAI {
+                Spacer()
+            }
+        }
+        .frame(height: 32)
+        .padding(.top, isUser ? -4 : -8)
+        .padding(.leading, isAI ? 4 : 0)
+        .padding(.trailing, isUser ? -8 : 0)
+    }
+    
+    private var addAsNoteButton: some View {
+        Button(action: {
+            guard let viewModel = self.focusModel.entryViewModel else { return }
+            let newNote = viewModel.addNote(text: text)
+            self.focusModel.focusedNoteID = newNote.id
+            NotificationCenter.default.post(name: .noteCreatedFromChat, object: newNote)
+        }) {
+            Image(systemName: "document.badge.plus")
+                .font(.system(size: 14))
+                .foregroundColor(.secondary)
+                .padding(6)
+        }
+        .buttonStyle(.plain)
+        .frame(width: 32, height: 32)
+//        .padding(.bottom, -34)
+//        .padding(.trailing, -12)
+        .help("Add this message as a note")
+        .opacity(isHoveringAddAsNoteButton ? 1 : 0.5)
+        .onHover { hovering in
+            isHoveringAddAsNoteButton = hovering
         }
     }
     
