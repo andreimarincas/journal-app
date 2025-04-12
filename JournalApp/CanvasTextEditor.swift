@@ -105,15 +105,29 @@ struct CanvasTextEditor: NSViewRepresentable {
 
         if textView.string != text {
             textView.textStorage?.setAttributedString(makeAttributedText(text))
-            textView.selectedRange = NSMakeRange(0, 0)
+            if !context.coordinator.hasInitializedScroll {
+                context.coordinator.hasInitializedScroll = true
+                DispatchQueue.main.async {
+                    textView.scroll(NSPoint(x: 0, y: 0))
+                }
+            }
         }
 
         textView.layoutManager?.ensureLayout(for: textView.textContainer!)
+        
+        if context.coordinator.needsInitialScrollToTop {
+            context.coordinator.needsInitialScrollToTop = false
+            DispatchQueue.main.async {
+                textView.scroll(NSPoint(x: 0, y: 0))
+            }
+        }
     }
 
     class Coordinator: NSObject, NSTextViewDelegate {
         var parent: CanvasTextEditor
         weak var textView: NSTextView?
+        var hasInitializedScroll = false
+        var needsInitialScrollToTop = true
 
         init(_ parent: CanvasTextEditor) {
             self.parent = parent
