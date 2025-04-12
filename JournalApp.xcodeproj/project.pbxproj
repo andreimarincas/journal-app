@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		771B301B2DA5704300F76BB9 /* MarkdownUI in Frameworks */ = {isa = PBXBuildFile; productRef = 771B301A2DA5704300F76BB9 /* MarkdownUI */; };
+		77E32B592DAAA90600B14EF5 /* Lottie in Frameworks */ = {isa = PBXBuildFile; productRef = 77E32B582DAAA90600B14EF5 /* Lottie */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -70,6 +71,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				771B301B2DA5704300F76BB9 /* MarkdownUI in Frameworks */,
+				77E32B592DAAA90600B14EF5 /* Lottie in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -131,6 +133,7 @@
 			name = JournalApp;
 			packageProductDependencies = (
 				771B301A2DA5704300F76BB9 /* MarkdownUI */,
+				77E32B582DAAA90600B14EF5 /* Lottie */,
 			);
 			productName = JournalApp;
 			productReference = 776716262D9BEEC9002C4A88 /* JournalApp.app */;
@@ -216,6 +219,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				771B30192DA5704300F76BB9 /* XCRemoteSwiftPackageReference "MarkdownUI" */,
+				77E32B572DAAA90600B14EF5 /* XCRemoteSwiftPackageReference "lottie-spm" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 776716272D9BEEC9002C4A88 /* Products */;
@@ -585,6 +589,14 @@
 				minimumVersion = 2.4.1;
 			};
 		};
+		77E32B572DAAA90600B14EF5 /* XCRemoteSwiftPackageReference "lottie-spm" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/airbnb/lottie-spm";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 4.5.1;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -592,6 +604,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 771B30192DA5704300F76BB9 /* XCRemoteSwiftPackageReference "MarkdownUI" */;
 			productName = MarkdownUI;
+		};
+		77E32B582DAAA90600B14EF5 /* Lottie */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 77E32B572DAAA90600B14EF5 /* XCRemoteSwiftPackageReference "lottie-spm" */;
+			productName = Lottie;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

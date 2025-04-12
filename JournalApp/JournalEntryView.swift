@@ -751,6 +751,7 @@ struct JournalEntryView: View {
                 .padding(.trailing, 8)
                 
                 Button(action: {
+                    guard !viewModel.isGeneratingAISuggestions else { return }
                     if let window = NSApplication.shared.keyWindow {
                         window.makeFirstResponder(nil)
                     }
@@ -764,16 +765,27 @@ struct JournalEntryView: View {
                         }
                     }
                 }) {
-                    Image(systemName: "sparkles")
-                        .font(.system(size: 18, weight: .bold))
-                        .frame(width: 44, height: 44)
-                        .background(Color("AIButtonColor"))
-                        .clipShape(Circle())
-                        .shadow(radius: 3)
-                        .symbolRenderingMode(.palette)
-                        .foregroundStyle(Color("SparklesYellow"), Color("SparklesOrange"))
+                    ZStack {
+                        if viewModel.isGeneratingAISuggestions {
+                            LottieView(filename: "magic_burst", loop: true)
+                                .frame(width: 44, height: 44)
+                                .scaleEffect(0.4)
+                                .background(Color("AIButtonColor"))
+                                .clipShape(Circle())
+                                .shadow(radius: 3)
+                                .foregroundStyle(Color("SparklesYellow"), Color("SparklesOrange"))
+                        } else {
+                            Image(systemName: "sparkles")
+                                .font(.system(size: 18, weight: .bold))
+                                .frame(width: 44, height: 44)
+                                .background(Color("AIButtonColor"))
+                                .clipShape(Circle())
+                                .shadow(radius: 3)
+                                .symbolRenderingMode(.palette)
+                                .foregroundStyle(Color("SparklesYellow"), Color("SparklesOrange"))
+                        }
+                    }
                 }
-                .disabled(viewModel.isGeneratingAISuggestions)
                 .buttonStyle(.plain)
                 .padding(.top, 4)
             }
