@@ -745,7 +745,7 @@ struct MessageBubble: View {
             .background(isFocused ? Color.accentColor : Color("BubbleUser"))
             .clipShape(RoundedRectangle(cornerRadius: 12))
             .frame(maxWidth: 380, alignment: isUser ? .trailing : .leading)
-            .multilineTextAlignment(isUser ? .trailing : .leading)
+            .multilineTextAlignment(.leading)
     }
     
     private func markdownTextView(_ text: String) -> some View {
