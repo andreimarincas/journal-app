@@ -169,14 +169,18 @@ class JournalEntryViewModel: ObservableObject {
         }
     }
     
+    func isAINote(text: String) -> Bool {
+        return text.trimmingCharacters(in: .whitespacesAndNewlines).hasPrefix("✨")
+    }
+    
     @discardableResult
     func addNote(text: String = "") -> JournalNote {
         let newNumber = (entry.notes.map(\.number).max() ?? 0) + 1
         let newNote = JournalNote(number: newNumber, text: text, entry: entry)
         
         // Replace the last note if it is AI generated and user has not decided yet upon its tone
-        if newNote.isAINote && latestAISuggestions.contains(where: { $0.text == newNote.text }) {
-            if let lastNote = notes.last, lastNote.isAINote && latestAISuggestions.first(where: { $0.text == lastNote.text }) == nil {
+        if isAINote(text: newNote.text) && latestAISuggestions.contains(where: { $0.text == newNote.text }) {
+            if let lastNote = notes.last, isAINote(text: lastNote.text) && latestAISuggestions.first(where: { $0.text == lastNote.text }) == nil {
                 dataSource.remove(lastNote, from: entry)
             }
         }

@@ -63,9 +63,3 @@ class ChatMessage {
         self.entryID = entryID
     }
 }
-
-extension JournalNote {
-    var isAINote: Bool {
-        return text.trimmingCharacters(in: .whitespacesAndNewlines).hasPrefix("✨")
-    }
-}
