@@ -19,6 +19,7 @@ struct CanvasTextEditor: NSViewRepresentable {
         paragraphStyle.paragraphSpacing = 9
         paragraphStyle.firstLineHeadIndent = 18
         paragraphStyle.paragraphSpacingBefore = 0
+        paragraphStyle.alignment = .justified
         return [
             .font: font,
             .foregroundColor: NSColor.labelColor,
