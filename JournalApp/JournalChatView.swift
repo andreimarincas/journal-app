@@ -649,7 +649,8 @@ struct MessageBubble: View {
     private var addAsNoteButton: some View {
         Button(action: {
             guard let viewModel = self.focusModel.entryViewModel else { return }
-            let newNote = viewModel.addNote(text: text)
+            let newText = isAI ? "✨ " + text : text
+            let newNote = viewModel.addNote(text: newText)
             self.focusModel.focusedNoteID = newNote.id
             NotificationCenter.default.post(name: .noteCreatedFromChat, object: newNote)
         }) {

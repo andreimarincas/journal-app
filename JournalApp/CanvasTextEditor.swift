@@ -26,6 +26,26 @@ struct CanvasTextEditor: NSViewRepresentable {
         ]
     }
     
+    private func makeAttributedText(_ text: String) -> NSAttributedString {
+        let attributedText = NSMutableAttributedString(string: text)
+        let fullRange = NSRange(location: 0, length: attributedText.length)
+        attributedText.addAttributes(textAttributes, range: fullRange)
+
+        let paragraphs = text.components(separatedBy: .newlines)
+        var position = 0
+        for paragraph in paragraphs {
+            let trimmed = paragraph.trimmingCharacters(in: .whitespaces)
+            let length = (paragraph as NSString).length
+            let range = NSRange(location: position, length: length)
+            if trimmed.hasPrefix("✨") {
+                let italicFont = NSFontManager.shared.convert(font, toHaveTrait: .italicFontMask)
+                attributedText.addAttribute(.font, value: italicFont, range: range)
+            }
+            position += length + 1
+        }
+        return attributedText
+    }
+    
     func makeCoordinator() -> Coordinator {
         Coordinator(self)
     }
@@ -59,21 +79,21 @@ struct CanvasTextEditor: NSViewRepresentable {
         scrollView.autoresizingMask = [.width, .height]
 
         context.coordinator.textView = textView
-        let attrText = NSAttributedString(string: text, attributes: textAttributes)
-        textView.textStorage?.setAttributedString(attrText)
+        
+        textView.textStorage?.setAttributedString(makeAttributedText(text))
 
         return scrollView
     }
 
     func updateNSView(_ nsView: NSScrollView, context: Context) {
-        if let textView = nsView.documentView as? NSTextView {
-            if textView.string != text {
-                let attrText = NSAttributedString(string: text, attributes: textAttributes)
-                textView.textStorage?.setAttributedString(attrText)
-                textView.selectedRange = NSMakeRange(0, 0)
-            }
-            textView.layoutManager?.ensureLayout(for: textView.textContainer!)
+        guard let textView = nsView.documentView as? NSTextView else { return }
+
+        if textView.string != text {
+            textView.textStorage?.setAttributedString(makeAttributedText(text))
+            textView.selectedRange = NSMakeRange(0, 0)
         }
+
+        textView.layoutManager?.ensureLayout(for: textView.textContainer!)
     }
 
     class Coordinator: NSObject, NSTextViewDelegate {

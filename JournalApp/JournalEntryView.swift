@@ -386,7 +386,9 @@ struct JournalEntryView: View {
                 }
 
                 HStack(spacing: 0) {
-                    toneCycleButtons
+                    if viewModel.latestAISuggestions.count > 1 {
+                        toneCycleButtons
+                    }
                     doneButton
                     undoButton
                     redoButton
