@@ -209,6 +209,11 @@ class JournalEntryViewModel: ObservableObject {
 
     func deleteNote(_ noteToDelete: JournalNote) {
         dataSource.remove(noteToDelete, from: entry)
+        undoManagers.removeValue(forKey: noteToDelete.id)
+        if lastEditedNoteID == noteToDelete.id {
+            lastEditedNoteID = nil
+            updateUndoRedoAvailability()
+        }
         for note in notes {
             if note.number > noteToDelete.number {
                 dataSource.update(note, with: note.number - 1)
