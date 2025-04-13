@@ -11,6 +11,7 @@ import AppKit
 struct CanvasTextEditor: NSViewRepresentable {
     @Binding var text: String
     var containerWidth: CGFloat? = nil
+    var onEditingChanged: (() -> Void)? = nil
     var onEditingEnded: (() -> Void)? = nil
     let font: NSFont = .systemFont(ofSize: JournalLayoutConstants.canvasFontSize, weight: .regular)
     
@@ -160,6 +161,7 @@ struct CanvasTextEditor: NSViewRepresentable {
                 textView.textStorage?.setAttributedString(self.parent.makeAttributedText(textView.string))
                 textView.setSelectedRange(selectedRange)
             }
+            parent.onEditingChanged?()
         }
         
         func textDidEndEditing(_ notification: Notification) {

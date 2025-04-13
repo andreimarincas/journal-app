@@ -7,6 +7,7 @@
 
 import Foundation
 import SwiftData
+import AppKit
 
 class JournalEntryViewModel: ObservableObject {
     @Published private(set) var entry: JournalEntry
@@ -207,12 +208,12 @@ class JournalEntryViewModel: ObservableObject {
         loadNotes()
     }
 
-    func deleteNote(_ noteToDelete: JournalNote) {
+    func deleteNote(_ noteToDelete: JournalNote, viewMode: JournalEntryView.ViewMode) {
         dataSource.remove(noteToDelete, from: entry)
         undoManagers.removeValue(forKey: noteToDelete.id)
         if lastEditedNoteID == noteToDelete.id {
             lastEditedNoteID = nil
-            updateUndoRedoAvailability()
+            updateUndoRedoAvailability(viewMode: viewMode)
         }
         for note in notes {
             if note.number > noteToDelete.number {
@@ -222,26 +223,41 @@ class JournalEntryViewModel: ObservableObject {
         loadNotes()
     }
     
-    func performUndo(focusedNoteID: UUID?) {
-        let id = focusedNoteID ?? lastEditedNoteID
-        guard let id,
-              let currentText = editedTexts[id],
-              let restored = undo(for: id, current: currentText)
-        else { return }
-
-        editedTexts[id] = restored
-        updateUndoRedoAvailability(focusedNoteID: focusedNoteID)
+    func performUndo(focusedNoteID: UUID?, viewMode: JournalEntryView.ViewMode) {
+        defer {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                self.updateUndoRedoAvailability(focusedNoteID: focusedNoteID, viewMode: viewMode)
+            }
+        }
+        if viewMode == .notes {
+            let id = focusedNoteID ?? lastEditedNoteID
+            guard let id,
+                  let currentText = editedTexts[id],
+                  let restored = undo(for: id, current: currentText)
+            else { return }
+            editedTexts[id] = restored
+            return
+        } else {
+            NSApp.sendAction(Selector(("undo:")), to: nil, from: nil)
+        }
     }
     
-    func performRedo(focusedNoteID: UUID?) {
-        let id = focusedNoteID ?? lastEditedNoteID
-        guard let id,
-              let currentText = editedTexts[id],
-              let restored = redo(for: id, current: currentText)
-        else { return }
-
-        editedTexts[id] = restored
-        updateUndoRedoAvailability(focusedNoteID: focusedNoteID)
+    func performRedo(focusedNoteID: UUID?, viewMode: JournalEntryView.ViewMode) {
+        defer {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                self.updateUndoRedoAvailability(focusedNoteID: focusedNoteID, viewMode: viewMode)
+            }
+        }
+        if viewMode == .notes {
+            let id = focusedNoteID ?? lastEditedNoteID
+            guard let id,
+                  let currentText = editedTexts[id],
+                  let restored = redo(for: id, current: currentText)
+            else { return }
+            editedTexts[id] = restored
+        } else {
+            NSApp.sendAction(Selector(("redo:")), to: nil, from: nil)
+        }
     }
     
     private func undo(for noteID: UUID, current: String) -> String? {
@@ -262,10 +278,23 @@ class JournalEntryViewModel: ObservableObject {
         undoManagers[noteID] = manager
     }
     
-    func updateUndoRedoAvailability(focusedNoteID: UUID? = nil) {
-        let id = lastEditedNoteID ?? focusedNoteID
-        isUndoAvailable = id != nil && undoManagers[id!]?.undoStack.isEmpty == false
-        isRedoAvailable = id != nil && undoManagers[id!]?.redoStack.isEmpty == false
+    func updateUndoRedoAvailability(focusedNoteID: UUID? = nil, viewMode: JournalEntryView.ViewMode) {
+        if viewMode == .canvas {
+            let undoManager = NSApp.keyWindow?.undoManager
+            isUndoAvailable = undoManager?.canUndo ?? false
+            isRedoAvailable = undoManager?.canRedo ?? false
+            return
+        }
+        
+        guard let id = focusedNoteID ?? lastEditedNoteID,
+              let manager = undoManagers[id] else {
+            isUndoAvailable = false
+            isRedoAvailable = false
+            return
+        }
+        
+        isUndoAvailable = !manager.undoStack.isEmpty
+        isRedoAvailable = !manager.redoStack.isEmpty
     }
     
     func canUndo(focusedNoteID: UUID?) -> Bool {

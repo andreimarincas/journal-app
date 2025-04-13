@@ -9,6 +9,7 @@ import SwiftUI
 
 struct CanvasView: View {
     @Binding var draftCanvasText: String
+    var updateUndoRedo: (() -> Void)? = nil
     var persistText: (() -> Void)? = nil
     
     var body: some View {
@@ -16,6 +17,9 @@ struct CanvasView: View {
             CanvasTextEditor(
                 text: $draftCanvasText,
                 containerWidth: geometry.size.width,
+                onEditingChanged: {
+                    updateUndoRedo?()
+                },
                 onEditingEnded: {
                     persistText?()
                 }

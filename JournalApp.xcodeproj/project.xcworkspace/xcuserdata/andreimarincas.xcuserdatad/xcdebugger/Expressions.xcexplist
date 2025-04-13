@@ -449,6 +449,20 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
+         contextName = "JournalEntryViewModel.updateUndoRedoAvailability(focusedNoteID:viewMode:):JournalEntryViewModel.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "undoManager!.canUndo">
+            </PersistentString>
+            <PersistentString
+               value = "isUndoAvailable">
+            </PersistentString>
+            <PersistentString
+               value = "isRedoAvailable">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
          contextName = "TextViewWrapper.Coordinator.textView(_:shouldChangeTextIn:replacementString:):JournalEntryView.swift">
          <PersistentStrings>
             <PersistentString

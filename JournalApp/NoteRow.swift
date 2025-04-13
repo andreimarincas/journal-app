@@ -136,14 +136,14 @@ struct NoteRow: View {
             if newValue == note.id {
                 isSummaryPanelVisible = false
             }
-            viewModel.updateUndoRedoAvailability(focusedNoteID: focusModel.focusedNoteID)
+            viewModel.updateUndoRedoAvailability(focusedNoteID: focusModel.focusedNoteID, viewMode: .notes)
         }
         .onAppear {
             viewModel.registerUndoManager(for: note.id, undoManager)
             if undoManager.undoStack.isEmpty {
                 undoManager.registerChange(previous: editedText, current: editedText) {
                     DispatchQueue.main.async { [weak viewModel] in
-                        viewModel?.updateUndoRedoAvailability(focusedNoteID: focusModel.focusedNoteID)
+                        viewModel?.updateUndoRedoAvailability(focusedNoteID: focusModel.focusedNoteID, viewMode: .notes)
                     }
                 }
             }
@@ -285,7 +285,7 @@ struct NoteRow: View {
                         editedText = enhancedText
                         undoManager.registerChange(previous: previousText, current: enhancedText) { [weak viewModel] in
                             DispatchQueue.main.async {
-                                viewModel?.updateUndoRedoAvailability(focusedNoteID: focusModel.focusedNoteID)
+                                viewModel?.updateUndoRedoAvailability(focusedNoteID: focusModel.focusedNoteID, viewMode: .notes)
                             }
                         }
                     }
@@ -312,6 +312,7 @@ struct NoteRow: View {
                     if let restored = undoManager.undo(current: editedText) {
                         editedText = restored
                     }
+                    viewModel.updateUndoRedoAvailability(focusedNoteID: focusModel.focusedNoteID, viewMode: .notes)
                 }) {
                     Image(systemName: "arrow.uturn.backward")
                         .imageScale(.medium)
@@ -335,6 +336,7 @@ struct NoteRow: View {
                     if let restored = undoManager.redo(current: editedText) {
                         editedText = restored
                     }
+                    viewModel.updateUndoRedoAvailability(focusedNoteID: focusModel.focusedNoteID, viewMode: .notes)s
                 }) {
                     Image(systemName: "arrow.uturn.forward")
                         .imageScale(.medium)
@@ -415,7 +417,7 @@ struct NoteRow: View {
         .alert("Delete this note?", isPresented: $showDeleteAlert) {
             Button("Delete", role: .destructive) {
                 guard let _ = viewModel.notes.firstIndex(where: { $0.id == note.id }) else { return }
-                viewModel.deleteNote(note)
+                viewModel.deleteNote(note, viewMode: .notes)
                 if focusModel.pinnedNoteID == note.id {
                     focusModel.clearChatFocus()
                 }

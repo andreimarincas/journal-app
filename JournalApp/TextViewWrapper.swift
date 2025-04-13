@@ -159,7 +159,7 @@ struct TextViewWrapper: NSViewRepresentable {
             let trimmedText = textView.string.trimmingCharacters(in: .whitespacesAndNewlines)
             if trimmedText.isEmpty {
                 if let note = parent.viewModel.notes.first(where: { $0.id == parent.id }) {
-                    parent.viewModel.deleteNote(note)
+                    parent.viewModel.deleteNote(note, viewMode: .notes)
                     parent.focusModel.focusedNoteID = nil
                 }
             } else {
@@ -177,7 +177,7 @@ struct TextViewWrapper: NSViewRepresentable {
                 parent.undoManager.registerChange(previous: oldText, current: newText) { [weak self] in
                     DispatchQueue.main.async {
                         guard let self = self else { return }
-                        self.parent.viewModel.updateUndoRedoAvailability(focusedNoteID: self.parent.focusModel.focusedNoteID)
+                        self.parent.viewModel.updateUndoRedoAvailability(focusedNoteID: self.parent.focusModel.focusedNoteID, viewMode: .notes)
                     }
                 }
                 let selectedRange = textView.selectedRange()

@@ -21,8 +21,9 @@ struct JournalEntryView: View {
     @State private var isHoveringRedoButton : Bool = false
     @State private var selectedViewMode: ViewMode = .notes
     @State private var draftCanvasText: String = ""
+    @State private var undoAvailabilityTimer: Timer?
     
-    private enum ViewMode: String {
+    enum ViewMode: String {
         case notes, canvas
     }
 
@@ -55,6 +56,11 @@ struct JournalEntryView: View {
                 } else {
                     CanvasView(
                         draftCanvasText: $draftCanvasText,
+                        updateUndoRedo: {
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                                viewModel.updateUndoRedoAvailability(focusedNoteID: focusModel.focusedNoteID, viewMode: .canvas)
+                            }
+                        },
                         persistText: {
                             viewModel.persistCanvasText(draftCanvasText)
                         }
@@ -86,6 +92,11 @@ struct JournalEntryView: View {
                 focusModel.entry = viewModel.entry
                 viewModel.loadNotes()
                 draftCanvasText = viewModel.canvasBody
+                undoAvailabilityTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { _ in
+                    if viewMode == .canvas {
+                        viewModel.updateUndoRedoAvailability(focusedNoteID: focusModel.focusedNoteID, viewMode: viewMode)
+                    }
+                }
             }
             .onChange(of: selectedViewMode) { _, newValue in
                 setViewMode(newValue)
@@ -95,6 +106,13 @@ struct JournalEntryView: View {
                 if newValue == .canvas {
                     draftCanvasText = viewModel.canvasBody
                 }
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    viewModel.updateUndoRedoAvailability(focusedNoteID: focusModel.focusedNoteID, viewMode: viewMode)
+                }
+            }
+            .onDisappear {
+                undoAvailabilityTimer?.invalidate()
+                undoAvailabilityTimer = nil
             }
         }
         .onChange(of: viewModel.notes) {
@@ -172,7 +190,11 @@ struct JournalEntryView: View {
     
     private var undoButton: some View {
         Button(action: {
-            viewModel.performUndo(focusedNoteID: focusModel.focusedNoteID)
+            if viewMode == .canvas {
+            NSApp.sendAction(Selector(("undo:")), to: nil, from: nil)
+            } else {
+                viewModel.performUndo(focusedNoteID: focusModel.focusedNoteID, viewMode: viewMode)
+            }
         }) {
             ZStack {
                 Image(systemName: "arrow.uturn.backward")
@@ -186,7 +208,7 @@ struct JournalEntryView: View {
                           ? Color.secondary.opacity(0.15)
                           : Color(NSColor.controlBackgroundColor))
                     .scaleEffect(0.85)
-                    .opacity(viewModel.isUndoAvailable ? 1 : 0)
+                    .opacity(viewModel.isUndoAvailable && isHoveringUndoButton ? 1 : 0)
             )
             .clipShape(Circle())
         }
@@ -200,7 +222,11 @@ struct JournalEntryView: View {
     
     private var redoButton: some View {
         Button(action: {
-            viewModel.performRedo(focusedNoteID: focusModel.focusedNoteID)
+            if viewMode == .canvas {
+            NSApp.sendAction(Selector(("redo:")), to: nil, from: nil)
+            } else {
+                viewModel.performRedo(focusedNoteID: focusModel.focusedNoteID, viewMode: viewMode)
+            }
         }) {
             ZStack {
                 Image(systemName: "arrow.uturn.forward")
@@ -214,7 +240,7 @@ struct JournalEntryView: View {
                           ? Color.secondary.opacity(0.15)
                           : Color(NSColor.controlBackgroundColor))
                     .scaleEffect(0.85)
-                    .opacity(viewModel.isRedoAvailable ? 1 : 0)
+                    .opacity(viewModel.isRedoAvailable && isHoveringRedoButton ? 1 : 0)
             )
             .clipShape(Circle())
         }
