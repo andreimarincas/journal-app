@@ -318,7 +318,9 @@ class JournalEntryViewModel: ObservableObject {
                 assistantReply: assistantReply
             )
 
-            persistCanvasText(merged)
+            await MainActor.run {
+                persistCanvasText(merged)
+            }
             return merged
             
         } catch {

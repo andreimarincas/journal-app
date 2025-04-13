@@ -32,7 +32,13 @@ struct JournalChatView: View {
     @AppStorage("isCanvasMergeModeEnabled") private var storedCanvasMergeModeEnabled = false
     @State private var isCanvasMergeModeEnabled = false
     
-    init(chatViewModel: JournalChatViewModel, entry: JournalEntry, isInOwnWindow: Binding<Bool> = .constant(false), isChatVisible: Binding<Bool> = .constant(true), popOutWindow: (() -> Void)? = nil, isSummaryPanelVisible: Binding<Bool> = .constant(false)) {
+    init(chatViewModel: JournalChatViewModel,
+         entry: JournalEntry,
+         isInOwnWindow: Binding<Bool> = .constant(false),
+         isChatVisible: Binding<Bool> = .constant(true),
+         popOutWindow: (() -> Void)? = nil,
+         isSummaryPanelVisible: Binding<Bool> = .constant(false)
+    ) {
         self.entry = entry
         self._isInOwnWindow = isInOwnWindow
         self._isChatVisible = isChatVisible
