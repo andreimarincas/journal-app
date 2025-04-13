@@ -24,8 +24,11 @@ class JournalChatViewModel: ObservableObject {
     
     private(set) var lastAnimatedMessageID: UUID?
     
-    init(dataSource: ChatMessageDataSource, isPreview: Bool = false) {
+    weak var focusModel: JournalFocusModel?
+    
+    init(dataSource: ChatMessageDataSource, focusModel: JournalFocusModel? = nil, isPreview: Bool = false) {
         self.dataSource = dataSource
+        self.focusModel = focusModel
         self.isUsingPreviewContext = isPreview
         self.isTyping = false
         self.messages = []
@@ -121,7 +124,7 @@ class JournalChatViewModel: ObservableObject {
         messages.append(systemMessage)
     }
     
-    func sendFocusedNoteToGPT(message: String, context: ChatNoteContext?, pinnedNoteID: UUID?) {
+    func sendFocusedNoteToGPT(message: String, context: ChatNoteContext?, pinnedNoteID: UUID?, syncWithCanvas: Bool = false) {
         let trimmed = message.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
         
@@ -170,6 +173,11 @@ class JournalChatViewModel: ObservableObject {
                     self.dataSource.insertMessage(assistantMessage, previousMessage: userMessage)
                     self.messages.append(assistantMessage)
                     self.lastAnimatedMessageID = assistantMessage.id
+                    
+                    if syncWithCanvas {
+                        self.focusModel?.pendingCanvasMergeUserMessage = trimmed
+                        self.focusModel?.pendingCanvasMergeAssistantReply = response
+                    }
                 }
             } catch {
                 hideTypingIndicator { [weak self] in
@@ -179,7 +187,7 @@ class JournalChatViewModel: ObservableObject {
         }
     }
     
-    func sendInputUserMessage(text: String) {
+    func sendInputUserMessage(text: String, syncWithCanvas: Bool = false) {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
         
@@ -201,6 +209,11 @@ class JournalChatViewModel: ObservableObject {
                     self.dataSource.insertMessage(assistantMessage, previousMessage: userMessage)
                     self.messages.append(assistantMessage)
                     self.lastAnimatedMessageID = assistantMessage.id
+                    
+                    if syncWithCanvas {
+                        self.focusModel?.pendingCanvasMergeUserMessage = trimmed
+                        self.focusModel?.pendingCanvasMergeAssistantReply = response
+                    }
                 }
             } catch {
                 hideTypingIndicator { [weak self] in

@@ -59,7 +59,7 @@ struct JournalChatView: View {
             ChatInputView(
                 isInputFocused: _isInputFocused,
                 sendMessage: { message in
-                    chatViewModel.sendInputUserMessage(text: message)
+                    chatViewModel.sendInputUserMessage(text: message, syncWithCanvas: isCanvasMergeModeEnabled)
                 },
                 isSummaryPanelVisible: $isSummaryPanelVisible,
                 isDisabled: isAnimatingTypewriter
@@ -68,7 +68,7 @@ struct JournalChatView: View {
         .background(Color("ChatViewBackground"))
         .onChange(of: focusModel.pinnedNoteID) { _, newValue in
             if let _ = newValue, let message = focusModel.pendingChatMessage {
-                chatViewModel.sendFocusedNoteToGPT(message: message, context: focusModel.pendingChatMessageContext, pinnedNoteID: focusModel.pinnedNoteID)
+                chatViewModel.sendFocusedNoteToGPT(message: message, context: focusModel.pendingChatMessageContext, pinnedNoteID: focusModel.pinnedNoteID, syncWithCanvas: isCanvasMergeModeEnabled)
             }
         }
         .onAppear {

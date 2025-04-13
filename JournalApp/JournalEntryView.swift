@@ -111,6 +111,19 @@ struct JournalEntryView: View {
                     viewModel.updateUndoRedoAvailability(focusedNoteID: focusModel.focusedNoteID, viewMode: viewMode)
                 }
             }
+            .onChange(of: focusModel.pendingCanvasMergeAssistantReply) { _, newValue in
+                guard let userMessage = focusModel.pendingCanvasMergeUserMessage,
+                      let assistantReply = newValue,
+                      selectedViewMode == .canvas else { return }
+                Task {
+                    let merged = await viewModel.mergeCanvasFromChat(userMessage: userMessage, assistantReply: assistantReply)
+                    await MainActor.run {
+                        draftCanvasText = merged ?? viewModel.canvasBody
+                        focusModel.pendingCanvasMergeUserMessage = nil
+                        focusModel.pendingCanvasMergeAssistantReply = nil
+                    }
+                }
+            }
             .onDisappear {
                 undoAvailabilityTimer?.invalidate()
                 undoAvailabilityTimer = nil

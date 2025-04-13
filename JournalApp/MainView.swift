@@ -67,6 +67,7 @@ struct MainView: View {
                     }
                     if chatViewModel.isUsingPreviewContext {
                         chatViewModel.replaceDataSource(with: ChatMessageDataSource(modelContext: modelContext))
+                        chatViewModel.focusModel = focusModel
                     }
                 }
             }

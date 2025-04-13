@@ -308,6 +308,24 @@ class JournalEntryViewModel: ObservableObject {
               let manager = undoManagers[id] else { return false }
         return !manager.redoStack.isEmpty
     }
+    
+    func mergeCanvasFromChat(userMessage: String, assistantReply: String) async -> String? {
+        let coordinator = CanvasMergeCoordinator(gptClient: GPTClientProvider.shared)
+        do {
+            let merged = try await coordinator.mergeCanvas(
+                currentCanvas: canvasBody,
+                userMessage: userMessage,
+                assistantReply: assistantReply
+            )
+
+            persistCanvasText(merged)
+            return merged
+            
+        } catch {
+            print("Failed to merge canvas: \(error)")
+            return nil
+        }
+    }
 }
 
 final class NotesDataSource {

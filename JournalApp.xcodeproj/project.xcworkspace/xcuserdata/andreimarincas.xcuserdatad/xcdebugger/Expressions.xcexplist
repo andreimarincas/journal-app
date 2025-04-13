@@ -201,6 +201,14 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
+         contextName = "closure #3 in closure #1 in JournalChatViewModel.sendInputUserMessage(text:syncWithCanvas:):JournalChatViewModel.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "self.focusModel">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
          contextName = "CanvasTextEditor.makeAttributedText(_:):CanvasTextEditor.swift">
          <PersistentStrings>
             <PersistentString

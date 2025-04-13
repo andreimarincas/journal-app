@@ -21,6 +21,9 @@ class JournalFocusModel: ObservableObject {
     
     @Published var viewMode: JournalEntryView.ViewMode = .notes
     
+    @Published var pendingCanvasMergeUserMessage: String? = nil
+    @Published var pendingCanvasMergeAssistantReply: String? = nil
+    
     func clearChatFocus() {
         pendingChatMessage = nil
         pendingChatMessageContext = nil
