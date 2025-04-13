@@ -8,13 +8,13 @@
 import Foundation
 
 final class CustomUndoManager: ObservableObject {
-    private(set) var undoStack: [String] = []
-    private(set) var redoStack: [String] = []
+    @Published private(set) var undoStack: [String] = []
+    @Published private(set) var redoStack: [String] = []
     private var debounceTimer: Timer?
     private var pendingChange: (previous: String, current: String)?
     private let debounceDelay: TimeInterval = 0.1
 
-    func registerChange(previous: String, current: String) {
+    func registerChange(previous: String, current: String, completion: (() -> Void)?) {
         guard previous != current else { return }
 
         pendingChange = (previous, current)
@@ -25,6 +25,7 @@ final class CustomUndoManager: ObservableObject {
             self.undoStack.append(change.previous)
             self.redoStack.removeAll()
             self.pendingChange = nil
+            completion?()
         }
     }
 

@@ -22,6 +22,12 @@ class JournalEntryViewModel: ObservableObject {
     private(set) var isUsingPreviewContext: Bool
     @Published private(set) var notes: [JournalNote] = []
     
+    @Published var editedTexts: [UUID: String] = [:]
+    @Published var lastEditedNoteID: UUID? = nil
+    private var undoManagers: [UUID: CustomUndoManager] = [:]
+    @Published var isUndoAvailable: Bool = false
+    @Published var isRedoAvailable: Bool = false
+    
     init(entry: JournalEntry, dataSource: NotesDataSource, isPreview: Bool = false) {
         self.entry = entry
         self.dataSource = dataSource
@@ -209,6 +215,64 @@ class JournalEntryViewModel: ObservableObject {
             }
         }
         loadNotes()
+    }
+    
+    func performUndo(focusedNoteID: UUID?) {
+        let id = focusedNoteID ?? lastEditedNoteID
+        guard let id,
+              let currentText = editedTexts[id],
+              let restored = undo(for: id, current: currentText)
+        else { return }
+
+        editedTexts[id] = restored
+        updateUndoRedoAvailability()
+    }
+    
+    func performRedo(focusedNoteID: UUID?) {
+        let id = focusedNoteID ?? lastEditedNoteID
+        guard let id,
+              let currentText = editedTexts[id],
+              let restored = redo(for: id, current: currentText)
+        else { return }
+
+        editedTexts[id] = restored
+        updateUndoRedoAvailability()
+    }
+    
+    private func undo(for noteID: UUID, current: String) -> String? {
+        if let manager = undoManagers[noteID] {
+            return manager.undo(current: current)
+        }
+        return nil
+    }
+
+    private func redo(for noteID: UUID, current: String) -> String? {
+        if let manager = undoManagers[noteID] {
+            return manager.redo(current: current)
+        }
+        return nil
+    }
+    
+    func registerUndoManager(for noteID: UUID, _ manager: CustomUndoManager) {
+        undoManagers[noteID] = manager
+    }
+    
+    func updateUndoRedoAvailability() {
+        let id = lastEditedNoteID
+        isUndoAvailable = id != nil && undoManagers[id!]?.undoStack.isEmpty == false
+        isRedoAvailable = id != nil && undoManagers[id!]?.redoStack.isEmpty == false
+    }
+    
+    func canUndo(focusedNoteID: UUID?) -> Bool {
+        guard let id = focusedNoteID ?? lastEditedNoteID,
+              let manager = undoManagers[id] else { return false }
+        return !manager.undoStack.isEmpty
+    }
+
+    func canRedo(focusedNoteID: UUID?) -> Bool {
+        guard let id = focusedNoteID ?? lastEditedNoteID,
+              let manager = undoManagers[id] else { return false }
+        return !manager.redoStack.isEmpty
     }
 }
 

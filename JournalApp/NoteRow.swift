@@ -137,6 +137,16 @@ struct NoteRow: View {
                 isSummaryPanelVisible = false
             }
         }
+        .onAppear {
+            viewModel.registerUndoManager(for: note.id, undoManager)
+            if undoManager.undoStack.isEmpty {
+                undoManager.registerChange(previous: editedText, current: editedText) {
+                    DispatchQueue.main.async { [weak viewModel] in
+                        viewModel?.updateUndoRedoAvailability()
+                    }
+                }
+            }
+        }
         
         if isAINote && !isFinalized {
             ZStack() {
@@ -272,7 +282,11 @@ struct NoteRow: View {
                         isEnhancing = false
                         guard let enhancedText else { return }
                         editedText = enhancedText
-                        undoManager.registerChange(previous: previousText, current: enhancedText)
+                        undoManager.registerChange(previous: previousText, current: enhancedText) { [weak viewModel] in
+                            DispatchQueue.main.async {
+                                viewModel?.updateUndoRedoAvailability()
+                            }
+                        }
                     }
                 }) {
                     Image(systemName: "wand.and.stars")

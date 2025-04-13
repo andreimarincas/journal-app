@@ -12,7 +12,6 @@ struct JournalEntryView: View {
     @State private var viewModel: JournalEntryViewModel
     @Binding var isSummaryPanelVisible: Bool
     @EnvironmentObject private var focusModel: JournalFocusModel
-    @State private var editedTexts: [UUID: String] = [:]
     @State private var aiSuggestions: [JournalTone: String] = [:]
     @State private var containerWidth: CGFloat = 0
     @Binding var isChatVisible: Bool
@@ -71,7 +70,7 @@ struct JournalEntryView: View {
             .contentShape(Rectangle()) // Ensures the full area is tappable
             .onTapGesture {
                 if let oldID = focusModel.focusedNoteID,
-                   let newText = editedTexts[oldID],
+                   let newText = viewModel.editedTexts[oldID],
                    let note = viewModel.notes.first(where: { $0.id == oldID }) {
                     if newText != note.text {
                         viewModel.updateNote(note, text: newText)
@@ -97,9 +96,6 @@ struct JournalEntryView: View {
                     draftCanvasText = viewModel.canvasBody
                 }
             }
-        }
-        .onChange(of: editedTexts) { oldValue, newValue in
-//            print(newValue)
         }
         .onChange(of: viewModel.notes) {
             draftCanvasText = viewModel.canvasBody
@@ -173,10 +169,10 @@ struct JournalEntryView: View {
             isShowChatHovering = hovering
         }
     }
-
+    
     private var undoButton: some View {
         Button(action: {
-            // Undo logic
+            viewModel.performUndo(focusedNoteID: focusModel.focusedNoteID)
         }) {
             ZStack {
                 Image(systemName: "arrow.uturn.backward")
@@ -190,23 +186,21 @@ struct JournalEntryView: View {
                           ? Color.secondary.opacity(0.15)
                           : Color(NSColor.controlBackgroundColor))
                     .scaleEffect(0.85)
+                    .opacity(viewModel.isUndoAvailable ? 1 : 0)
             )
             .clipShape(Circle())
         }
-        .offset(x: 3)
         .buttonStyle(.borderless)
+        .offset(x: 3)
+        .disabled(!viewModel.isUndoAvailable)
         .onHover { hovering in
             isHoveringUndoButton = hovering
         }
     }
     
-    private func undoAction() {
-        
-    }
-    
     private var redoButton: some View {
         Button(action: {
-            // Redo logic
+            viewModel.performRedo(focusedNoteID: focusModel.focusedNoteID)
         }) {
             ZStack {
                 Image(systemName: "arrow.uturn.forward")
@@ -220,18 +214,16 @@ struct JournalEntryView: View {
                           ? Color.secondary.opacity(0.15)
                           : Color(NSColor.controlBackgroundColor))
                     .scaleEffect(0.85)
+                    .opacity(viewModel.isRedoAvailable ? 1 : 0)
             )
             .clipShape(Circle())
         }
         .buttonStyle(.borderless)
         .offset(x: -3)
+        .disabled(!viewModel.isRedoAvailable)
         .onHover { hovering in
             isHoveringRedoButton = hovering
         }
-    }
-    
-    private func redoAction() {
-        
     }
     
     @ViewBuilder
@@ -307,7 +299,7 @@ struct JournalEntryView: View {
     }
     
     private func noteView(for note: JournalNote) -> some View {
-        if let newText = editedTexts[note.id], newText != note.text {
+        if let newText = viewModel.editedTexts[note.id], newText != note.text {
             note.text = newText
         }
         let shouldFocus = focusModel.focusedNoteID == note.id
@@ -319,14 +311,12 @@ struct JournalEntryView: View {
             shouldFocusInChat: shouldFocusInChat,
             editedText: Binding(
                 get: {
-                    let result = editedTexts[note.id] ?? note.text
-                    print(result)
-                    return result
+                    viewModel.editedTexts[note.id] ?? note.text
                 },
                 set: {
-                    print($0)
-                    if $0 != editedTexts[note.id] {
-                        editedTexts[note.id] = $0
+                    if $0 != viewModel.editedTexts[note.id] {
+                        viewModel.editedTexts[note.id] = $0
+                        viewModel.lastEditedNoteID = note.id
                         if focusModel.pinnedNoteID == note.id {
                             focusModel.clearChatFocus()
                         }

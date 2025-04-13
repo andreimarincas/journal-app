@@ -174,7 +174,11 @@ struct TextViewWrapper: NSViewRepresentable {
             let newText = textView.string
             
             if oldText != newText {
-                parent.undoManager.registerChange(previous: oldText, current: newText)
+                parent.undoManager.registerChange(previous: oldText, current: newText) { [weak self] in
+                    DispatchQueue.main.async {
+                        self?.parent.viewModel.updateUndoRedoAvailability()
+                    }
+                }
                 parent.text = newText
                 
                 // This forces the newly updated or pasted text to be immediately styled with your standard note font, spacing, and color, overriding any residual rich text attributes that might have been pasted or triggered during editing.
