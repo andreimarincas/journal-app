@@ -29,6 +29,7 @@ struct JournalChatView: View {
     
     @State private var canTriggerLoad = true
     @State private var isAnimatingTypewriter: Bool = false
+    @State private var isCanvasMergeModeEnabled = false
     
     init(chatViewModel: JournalChatViewModel, entry: JournalEntry, isInOwnWindow: Binding<Bool> = .constant(false), isChatVisible: Binding<Bool> = .constant(true), popOutWindow: (() -> Void)? = nil, isSummaryPanelVisible: Binding<Bool> = .constant(false)) {
         self.entry = entry
@@ -79,73 +80,88 @@ struct JournalChatView: View {
     }
     
     private var topButtons: some View {
-        HStack {
-            Spacer()
-            ProgressView()
-                .progressViewStyle(.circular)
-                .foregroundStyle(Color.red)
-                .frame(width: 44, height: 44)
-                .scaleEffect(0.7)
+        ZStack {
+            HStack() {
+                Toggle(isOn: $isCanvasMergeModeEnabled) {
+                    Text("Work with Canvas")
+                        .font(.body)
+                        .foregroundColor(.secondary)
+                }
+                .toggleStyle(SwitchToggleStyle(tint: Color.accentColor))
+                .padding(.leading, 24)
                 .padding(.top, 8)
-                .offset(x: 28)
-                .opacity(isLoadingOlderMessages ? 1 : 0)
-                .animation(.easeInOut(duration: 0.3), value: isLoadingOlderMessages)
-            .allowsHitTesting(false)
-            Spacer()
-            Button(action: {
-                isChatVisible = false
-            }) {
-                Image(systemName: "eye.slash")
-                    .frame(width: 28, height: 28)
-                    .font(.system(size: 16, weight: .regular))
-                    .padding(6)
-                    .background(Color(NSColor.controlBackgroundColor))
-                    .clipShape(Circle())
-                    .opacity(isHoveringHide ? 1.0 : 0.5)
-            }
-            .buttonStyle(PlainButtonStyle())
-            .padding(.top, 6)
-            .padding(.trailing, 0)
-            .onHover { hovering in
-                isHoveringHide = hovering
-            }
-            if !isInOwnWindow {
+                
+                Spacer()
+                
                 Button(action: {
-                    popOutWindow?()
+                    isChatVisible = false
                 }) {
-                    Image(systemName: "arrow.up.right.bottomleft.rectangle")
+                    Image(systemName: "eye.slash")
                         .frame(width: 28, height: 28)
                         .font(.system(size: 16, weight: .regular))
                         .padding(6)
                         .background(Color(NSColor.controlBackgroundColor))
                         .clipShape(Circle())
-                        .opacity(isHoveringPopOut ? 1.0 : 0.5)
+                        .opacity(isHoveringHide ? 1.0 : 0.5)
                 }
                 .buttonStyle(PlainButtonStyle())
                 .padding(.top, 6)
                 .padding(.trailing, 0)
                 .onHover { hovering in
-                    isHoveringPopOut = hovering
+                    isHoveringHide = hovering
+                }
+                if !isInOwnWindow {
+                    Button(action: {
+                        popOutWindow?()
+                    }) {
+                        Image(systemName: "arrow.up.right.bottomleft.rectangle")
+                            .frame(width: 28, height: 28)
+                            .font(.system(size: 16, weight: .regular))
+                            .padding(6)
+                            .background(Color(NSColor.controlBackgroundColor))
+                            .clipShape(Circle())
+                            .opacity(isHoveringPopOut ? 1.0 : 0.5)
+                    }
+                    .buttonStyle(PlainButtonStyle())
+                    .padding(.top, 6)
+                    .padding(.trailing, 0)
+                    .onHover { hovering in
+                        isHoveringPopOut = hovering
+                    }
+                }
+                if isInOwnWindow {
+                    Button(action: {
+                        isInOwnWindow = false
+                    }) {
+                        Image(systemName: "arrow.down.left.topright.rectangle")
+                            .frame(width: 28, height: 28)
+                            .font(.system(size: 16, weight: .regular))
+                            .padding(6)
+                            .background(Color(NSColor.controlBackgroundColor))
+                            .clipShape(Circle())
+                            .opacity(isHoveringDock ? 1.0 : 0.5)
+                    }
+                    .buttonStyle(PlainButtonStyle())
+                    .padding(.top, 6)
+                    .padding(.trailing, 0)
+                    .onHover { hovering in
+                        isHoveringDock = hovering
+                    }
                 }
             }
-            if isInOwnWindow {
-                Button(action: {
-                    isInOwnWindow = false
-                }) {
-                    Image(systemName: "arrow.down.left.topright.rectangle")
-                        .frame(width: 28, height: 28)
-                        .font(.system(size: 16, weight: .regular))
-                        .padding(6)
-                        .background(Color(NSColor.controlBackgroundColor))
-                        .clipShape(Circle())
-                        .opacity(isHoveringDock ? 1.0 : 0.5)
-                }
-                .buttonStyle(PlainButtonStyle())
-                .padding(.top, 6)
-                .padding(.trailing, 0)
-                .onHover { hovering in
-                    isHoveringDock = hovering
-                }
+            
+            HStack() {
+                Spacer()
+                ProgressView()
+                    .progressViewStyle(.circular)
+                    .foregroundStyle(Color.red)
+                    .frame(width: 44, height: 44)
+                    .scaleEffect(0.7)
+                    .padding(.top, 8)
+                    .opacity(isLoadingOlderMessages ? 1 : 0)
+                    .animation(.easeInOut(duration: 0.3), value: isLoadingOlderMessages)
+                    .allowsHitTesting(false)
+                Spacer()
             }
         }
     }
