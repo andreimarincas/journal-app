@@ -336,7 +336,7 @@ struct NoteRow: View {
                     if let restored = undoManager.redo(current: editedText) {
                         editedText = restored
                     }
-                    viewModel.updateUndoRedoAvailability(focusedNoteID: focusModel.focusedNoteID, viewMode: .notes)s
+                    viewModel.updateUndoRedoAvailability(focusedNoteID: focusModel.focusedNoteID, viewMode: .notes)
                 }) {
                     Image(systemName: "arrow.uturn.forward")
                         .imageScale(.medium)
