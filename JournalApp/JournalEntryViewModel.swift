@@ -208,12 +208,12 @@ class JournalEntryViewModel: ObservableObject {
         loadNotes()
     }
 
-    func deleteNote(_ noteToDelete: JournalNote, viewMode: JournalEntryView.ViewMode) {
+    func deleteNote(_ noteToDelete: JournalNote, viewMode: JournalEntryView.ViewMode, canvasUndoManager: CustomUndoManager) {
         dataSource.remove(noteToDelete, from: entry)
         undoManagers.removeValue(forKey: noteToDelete.id)
         if lastEditedNoteID == noteToDelete.id {
             lastEditedNoteID = nil
-            updateUndoRedoAvailability(viewMode: viewMode)
+            updateUndoRedoAvailability(viewMode: viewMode, canvasUndoManager: canvasUndoManager)
         }
         for note in notes {
             if note.number > noteToDelete.number {
@@ -223,10 +223,10 @@ class JournalEntryViewModel: ObservableObject {
         loadNotes()
     }
     
-    func performUndo(focusedNoteID: UUID?, viewMode: JournalEntryView.ViewMode) {
+    func performUndo(focusedNoteID: UUID?, viewMode: JournalEntryView.ViewMode, canvasUndoManager: CustomUndoManager) {
         defer {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                self.updateUndoRedoAvailability(focusedNoteID: focusedNoteID, viewMode: viewMode)
+                self.updateUndoRedoAvailability(focusedNoteID: focusedNoteID, viewMode: viewMode, canvasUndoManager: canvasUndoManager)
             }
         }
         if viewMode == .notes {
@@ -242,10 +242,10 @@ class JournalEntryViewModel: ObservableObject {
         }
     }
     
-    func performRedo(focusedNoteID: UUID?, viewMode: JournalEntryView.ViewMode) {
+    func performRedo(focusedNoteID: UUID?, viewMode: JournalEntryView.ViewMode, canvasUndoManager: CustomUndoManager) {
         defer {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                self.updateUndoRedoAvailability(focusedNoteID: focusedNoteID, viewMode: viewMode)
+                self.updateUndoRedoAvailability(focusedNoteID: focusedNoteID, viewMode: viewMode, canvasUndoManager: canvasUndoManager)
             }
         }
         if viewMode == .notes {
@@ -278,11 +278,10 @@ class JournalEntryViewModel: ObservableObject {
         undoManagers[noteID] = manager
     }
     
-    func updateUndoRedoAvailability(focusedNoteID: UUID? = nil, viewMode: JournalEntryView.ViewMode) {
+    func updateUndoRedoAvailability(focusedNoteID: UUID? = nil, viewMode: JournalEntryView.ViewMode, canvasUndoManager: CustomUndoManager) {
         if viewMode == .canvas {
-            let undoManager = NSApp.keyWindow?.undoManager
-            isUndoAvailable = undoManager?.canUndo ?? false
-            isRedoAvailable = undoManager?.canRedo ?? false
+            isUndoAvailable = !canvasUndoManager.undoStack.isEmpty
+            isRedoAvailable = !canvasUndoManager.redoStack.isEmpty
             return
         }
         

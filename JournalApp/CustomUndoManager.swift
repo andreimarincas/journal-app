@@ -14,7 +14,7 @@ final class CustomUndoManager: ObservableObject {
     private var pendingChange: (previous: String, current: String)?
     private let debounceDelay: TimeInterval = 0.1
 
-    func registerChange(previous: String, current: String, completion: (() -> Void)?) {
+    func registerChange(previous: String, current: String, completion: (() -> Void)? = nil) {
         guard previous != current else { return }
 
         pendingChange = (previous, current)

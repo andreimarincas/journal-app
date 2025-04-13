@@ -31,6 +31,7 @@ struct MainView: View {
     @State private var isChatPoppedOut: Bool = false
     @State private var poppedOutWindow: NSWindow?
     @State private var isSummaryPanelVisible: Bool = false
+    @State private var undoManagers: [UUID: CustomUndoManager] = [:]
     
     @StateObject private var summaryViewModel = SummaryPanelViewModel(entry: JournalEntry(date: Date(), title: "", notes: []))
     
@@ -269,8 +270,17 @@ struct MainView: View {
                 GeometryReader { geometry in
                     HStack(spacing: 0) {
                         ZStack(alignment: .topTrailing) {
-                            JournalEntryView(viewModel: entryViewModel, isSummaryPanelVisible: $isSummaryPanelVisible, isChatVisible: $isChatVisible)
-                                .environmentObject(focusModel)
+                            JournalEntryView(
+                                viewModel: entryViewModel,
+                                isSummaryPanelVisible: $isSummaryPanelVisible,
+                                isChatVisible: $isChatVisible,
+                                canvasUndoManager: undoManagers[entry.id, default: {
+                                    let manager = CustomUndoManager()
+                                    undoManagers[entry.id] = manager
+                                    return manager
+                                }()]
+                            )
+                            .environmentObject(focusModel)
                         }
                         
                         if !isChatPoppedOut && isChatVisible {

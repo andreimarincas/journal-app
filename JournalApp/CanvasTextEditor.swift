@@ -14,6 +14,7 @@ struct CanvasTextEditor: NSViewRepresentable {
     var onEditingChanged: (() -> Void)? = nil
     var onEditingEnded: (() -> Void)? = nil
     let font: NSFont = .systemFont(ofSize: JournalLayoutConstants.canvasFontSize, weight: .regular)
+    var undoManager: CustomUndoManager
     
     private var textAttributes: [NSAttributedString.Key : Any] {
         let paragraphStyle = NSMutableParagraphStyle()
@@ -62,7 +63,8 @@ struct CanvasTextEditor: NSViewRepresentable {
     }
     
     func makeCoordinator() -> Coordinator {
-        Coordinator(self)
+        let coordinator = Coordinator(self, initialText: text)
+        return coordinator
     }
 
     func makeNSView(context: Context) -> NSScrollView {
@@ -148,19 +150,32 @@ struct CanvasTextEditor: NSViewRepresentable {
         weak var textView: NSTextView?
         var hasInitializedScroll = false
         var needsInitialScrollToTop = true
+        var lastRegisteredText: String
 
-        init(_ parent: CanvasTextEditor) {
+        init(_ parent: CanvasTextEditor, initialText: String? = nil) {
             self.parent = parent
+            self.lastRegisteredText = initialText ?? ""
         }
 
         func textDidChange(_ notification: Notification) {
             guard let textView = textView else { return }
+            
+            let oldText = parent.text
+            let newText = textView.string
             let selectedRange = textView.selectedRange()
-            parent.text = textView.string
-            DispatchQueue.main.async {
+            
+            if oldText != newText {
+                parent.undoManager.registerChange(previous: oldText, current: newText) { [weak self] in
+                    DispatchQueue.main.async {
+                        guard let self = self else { return }
+                        NotificationCenter.default.post(name: .updateUndoRedoAvailability, object: self.parent.undoManager)
+                    }
+                }
+                parent.text = newText
                 textView.textStorage?.setAttributedString(self.parent.makeAttributedText(textView.string))
                 textView.setSelectedRange(selectedRange)
             }
+            
             parent.onEditingChanged?()
         }
         

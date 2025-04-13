@@ -12,4 +12,5 @@ extension Notification.Name {
     static let noteCreatedFromChat = Notification.Name("noteCreatedFromChat")
     static let stopTypewriterAnimation = Notification.Name("stopTypewriterAnimation")
     static let textViewHeightDidChange = Notification.Name("textViewHeightDidChange")
+    static let updateUndoRedoAvailability = Notification.Name("updateUndoRedoAvailability")
 }
