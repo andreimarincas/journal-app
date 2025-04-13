@@ -18,6 +18,8 @@ struct JournalEntryView: View {
     @Binding var isChatVisible: Bool
     @State private var isHoveringNoteHorizon : Bool = false
     @State private var isShowChatHovering = false
+    @State private var isHoveringUndoButton : Bool = false
+    @State private var isHoveringRedoButton : Bool = false
     @State private var selectedViewMode: ViewMode = .notes
     @State private var draftCanvasText: String = ""
     
@@ -112,7 +114,10 @@ struct JournalEntryView: View {
                 .foregroundStyle(.primary)
 
             Spacer()
-
+            
+            undoButton
+            redoButton
+            
             Picker("", selection: $selectedViewMode) {
                 Image(systemName: "list.number")
                     .help("Notes")
@@ -169,6 +174,66 @@ struct JournalEntryView: View {
         }
     }
 
+    private var undoButton: some View {
+        Button(action: {
+            // Undo logic
+        }) {
+            ZStack {
+                Image(systemName: "arrow.uturn.backward")
+                    .font(.system(size: 16, weight: .regular))
+            }
+            .frame(width: 28, height: 28)
+            .padding(6)
+            .background(
+                Circle()
+                    .fill(isHoveringUndoButton
+                          ? Color.secondary.opacity(0.15)
+                          : Color(NSColor.controlBackgroundColor))
+                    .scaleEffect(0.85)
+            )
+            .clipShape(Circle())
+        }
+        .offset(x: 3)
+        .buttonStyle(.borderless)
+        .onHover { hovering in
+            isHoveringUndoButton = hovering
+        }
+    }
+    
+    private func undoAction() {
+        
+    }
+    
+    private var redoButton: some View {
+        Button(action: {
+            // Redo logic
+        }) {
+            ZStack {
+                Image(systemName: "arrow.uturn.forward")
+                    .font(.system(size: 16, weight: .regular))
+            }
+            .frame(width: 28, height: 28)
+            .padding(6)
+            .background(
+                Circle()
+                    .fill(isHoveringRedoButton
+                          ? Color.secondary.opacity(0.15)
+                          : Color(NSColor.controlBackgroundColor))
+                    .scaleEffect(0.85)
+            )
+            .clipShape(Circle())
+        }
+        .buttonStyle(.borderless)
+        .offset(x: -3)
+        .onHover { hovering in
+            isHoveringRedoButton = hovering
+        }
+    }
+    
+    private func redoAction() {
+        
+    }
+    
     @ViewBuilder
     private var notesList: some View {
         if viewModel.notes.isEmpty {

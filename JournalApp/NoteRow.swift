@@ -41,7 +41,15 @@ struct NoteRow: View {
     
     @State private var isEnhancing = false
     
-    init(note: JournalNote, entry: JournalEntry, shouldFocus: Bool, shouldFocusInChat: Bool, editedText: Binding<String>, isChatVisible: Binding<Bool>, containerWidth: CGFloat, isSummaryPanelVisible: Binding<Bool>) {
+    init(note: JournalNote,
+         entry: JournalEntry,
+         shouldFocus: Bool,
+         shouldFocusInChat: Bool,
+         editedText: Binding<String>,
+         isChatVisible: Binding<Bool>,
+         containerWidth: CGFloat,
+         isSummaryPanelVisible: Binding<Bool>
+    ) {
         self.note = note
         self.entry = entry
         self.shouldFocus = shouldFocus
