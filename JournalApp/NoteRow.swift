@@ -136,13 +136,14 @@ struct NoteRow: View {
             if newValue == note.id {
                 isSummaryPanelVisible = false
             }
+            viewModel.updateUndoRedoAvailability(focusedNoteID: focusModel.focusedNoteID)
         }
         .onAppear {
             viewModel.registerUndoManager(for: note.id, undoManager)
             if undoManager.undoStack.isEmpty {
                 undoManager.registerChange(previous: editedText, current: editedText) {
                     DispatchQueue.main.async { [weak viewModel] in
-                        viewModel?.updateUndoRedoAvailability()
+                        viewModel?.updateUndoRedoAvailability(focusedNoteID: focusModel.focusedNoteID)
                     }
                 }
             }
@@ -284,7 +285,7 @@ struct NoteRow: View {
                         editedText = enhancedText
                         undoManager.registerChange(previous: previousText, current: enhancedText) { [weak viewModel] in
                             DispatchQueue.main.async {
-                                viewModel?.updateUndoRedoAvailability()
+                                viewModel?.updateUndoRedoAvailability(focusedNoteID: focusModel.focusedNoteID)
                             }
                         }
                     }

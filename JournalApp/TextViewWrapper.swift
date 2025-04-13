@@ -176,7 +176,8 @@ struct TextViewWrapper: NSViewRepresentable {
             if oldText != newText {
                 parent.undoManager.registerChange(previous: oldText, current: newText) { [weak self] in
                     DispatchQueue.main.async {
-                        self?.parent.viewModel.updateUndoRedoAvailability()
+                        guard let self = self else { return }
+                        self.parent.viewModel.updateUndoRedoAvailability(focusedNoteID: self.parent.focusModel.focusedNoteID)
                     }
                 }
                 let selectedRange = textView.selectedRange()

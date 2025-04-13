@@ -230,7 +230,7 @@ class JournalEntryViewModel: ObservableObject {
         else { return }
 
         editedTexts[id] = restored
-        updateUndoRedoAvailability()
+        updateUndoRedoAvailability(focusedNoteID: focusedNoteID)
     }
     
     func performRedo(focusedNoteID: UUID?) {
@@ -241,7 +241,7 @@ class JournalEntryViewModel: ObservableObject {
         else { return }
 
         editedTexts[id] = restored
-        updateUndoRedoAvailability()
+        updateUndoRedoAvailability(focusedNoteID: focusedNoteID)
     }
     
     private func undo(for noteID: UUID, current: String) -> String? {
@@ -262,8 +262,8 @@ class JournalEntryViewModel: ObservableObject {
         undoManagers[noteID] = manager
     }
     
-    func updateUndoRedoAvailability() {
-        let id = lastEditedNoteID
+    func updateUndoRedoAvailability(focusedNoteID: UUID? = nil) {
+        let id = lastEditedNoteID ?? focusedNoteID
         isUndoAvailable = id != nil && undoManagers[id!]?.undoStack.isEmpty == false
         isRedoAvailable = id != nil && undoManagers[id!]?.redoStack.isEmpty == false
     }
