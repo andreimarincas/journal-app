@@ -100,6 +100,7 @@ struct JournalEntryView: View {
             }
             .onChange(of: selectedViewMode) { _, newValue in
                 setViewMode(newValue)
+                focusModel.viewMode = newValue
                 if let window = NSApplication.shared.keyWindow {
                     window.makeFirstResponder(nil)
                 }

@@ -29,6 +29,7 @@ struct JournalChatView: View {
     
     @State private var canTriggerLoad = true
     @State private var isAnimatingTypewriter: Bool = false
+    @AppStorage("isCanvasMergeModeEnabled") private var storedCanvasMergeModeEnabled = false
     @State private var isCanvasMergeModeEnabled = false
     
     init(chatViewModel: JournalChatViewModel, entry: JournalEntry, isInOwnWindow: Binding<Bool> = .constant(false), isChatVisible: Binding<Bool> = .constant(true), popOutWindow: (() -> Void)? = nil, isSummaryPanelVisible: Binding<Bool> = .constant(false)) {
@@ -71,7 +72,19 @@ struct JournalChatView: View {
             }
         }
         .onAppear {
+            if focusModel.viewMode == .canvas {
+                isCanvasMergeModeEnabled = storedCanvasMergeModeEnabled
+            } else {
+                isCanvasMergeModeEnabled = false
+            }
             chatViewModel.startChat(title: entry.title, notes: entry.notes.map(\.text), entryID: entry.id)
+        }
+        .onChange(of: focusModel.viewMode) { _, newValue in
+            if newValue == .canvas {
+                isCanvasMergeModeEnabled = storedCanvasMergeModeEnabled
+            } else {
+                isCanvasMergeModeEnabled = false
+            }
         }
         .onChange(of: entry.id) { _, newID in
             chatViewModel.insertSystemMessage("Switched to: \(entry.title)")
@@ -82,8 +95,23 @@ struct JournalChatView: View {
     private var topButtons: some View {
         ZStack {
             HStack() {
-                Toggle(isOn: $isCanvasMergeModeEnabled) {
-                    Text("Work with Canvas")
+                Toggle(isOn: Binding(
+                    get: { isCanvasMergeModeEnabled },
+                    set: {
+                        if focusModel.viewMode == .canvas {
+                            isCanvasMergeModeEnabled = $0
+                            storedCanvasMergeModeEnabled = $0
+                        } else {
+                            isCanvasMergeModeEnabled = $0
+                            if $0 == true {
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                                    self.isCanvasMergeModeEnabled = false
+                                }
+                            }
+                        }
+                    }
+                )) {
+                    Text("Sync with Canvas")
                         .font(.body)
                         .foregroundColor(.secondary)
                 }
