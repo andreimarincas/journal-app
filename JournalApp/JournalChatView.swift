@@ -163,6 +163,13 @@ struct JournalChatView: View {
                     .allowsHitTesting(false)
                 Spacer()
             }
+            
+//            VStack {
+//                Rectangle()
+//                    .fill(Color.gray.opacity(0.15))
+//                    .offset(y: 26)
+//                    .frame(height: 1)
+//            }
         }
     }
 }

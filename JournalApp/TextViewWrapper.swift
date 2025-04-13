@@ -53,7 +53,6 @@ struct TextViewWrapper: NSViewRepresentable {
         textView.isEditable = true
         textView.isRichText = false
         setAttrText(text, to: textView)
-        textView.font = NSFont.systemFont(ofSize: 15, weight: .regular)
         textView.drawsBackground = false
         textView.textContainerInset = NSSize(width: 22, height: 2)
         textView.textContainer?.widthTracksTextView = true
