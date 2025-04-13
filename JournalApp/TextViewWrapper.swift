@@ -179,10 +179,10 @@ struct TextViewWrapper: NSViewRepresentable {
                         self?.parent.viewModel.updateUndoRedoAvailability()
                     }
                 }
+                let selectedRange = textView.selectedRange()
                 parent.text = newText
-                
-                // This forces the newly updated or pasted text to be immediately styled with your standard note font, spacing, and color, overriding any residual rich text attributes that might have been pasted or triggered during editing.
                 parent.setAttrText(newText, to: textView)
+                textView.setSelectedRange(selectedRange)
             }
         }
     }
