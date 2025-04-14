@@ -165,6 +165,17 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
+         contextName = "CanvasTextEditor.Coordinator.handleTextDidChange(oldText:newText:canRegisterUndo:):CanvasTextEditor.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "lastRegisteredText">
+            </PersistentString>
+            <PersistentString
+               value = "canRegisterUndo">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
          contextName = "JournalEntryViewModel.persistCanvasText():JournalEntryViewModel.swift">
          <PersistentStrings>
             <PersistentString
@@ -235,6 +246,14 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
+         contextName = "JournalEntryView.canvasView.getter:JournalEntryView.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "draftCanvasText">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
          contextName = "ChatMessageDataSource.insertMessage(_:):JournalChatViewModel.swift">
          <PersistentStrings>
             <PersistentString
@@ -266,6 +285,17 @@
          <PersistentStrings>
             <PersistentString
                value = "newNote.id">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "closure #1 in closure #1 in closure #5 in closure #1 in JournalEntryView.body.getter:JournalEntryView.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "draftCanvasText != previousCanvasText">
+            </PersistentString>
+            <PersistentString
+               value = "draftCanvasText">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -493,8 +523,22 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
+         contextName = "JournalEntryViewModel.updateUndoRedoAvailability(focusedNoteID:viewMode:canvasUndoManager:):JournalEntryViewModel.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "isRedoAvailable">
+            </PersistentString>
+            <PersistentString
+               value = "isUndoAvailable">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
          contextName = "closure #3 in closure #1 in JournalEntryView.body.getter:JournalEntryView.swift">
          <PersistentStrings>
+            <PersistentString
+               value = "draftCanvasText">
+            </PersistentString>
             <PersistentString
                value = "focusModel.owner">
             </PersistentString>

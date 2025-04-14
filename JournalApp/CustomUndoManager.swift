@@ -25,6 +25,9 @@ final class CustomUndoManager: ObservableObject {
             self.undoStack.append(change.previous)
             self.redoStack.removeAll()
             self.pendingChange = nil
+            DispatchQueue.main.async {
+                NotificationCenter.default.post(name: .updateUndoRedoAvailability, object: self)
+            }
             completion?()
         }
     }

@@ -21,7 +21,7 @@ struct JournalEntryView: View {
     @State private var isHoveringRedoButton : Bool = false
     @State private var selectedViewMode: ViewMode = .notes
     @State private var draftCanvasText: String = ""
-    @State private var undoAvailabilityTimer: Timer?
+    @State private var canvasUndoAllowed: Bool = false
     @State private var canvasUndoManager: CustomUndoManager
     
     enum ViewMode: String {
@@ -56,22 +56,7 @@ struct JournalEntryView: View {
                     notesList
                         .padding(.trailing, -22)
                 } else {
-                    CanvasView(
-                        draftCanvasText: $draftCanvasText,
-                        updateUndoRedo: {
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                                viewModel.updateUndoRedoAvailability(focusedNoteID: focusModel.focusedNoteID, viewMode: .canvas, canvasUndoManager: canvasUndoManager)
-                            }
-                        },
-                        persistText: {
-                            viewModel.persistCanvasText(draftCanvasText)
-                        },
-                        undoManager: canvasUndoManager
-                    )
-                    .padding(.leading, -18)
-                    .padding(.trailing, -38)
-                    .padding(.top, -18)
-                    .padding(.bottom, -18)
+                    canvasView
                 }
                 notesFooter
             }
@@ -94,12 +79,8 @@ struct JournalEntryView: View {
                 selectedViewMode = viewMode
                 focusModel.entry = viewModel.entry
                 viewModel.loadNotes()
+                canvasUndoAllowed = true
                 draftCanvasText = viewModel.canvasBody
-                undoAvailabilityTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { _ in
-                    if viewMode == .canvas {
-                        viewModel.updateUndoRedoAvailability(focusedNoteID: focusModel.focusedNoteID, viewMode: viewMode, canvasUndoManager: canvasUndoManager)
-                    }
-                }
             }
             .onChange(of: selectedViewMode) { _, newValue in
                 setViewMode(newValue)
@@ -110,9 +91,6 @@ struct JournalEntryView: View {
                 if newValue == .canvas {
                     draftCanvasText = viewModel.canvasBody
                 }
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                    viewModel.updateUndoRedoAvailability(focusedNoteID: focusModel.focusedNoteID, viewMode: viewMode, canvasUndoManager: canvasUndoManager)
-                }
             }
             .onChange(of: focusModel.pendingCanvasMergeAssistantReply) { _, newValue in
                 guard let userMessage = focusModel.pendingCanvasMergeUserMessage,
@@ -121,15 +99,17 @@ struct JournalEntryView: View {
                 Task {
                     let merged = await viewModel.mergeCanvasFromChat(userMessage: userMessage, assistantReply: assistantReply)
                     await MainActor.run {
-                        draftCanvasText = merged ?? viewModel.canvasBody
                         focusModel.pendingCanvasMergeUserMessage = nil
                         focusModel.pendingCanvasMergeAssistantReply = nil
+                        draftCanvasText = merged ?? viewModel.canvasBody
                     }
                 }
             }
-            .onDisappear {
-                undoAvailabilityTimer?.invalidate()
-                undoAvailabilityTimer = nil
+            .onChange(of: draftCanvasText) { oldValue, newValue in
+                if selectedViewMode == .canvas && focusModel.pendingCanvasMergeUserMessage != nil {
+                    canvasUndoManager.registerChange(previous: oldValue, current: newValue)
+                    viewModel.updateUndoRedoAvailability(focusedNoteID: focusModel.focusedNoteID, viewMode: .canvas, canvasUndoManager: canvasUndoManager)
+                }
             }
             .onReceive(NotificationCenter.default.publisher(for: .updateUndoRedoAvailability)) { notification in
                 guard
@@ -149,6 +129,26 @@ struct JournalEntryView: View {
         }
     }
 
+    private var canvasView: some View {
+        CanvasView(
+            draftCanvasText: $draftCanvasText,
+            canRegisterUndo: $canvasUndoAllowed,
+            updateUndoRedo: {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    viewModel.updateUndoRedoAvailability(focusedNoteID: focusModel.focusedNoteID, viewMode: .canvas, canvasUndoManager: canvasUndoManager)
+                }
+            },
+            persistText: {
+                viewModel.persistCanvasText(draftCanvasText)
+            },
+            undoManager: canvasUndoManager
+        )
+        .padding(.leading, -18)
+        .padding(.trailing, -38)
+        .padding(.top, -18)
+        .padding(.bottom, -18)
+    }
+    
     private var notesHeader: some View {
         HStack(alignment: .firstTextBaseline, spacing: 8) {
             Text(viewMode == .notes ? "Notes" : "Canvas")
@@ -222,6 +222,7 @@ struct JournalEntryView: View {
             if viewMode == .canvas {
                 if let restored = canvasUndoManager.undo(current: draftCanvasText) {
                     draftCanvasText = restored
+                    viewModel.updateUndoRedoAvailability(focusedNoteID: focusModel.focusedNoteID, viewMode: viewMode, canvasUndoManager: canvasUndoManager)
                 }
             } else {
                 viewModel.performUndo(focusedNoteID: focusModel.focusedNoteID, viewMode: viewMode, canvasUndoManager: canvasUndoManager)
@@ -256,6 +257,7 @@ struct JournalEntryView: View {
             if viewMode == .canvas {
                 if let restored = canvasUndoManager.redo(current: draftCanvasText) {
                     draftCanvasText = restored
+                    viewModel.updateUndoRedoAvailability(focusedNoteID: focusModel.focusedNoteID, viewMode: viewMode, canvasUndoManager: canvasUndoManager)
                 }
             } else {
                 viewModel.performRedo(focusedNoteID: focusModel.focusedNoteID, viewMode: viewMode, canvasUndoManager: canvasUndoManager)

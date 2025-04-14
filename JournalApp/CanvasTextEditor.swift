@@ -10,6 +10,7 @@ import AppKit
 
 struct CanvasTextEditor: NSViewRepresentable {
     @Binding var text: String
+    @Binding var canRegisterUndo: Bool
     var containerWidth: CGFloat? = nil
     var onEditingChanged: (() -> Void)? = nil
     var onEditingEnded: (() -> Void)? = nil
@@ -63,8 +64,7 @@ struct CanvasTextEditor: NSViewRepresentable {
     }
     
     func makeCoordinator() -> Coordinator {
-        let coordinator = Coordinator(self, initialText: text)
-        return coordinator
+        return Coordinator(self)
     }
 
     func makeNSView(context: Context) -> NSScrollView {
@@ -76,7 +76,7 @@ struct CanvasTextEditor: NSViewRepresentable {
         textView.usesRuler = false
         textView.drawsBackground = false
         textView.allowsUndo = true
-         textView.textContainerInset = NSSize(width: 20, height: 26)
+        textView.textContainerInset = NSSize(width: 20, height: 26)
 
         textView.font = font
         
@@ -150,11 +150,10 @@ struct CanvasTextEditor: NSViewRepresentable {
         weak var textView: NSTextView?
         var hasInitializedScroll = false
         var needsInitialScrollToTop = true
-        var lastRegisteredText: String
+        private var lastText: String?
 
-        init(_ parent: CanvasTextEditor, initialText: String? = nil) {
+        init(_ parent: CanvasTextEditor) {
             self.parent = parent
-            self.lastRegisteredText = initialText ?? ""
         }
 
         func textDidChange(_ notification: Notification) {
@@ -165,12 +164,7 @@ struct CanvasTextEditor: NSViewRepresentable {
             let selectedRange = textView.selectedRange()
             
             if oldText != newText {
-                parent.undoManager.registerChange(previous: oldText, current: newText) { [weak self] in
-                    DispatchQueue.main.async {
-                        guard let self = self else { return }
-                        NotificationCenter.default.post(name: .updateUndoRedoAvailability, object: self.parent.undoManager)
-                    }
-                }
+                parent.undoManager.registerChange(previous: oldText, current: newText)
                 parent.text = newText
                 textView.textStorage?.setAttributedString(self.parent.makeAttributedText(textView.string))
                 textView.setSelectedRange(selectedRange)

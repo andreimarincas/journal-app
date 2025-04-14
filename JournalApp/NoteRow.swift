@@ -141,11 +141,7 @@ struct NoteRow: View {
         .onAppear {
             viewModel.registerUndoManager(for: note.id, undoManager)
             if undoManager.undoStack.isEmpty {
-                undoManager.registerChange(previous: editedText, current: editedText) {
-                    DispatchQueue.main.async { [weak viewModel] in
-                        viewModel?.updateUndoRedoAvailability(focusedNoteID: focusModel.focusedNoteID, viewMode: .notes, canvasUndoManager: CustomUndoManager())
-                    }
-                }
+                undoManager.registerChange(previous: editedText, current: editedText)
             }
         }
         
@@ -283,11 +279,7 @@ struct NoteRow: View {
                         isEnhancing = false
                         guard let enhancedText else { return }
                         editedText = enhancedText
-                        undoManager.registerChange(previous: previousText, current: enhancedText) { [weak viewModel] in
-                            DispatchQueue.main.async {
-                                viewModel?.updateUndoRedoAvailability(focusedNoteID: focusModel.focusedNoteID, viewMode: .notes, canvasUndoManager: CustomUndoManager())
-                            }
-                        }
+                        undoManager.registerChange(previous: previousText, current: enhancedText)
                     }
                 }) {
                     Image(systemName: "wand.and.stars")
