@@ -16,11 +16,15 @@ final class CanvasMergeCoordinator {
 
     func mergeCanvas(currentCanvas: String, userMessage: String, assistantReply: String) async throws -> String {
         let context = """
-        --- Canvas ---
+        The following is a journal entry written by the user:
+
         \(currentCanvas)
 
-        --- New Message ---
-        \(userMessage)
+        The user then added a new thought in chat:
+
+        "\(userMessage)"
+
+        Please insert the new thought into the original journal entry in the most natural and emotionally resonant place. Do not reword or remove any existing content.
         """
 
         let messages = [

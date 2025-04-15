@@ -20,9 +20,13 @@ struct JournalEntryView: View {
     @State private var isHoveringUndoButton : Bool = false
     @State private var isHoveringRedoButton : Bool = false
     @State private var selectedViewMode: ViewMode = .notes
-    @State private var draftCanvasText: String = ""
+    @State private var draftCanvasText = CanvasText()
     @State private var canvasUndoAllowed: Bool = false
     @State private var canvasUndoManager: CustomUndoManager
+    @State private var isMerging: Bool = false
+//    @State private var progressOffset: CGFloat = 30
+    @State private var dotPulseIndex = 0
+    @State private var dotPulseTimer: Timer?
     
     enum ViewMode: String {
         case notes, canvas
@@ -56,7 +60,29 @@ struct JournalEntryView: View {
                     notesList
                         .padding(.trailing, -22)
                 } else {
-                    canvasView
+                    
+//                    canvasView
+                    
+//                    ZStack(alignment: .topLeading) {
+//                        canvasView
+//                        if isMerging {
+//                            progressLine
+//                                .padding(.top, 8) // slight space under the title "Canvas"
+//                        }
+//                    }
+                    
+                    ZStack(alignment: .topLeading) {
+                        canvasView
+                        
+                        if isMerging {
+                            HStack {
+                                Spacer()
+                                threeDotIndicator
+                                Spacer()
+                            }
+                            .offset(y: -6)
+                        }
+                    }
                 }
                 notesFooter
             }
@@ -80,7 +106,7 @@ struct JournalEntryView: View {
                 focusModel.entry = viewModel.entry
                 viewModel.loadNotes()
                 canvasUndoAllowed = true
-                draftCanvasText = viewModel.canvasBody
+                draftCanvasText = CanvasText(text: viewModel.canvasBody, source: .saved)
             }
             .onChange(of: selectedViewMode) { _, newValue in
                 setViewMode(newValue)
@@ -89,25 +115,32 @@ struct JournalEntryView: View {
                     window.makeFirstResponder(nil)
                 }
                 if newValue == .canvas {
-                    draftCanvasText = viewModel.canvasBody
+                    draftCanvasText = CanvasText(text: viewModel.canvasBody, source: .saved)
                 }
             }
             .onChange(of: focusModel.pendingCanvasMergeAssistantReply) { _, newValue in
                 guard let userMessage = focusModel.pendingCanvasMergeUserMessage,
                       let assistantReply = newValue,
                       selectedViewMode == .canvas else { return }
+                isMerging = true
                 Task {
+                    try? await Task.sleep(nanoseconds: UInt64(2 * 1_000_000_000))
                     let merged = await viewModel.mergeCanvasFromChat(userMessage: userMessage, assistantReply: assistantReply)
                     await MainActor.run {
                         focusModel.pendingCanvasMergeUserMessage = nil
                         focusModel.pendingCanvasMergeAssistantReply = nil
-                        draftCanvasText = merged ?? viewModel.canvasBody
+                        if let merged {
+                            draftCanvasText = CanvasText(text: merged, source: .draft)
+                        } else {
+                            draftCanvasText = CanvasText(text: viewModel.canvasBody, source: .saved)
+                        }
+                        isMerging = false
                     }
                 }
             }
             .onChange(of: draftCanvasText) { oldValue, newValue in
                 if selectedViewMode == .canvas && focusModel.pendingCanvasMergeUserMessage != nil {
-                    canvasUndoManager.registerChange(previous: oldValue, current: newValue)
+                    canvasUndoManager.registerChange(previous: oldValue.text, current: newValue.text)
                     viewModel.updateUndoRedoAvailability(focusedNoteID: focusModel.focusedNoteID, viewMode: .canvas, canvasUndoManager: canvasUndoManager)
                 }
             }
@@ -125,9 +158,61 @@ struct JournalEntryView: View {
             }
         }
         .onChange(of: viewModel.notes) {
-            draftCanvasText = viewModel.canvasBody
+            draftCanvasText = CanvasText(text: viewModel.canvasBody, source: .saved)
         }
     }
+    
+    private var threeDotIndicator: some View {
+        HStack(spacing: 6) {
+            ForEach(0..<3) { index in
+                Circle()
+                    .fill(Color.accentColor)
+                    .frame(width: 6, height: 6)
+//                    .shadow(color: Color.accentColor.opacity(0.5), radius: 3, x: 0, y: 0) // ✨ soft glow
+                    .opacity(dotPulseIndex == index ? 1.0 : 0.3)
+                    .animation(
+                        .easeInOut(duration: 0.6).delay(Double(index) * 0.2),
+                        value: dotPulseIndex
+                    )
+            }
+        }
+        .onAppear {
+            startDotPulse()
+        }
+        .onDisappear {
+            stopDotPulse()
+        }
+    }
+    
+    private func startDotPulse() {
+        dotPulseTimer?.invalidate()
+        dotPulseTimer = Timer.scheduledTimer(withTimeInterval: 0.3, repeats: true) { _ in
+            dotPulseIndex = (dotPulseIndex + 1) % 3
+        }
+    }
+
+    private func stopDotPulse() {
+        dotPulseTimer?.invalidate()
+        dotPulseTimer = nil
+    }
+    
+//    private var progressLine: some View {
+//        GeometryReader { geometry in
+//            ZStack(alignment: .leading) {
+//                Rectangle()
+//                    .fill(Color.blue)
+//                    .frame(width: 80, height: 3)
+//                    .offset(x: progressOffset)
+//                    .onAppear {
+//                        let travelDistance = geometry.size.width - 90
+//                        withAnimation(Animation.easeInOut(duration: 1.2).repeatForever(autoreverses: true)) {
+//                            progressOffset = travelDistance
+//                        }
+//                    }
+//            }
+//        }
+//        .frame(height: 3)
+//    }
 
     private var canvasView: some View {
         CanvasView(
@@ -139,7 +224,7 @@ struct JournalEntryView: View {
                 }
             },
             persistText: {
-                viewModel.persistCanvasText(draftCanvasText)
+                viewModel.persistCanvasText(draftCanvasText.text)
             },
             undoManager: canvasUndoManager
         )
@@ -220,8 +305,8 @@ struct JournalEntryView: View {
     private var undoButton: some View {
         Button(action: {
             if viewMode == .canvas {
-                if let restored = canvasUndoManager.undo(current: draftCanvasText) {
-                    draftCanvasText = restored
+                if let restored = canvasUndoManager.undo(current: draftCanvasText.text) {
+                    draftCanvasText.text = restored
                     viewModel.updateUndoRedoAvailability(focusedNoteID: focusModel.focusedNoteID, viewMode: viewMode, canvasUndoManager: canvasUndoManager)
                 }
             } else {
@@ -255,8 +340,8 @@ struct JournalEntryView: View {
     private var redoButton: some View {
         Button(action: {
             if viewMode == .canvas {
-                if let restored = canvasUndoManager.redo(current: draftCanvasText) {
-                    draftCanvasText = restored
+                if let restored = canvasUndoManager.redo(current: draftCanvasText.text) {
+                    draftCanvasText.text = restored
                     viewModel.updateUndoRedoAvailability(focusedNoteID: focusModel.focusedNoteID, viewMode: viewMode, canvasUndoManager: canvasUndoManager)
                 }
             } else {

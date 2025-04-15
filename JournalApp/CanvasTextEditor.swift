@@ -9,7 +9,7 @@ import SwiftUI
 import AppKit
 
 struct CanvasTextEditor: NSViewRepresentable {
-    @Binding var text: String
+    @Binding var canvasText: CanvasText
     @Binding var canRegisterUndo: Bool
     var containerWidth: CGFloat? = nil
     var onEditingChanged: (() -> Void)? = nil
@@ -97,7 +97,7 @@ struct CanvasTextEditor: NSViewRepresentable {
 
         context.coordinator.textView = textView
         
-        textView.textStorage?.setAttributedString(makeAttributedText(text))
+        textView.textStorage?.setAttributedString(makeAttributedText(canvasText.text))
         
         NotificationCenter.default.addObserver(forName: .scrollToNote, object: nil, queue: .main) { notification in
             if let newNote = notification.object as? JournalNote {
@@ -125,8 +125,8 @@ struct CanvasTextEditor: NSViewRepresentable {
             textView.textContainerInset = NSSize(width: horizontalInset, height: 26)
         }
 
-        if textView.string != text {
-            textView.textStorage?.setAttributedString(makeAttributedText(text))
+        if textView.string != canvasText.text {
+            textView.textStorage?.setAttributedString(makeAttributedText(canvasText.text))
             if !context.coordinator.hasInitializedScroll {
                 context.coordinator.hasInitializedScroll = true
                 DispatchQueue.main.async {
@@ -159,13 +159,13 @@ struct CanvasTextEditor: NSViewRepresentable {
         func textDidChange(_ notification: Notification) {
             guard let textView = textView else { return }
             
-            let oldText = parent.text
+            let oldText = parent.canvasText.text
             let newText = textView.string
             let selectedRange = textView.selectedRange()
             
             if oldText != newText {
                 parent.undoManager.registerChange(previous: oldText, current: newText)
-                parent.text = newText
+                parent.canvasText.text = newText
                 textView.textStorage?.setAttributedString(self.parent.makeAttributedText(textView.string))
                 textView.setSelectedRange(selectedRange)
             }

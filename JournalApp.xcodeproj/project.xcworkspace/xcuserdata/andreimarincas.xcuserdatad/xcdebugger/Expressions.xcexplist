@@ -262,6 +262,20 @@
          </PersistentStrings>
       </ContextState>
       <ContextState
+         contextName = "closure #2 in CanvasView.body.getter:CanvasView.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "tempDraftCanvasText">
+            </PersistentString>
+            <PersistentString
+               value = "oldValue">
+            </PersistentString>
+            <PersistentString
+               value = "isAnimatingFog">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
          contextName = "closure #1 in JournalEntryView.NoteRow.doneButton.getter:JournalEntryView.swift">
          <PersistentStrings>
             <PersistentString
@@ -348,6 +362,17 @@
          <PersistentStrings>
             <PersistentString
                value = "textView.undoManager">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "closure #2 in closure #1 in CanvasView.body.getter:CanvasView.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "displayedCanvasText">
+            </PersistentString>
+            <PersistentString
+               value = "newValue">
             </PersistentString>
          </PersistentStrings>
       </ContextState>
@@ -538,6 +563,9 @@
          <PersistentStrings>
             <PersistentString
                value = "draftCanvasText">
+            </PersistentString>
+            <PersistentString
+               value = "viewModel.canvasBody">
             </PersistentString>
             <PersistentString
                value = "focusModel.owner">
