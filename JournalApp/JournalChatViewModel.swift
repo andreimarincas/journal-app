@@ -7,7 +7,7 @@
 
 import Foundation
 import SwiftData
-import SwiftUICore
+import SwiftUI
 
 @MainActor
 class JournalChatViewModel: ObservableObject {
