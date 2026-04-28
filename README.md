@@ -1,6 +1,6 @@
 # Journal for Mac
 
-An introspective, AI-augmented journaling environment for macOS. This application leverages **SwiftUI**, **AppKit**, and **SwiftData** to create a seamless, desktop-class writing experience powered by OpenAI's GPT models.
+An introspective, AI-augmented journaling environment for macOS. This application leverages **SwiftUI**, **AppKit**, and **SwiftData** to create a seamless, desktop writing experience powered by OpenAI's GPT models.
 
 Unlike traditional journaling apps, **Journal for Mac** acts as an active participant in the writing process—distilling thoughts into cohesive narratives, providing tone-based creative suggestions, and facilitating a "Canvas" mode where AI-driven insights are merged into the user's primary entries.
 
@@ -34,7 +34,7 @@ The project is built with a focus on high-performance text rendering and reactiv
 - **Summary Panel:** Automatically generates a first-person summary of the entry's disparate notes. Uses a **debounced observation pattern** to keep summaries up-to-date without over-calling the API during active writing.
 - **Canvas Mode:** A distraction-free editing environment where the `CanvasMergeCoordinator` uses LLM logic to intelligently insert new thoughts into existing text without overwriting user content.
 
-### 2. Sophisticated Text Handling
+### 2. Text Handling
 
 - **FocusableTextView:** A custom `NSTextView` subclass that manages focus transitions, custom key equivalents (`Cmd+S` to save/resign), and tone-cycling shortcuts.
 - **ResizingTextView:** A dynamic chat input that grows with content up to a specific threshold before enabling internal scrolling.
