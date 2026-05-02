@@ -1,5 +1,7 @@
 # Journal for Mac
 
+<img width="620" height="325" alt="journal-app" src="https://github.com/user-attachments/assets/cabe17a4-cc44-45fe-8d05-bae30e3253d9" />
+
 An introspective, AI-augmented journaling environment for macOS. This application leverages **SwiftUI**, **AppKit**, and **SwiftData** to create a seamless, desktop writing experience powered by OpenAI's GPT models.
 
 Unlike traditional journaling apps, **Journal for Mac** acts as an active participant in the writing process—distilling thoughts into cohesive narratives, providing tone-based creative suggestions, and facilitating a "Canvas" mode where AI-driven insights are merged into the user's primary entries.
